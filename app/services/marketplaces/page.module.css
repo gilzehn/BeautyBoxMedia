@@ -19,15 +19,22 @@
   font-size: 3rem;
   font-weight: 900;
   letter-spacing: -0.03em;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.intro {
+  font-size: 1.25rem;
+  color: var(--accent);
+  margin-bottom: 20px;
 }
 
 .subtitle {
-  font-size: 1.125rem;
+  font-size: 1.05rem;
   color: var(--text-secondary);
-  max-width: 560px;
+  max-width: 780px;
   margin: 0 auto;
-  line-height: 1.7;
+  line-height: 1.8;
+  text-align: left;
 }
 
 .list {
@@ -42,6 +49,7 @@
   padding: 48px 0;
   border-bottom: 1px solid var(--border);
   align-items: flex-start;
+  scroll-margin-top: calc(var(--nav-height) + 24px);
 }
 
 .item:last-child {
@@ -65,14 +73,27 @@
 .itemTitle {
   font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .itemDesc {
   font-size: 1.05rem;
   color: var(--text-secondary);
   line-height: 1.8;
-  max-width: 700px;
+  max-width: 780px;
+}
+
+.learnMore {
+  display: inline-block;
+  margin-top: 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--accent);
+  transition: opacity var(--transition);
+}
+
+.learnMore:hover {
+  opacity: 0.7;
 }
 
 .cta {
@@ -96,6 +117,10 @@
 @media (max-width: 768px) {
   .title {
     font-size: 2.25rem;
+  }
+
+  .subtitle {
+    text-align: center;
   }
 
   .item {

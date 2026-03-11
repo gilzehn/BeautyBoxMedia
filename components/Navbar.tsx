@@ -55,11 +55,11 @@ export default function Navbar() {
                     <p className={styles.megaLabel}>Amazon &amp; Beyond</p>
                   </Link>
                   <ul className={styles.megaLinks}>
-                    <li><Link href="/services#market-feasibility" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Market Feasibility &amp; Strategic Research</Link></li>
-                    <li><Link href="/services#brand-presence" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Brand Presence Optimization</Link></li>
-                    <li><Link href="/services#advertising-mgmt" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Advertising Management</Link></li>
-                    <li><Link href="/services#account-mgmt" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Full Account Management</Link></li>
-                    <li><Link href="/services#consulting" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Consulting &amp; Advisory</Link></li>
+                    <li><Link href="/services/marketplaces#market-feasibility" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Market Feasibility &amp; Strategic Research</Link></li>
+                    <li><Link href="/services/marketplaces#brand-presence" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Brand Presence Optimization</Link></li>
+                    <li><Link href="/services/marketplaces#advertising-mgmt" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Advertising Management</Link></li>
+                    <li><Link href="/services/marketplaces#account-mgmt" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Full Account Management</Link></li>
+                    <li><Link href="/services/marketplaces#consulting" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Consulting &amp; Advisory</Link></li>
                   </ul>
                 </div>
 
@@ -69,11 +69,11 @@ export default function Navbar() {
                     <p className={styles.megaLabel}>Shopify &amp; Web</p>
                   </Link>
                   <ul className={styles.megaLinks}>
-                    <li><Link href="/services#dtc-research" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Market Feasibility &amp; Strategic Research</Link></li>
-                    <li><Link href="/services#paid-search" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Paid Search &amp; Social Campaign Management</Link></li>
-                    <li><Link href="/services#seo-geo" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>SEO &amp; Generative Engine Optimization (GEO)</Link></li>
-                    <li><Link href="/services#lifecycle-email" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Lifecycle &amp; Email Marketing</Link></li>
-                    <li><Link href="/services#influencer" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Influencer &amp; Creator Marketing</Link></li>
+                    <li><Link href="/services/dtc#dtc-research" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Market Feasibility &amp; Strategic Research</Link></li>
+                    <li><Link href="/services/dtc#paid-search" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Paid Search &amp; Social Campaign Management</Link></li>
+                    <li><Link href="/services/dtc#seo-geo" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>SEO &amp; Generative Engine Optimization (GEO)</Link></li>
+                    <li><Link href="/services/dtc#lifecycle-email" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Lifecycle &amp; Email Marketing</Link></li>
+                    <li><Link href="/services/dtc#influencer" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Influencer &amp; Creator Marketing</Link></li>
                   </ul>
                 </div>
 
@@ -83,9 +83,9 @@ export default function Navbar() {
                     <p className={styles.megaLabel}>Cross-Platform</p>
                   </Link>
                   <ul className={styles.megaLinks}>
-                    <li><Link href="/services#audience-targeting" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Audience Targeting &amp; Data Strategy</Link></li>
-                    <li><Link href="/services#performance-reporting" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Performance Optimization &amp; Reporting</Link></li>
-                    <li><Link href="/services#attribution" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Attribution Modeling</Link></li>
+                    <li><Link href="/services/growth-data#audience-targeting" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Audience Targeting &amp; Data Strategy</Link></li>
+                    <li><Link href="/services/growth-data#performance-reporting" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Performance Optimization &amp; Reporting</Link></li>
+                    <li><Link href="/services/growth-data#attribution" onClick={() => { setMenuOpen(false); setServicesOpen(false); }}>Attribution Modeling</Link></li>
                   </ul>
                 </div>
               </div>
