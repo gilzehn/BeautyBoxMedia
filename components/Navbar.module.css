@@ -136,6 +136,15 @@
   border-right: none;
 }
 
+.megaHeadingLink {
+  display: block;
+  transition: opacity var(--transition);
+}
+
+.megaHeadingLink:hover {
+  opacity: 0.8;
+}
+
 .megaHeading {
   font-size: 1rem;
   font-weight: 700;

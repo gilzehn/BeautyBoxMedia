@@ -12,7 +12,9 @@
       "Bash(cd /c/BeautyBoxMedia && gh run list --limit 5 2>&1)",
       "Bash(cd /c/BeautyBoxMedia && git add .github/workflows/deploy.yml && git commit -m \"$\\(cat <<'EOF'\nFix deploy workflow to use master branch\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git push 2>&1)",
       "Bash(cd /c/BeautyBoxMedia && gh run list --limit 3 2>&1)",
-      "Bash(npx kill-port:*)"
+      "Bash(npx kill-port:*)",
+      "Bash(cd /c/BeautyBoxMedia && git commit -m \"$\\(cat <<'EOF'\nUpdate branding and add services mega menu\n\n- Rename to Beauty Box Media \\(remove \"The\"\\)\n- Replace nav with mega menu: Marketplaces, D2C, Growth & Data Layer\n- Add column icons and widen menu for desktop\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git push 2>&1)",
+      "Bash(cd /c/BeautyBoxMedia && git add -A && git commit -m \"$\\(cat <<'EOF'\nAdd all service pages, about, case studies, and mega menu updates\n\n- Mega menu headers link to dedicated pages \\(marketplaces, dtc, growth-data\\)\n- Sub-items link to anchors on main services page\n- Add about page with zigzag team layout\n- Add case studies page with 5 placeholders\n- Add nav links for Case Studies and About Us\n- Add client logo strip on homepage\n- Update hero tagline\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git push 2>&1)"
     ]
   }
 }

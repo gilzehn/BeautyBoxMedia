@@ -7,6 +7,27 @@ export default function Home() {
     <>
       <Hero />
 
+      {/* Client Logos */}
+      <section className={styles.logoStrip}>
+        <div className="container">
+          <p className={styles.logoLabel}>Trusted by leading beauty brands</p>
+          <div className={styles.logoTrack}>
+            <div className={styles.logoSlide}>
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className={styles.logoSet}>
+                  <span className={styles.logoPlaceholder}>Brand Logo</span>
+                  <span className={styles.logoPlaceholder}>Brand Logo</span>
+                  <span className={styles.logoPlaceholder}>Brand Logo</span>
+                  <span className={styles.logoPlaceholder}>Brand Logo</span>
+                  <span className={styles.logoPlaceholder}>Brand Logo</span>
+                  <span className={styles.logoPlaceholder}>Brand Logo</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Services Preview */}
       <section className="section" style={{ background: 'var(--bg-secondary)' }}>
         <div className="container">

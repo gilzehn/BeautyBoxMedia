@@ -1,0 +1,135 @@
+.header {
+  padding: calc(var(--nav-height) + 80px) 0 60px;
+  text-align: center;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.tagline {
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  max-width: 560px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* ── Team ── */
+
+.team {
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
+}
+
+.member {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.memberReverse {
+  direction: rtl;
+}
+
+.memberReverse > * {
+  direction: ltr;
+}
+
+.imageWrap {
+  position: relative;
+}
+
+.imagePlaceholder {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  overflow: hidden;
+}
+
+.imageWrap::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 16px;
+  right: 16px;
+  height: 40px;
+  background: var(--accent);
+  opacity: 0.15;
+  border-radius: var(--radius-lg);
+  filter: blur(20px);
+  z-index: -1;
+}
+
+.bio {
+  padding: 20px 0;
+}
+
+.role {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.name {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.bioText {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 2.25rem;
+  }
+
+  .team {
+    gap: 48px;
+  }
+
+  .member {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .memberReverse {
+    direction: ltr;
+  }
+
+  .name {
+    font-size: 1.5rem;
+  }
+}

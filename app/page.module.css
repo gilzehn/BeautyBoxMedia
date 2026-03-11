@@ -1,3 +1,61 @@
+/* ── Logo Strip ── */
+
+.logoStrip {
+  padding: 48px 0;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.logoLabel {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+
+.logoTrack {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.logoSlide {
+  display: flex;
+  width: max-content;
+  animation: scroll 20s linear infinite;
+}
+
+.logoSet {
+  display: flex;
+  gap: 64px;
+  padding: 0 32px;
+}
+
+.logoPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  height: 48px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0.5;
+}
+
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ── Services ── */
+
 .servicesGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
