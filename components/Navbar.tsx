@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
@@ -12,7 +13,7 @@ export default function Navbar() {
     <nav className={styles.navbar}>
       <div className={styles.inner}>
         <Link href="/" className={styles.logo}>
-          Beauty Box <span className={styles.logoAccent}>Media</span>
+          <Image src="/logo.svg" alt="Beauty Box Media" width={180} height={40} priority />
         </Link>
 
         <button
