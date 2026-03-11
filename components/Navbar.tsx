@@ -13,7 +13,7 @@ export default function Navbar() {
     <nav className={styles.navbar}>
       <div className={styles.inner}>
         <Link href="/" className={styles.logo}>
-          <Image src="/logo.svg" alt="Beauty Box Media" width={180} height={40} priority />
+          <Image src="/logo.svg" alt="Beauty Box Media" width={216} height={48} priority />
         </Link>
 
         <button
