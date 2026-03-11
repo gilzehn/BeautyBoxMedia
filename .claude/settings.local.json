@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /c/BeautyBoxMedia && npx create-next-app@latest . --typescript --app --no-tailwind --eslint --no-src-dir --import-alias \"@/*\" --use-npm 2>&1)",
+      "Bash(cd /c/BeautyBoxMedia && npm install 2>&1)",
+      "Bash(cd /c/BeautyBoxMedia && npm run build 2>&1)",
+      "Bash(cd /c/BeautyBoxMedia && npm run dev 2>&1)",
+      "Bash(cd /c/BeautyBoxMedia && git init 2>&1 && gh auth status 2>&1)",
+      "Bash(cd:*)"
+    ]
+  }
+}
