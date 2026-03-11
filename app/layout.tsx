@@ -4,7 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'The Beauty Box Media',
+  title: 'Beauty Box Media',
   description: 'Elevate your brand with stunning digital media solutions. Social media management, content creation, and brand strategy.',
 };
 

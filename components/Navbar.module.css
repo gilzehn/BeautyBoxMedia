@@ -43,43 +43,161 @@
   color: var(--text-secondary);
   transition: color var(--transition);
   position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  font-family: inherit;
 }
 
 .link:hover {
   color: var(--text-primary);
 }
 
-.link::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: var(--accent);
-  transition: width var(--transition);
+.chevron {
+  transition: transform var(--transition);
 }
 
-.link:hover::after {
-  width: 100%;
+.chevronOpen {
+  transform: rotate(180deg);
 }
 
 .ctaLink {
-  composes: link;
+  font-size: 0.95rem;
+  font-weight: 500;
   background: var(--accent);
-  color: white !important;
+  color: white;
   padding: 10px 24px;
   border-radius: var(--radius-sm);
   box-shadow: 0 0 16px var(--accent-glow);
-}
-
-.ctaLink::after {
-  display: none;
+  transition: all var(--transition);
 }
 
 .ctaLink:hover {
   background: var(--accent-hover);
 }
+
+/* ── Mega Menu ── */
+
+.servicesWrap {
+  position: relative;
+  padding: 20px 0;
+  margin: -20px 0;
+}
+
+.mega {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1080px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--transition), visibility var(--transition);
+}
+
+.mega::before {
+  content: '';
+  display: block;
+  height: 16px;
+}
+
+.megaOpen {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.megaPanel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.megaInner {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  padding: 28px 0;
+}
+
+.megaCol {
+  padding: 0 28px;
+  border-right: 1px solid var(--border);
+}
+
+.megaCol:last-child {
+  border-right: none;
+}
+
+.megaHeading {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.megaHeading svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.megaLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.megaLinks {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.megaLinks a {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  transition: all var(--transition);
+  padding: 4px 0;
+  display: block;
+}
+
+.megaLinks a:hover {
+  color: var(--accent);
+  padding-left: 4px;
+}
+
+.megaFooter {
+  border-top: 1px solid var(--border);
+  padding: 14px 28px;
+  text-align: center;
+}
+
+.megaFooterLink {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  transition: opacity var(--transition);
+}
+
+.megaFooterLink:hover {
+  opacity: 0.8;
+}
+
+/* ── Hamburger ── */
 
 .hamburger {
   display: none;
@@ -112,6 +230,8 @@
   transform: rotate(-45deg) translate(5px, -5px);
 }
 
+/* ── Mobile ── */
+
 @media (max-width: 768px) {
   .hamburger {
     display: flex;
@@ -121,15 +241,17 @@
     position: fixed;
     top: 0;
     right: -100%;
-    width: 280px;
+    width: 300px;
     height: 100vh;
     background: var(--bg-secondary);
     flex-direction: column;
-    justify-content: center;
-    gap: 24px;
-    padding: 40px;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 100px 24px 40px;
     transition: right var(--transition);
     border-left: 1px solid var(--border);
+    overflow-y: auto;
   }
 
   .linksOpen {
@@ -137,7 +259,61 @@
   }
 
   .link {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
+    padding: 12px 0;
+    width: 100%;
+  }
+
+  .servicesWrap {
+    width: 100%;
+  }
+
+  .mega {
+    position: static;
+    transform: none;
+    width: 100%;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    padding: 0;
+    display: none;
+  }
+
+  .megaOpen {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .megaInner {
+    grid-template-columns: 1fr;
+    padding: 8px 0;
+    gap: 20px;
+  }
+
+  .megaCol {
+    padding: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+  }
+
+  .megaCol:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .megaFooter {
+    padding: 12px 0;
+    text-align: left;
+  }
+
+  .ctaLink {
+    margin-top: 16px;
+    text-align: center;
+    display: block;
   }
 
   .overlay {

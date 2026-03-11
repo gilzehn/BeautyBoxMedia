@@ -6,7 +6,13 @@
       "Bash(cd /c/BeautyBoxMedia && npm run build 2>&1)",
       "Bash(cd /c/BeautyBoxMedia && npm run dev 2>&1)",
       "Bash(cd /c/BeautyBoxMedia && git init 2>&1 && gh auth status 2>&1)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(cd /c/BeautyBoxMedia && gh repo create BeautyBoxMedia --public --source=. --remote=origin --push 2>&1)",
+      "Bash(cd /c/BeautyBoxMedia && gh api repos/gilzehn/BeautyBoxMedia/pages 2>&1)",
+      "Bash(cd /c/BeautyBoxMedia && gh run list --limit 5 2>&1)",
+      "Bash(cd /c/BeautyBoxMedia && git add .github/workflows/deploy.yml && git commit -m \"$\\(cat <<'EOF'\nFix deploy workflow to use master branch\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git push 2>&1)",
+      "Bash(cd /c/BeautyBoxMedia && gh run list --limit 3 2>&1)",
+      "Bash(npx kill-port:*)"
     ]
   }
 }

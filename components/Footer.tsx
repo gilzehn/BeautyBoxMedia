@@ -8,7 +8,7 @@ export default function Footer() {
         <div className={styles.grid}>
           <div className={styles.brand}>
             <h3>
-              The Beauty Box <span className={styles.brandAccent}>Media</span>
+              Beauty Box <span className={styles.brandAccent}>Media</span>
             </h3>
             <p>
               Elevate your brand with stunning digital media solutions.
@@ -37,7 +37,7 @@ export default function Footer() {
 
         <div className={styles.bottom}>
           <p className={styles.copyright}>
-            &copy; {new Date().getFullYear()} The Beauty Box Media. All rights reserved.
+            &copy; {new Date().getFullYear()} Beauty Box Media. All rights reserved.
           </p>
           <div className={styles.socials}>
             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className={styles.socialLink}>
