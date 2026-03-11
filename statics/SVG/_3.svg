@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200.04 170.16">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #433847;
+        fill-rule: evenodd;
+      }
+
+      .cls-2 {
+        font-family: Montserrat-Medium, Montserrat;
+        font-weight: 500;
+      }
+
+      .cls-3 {
+        font-family: Montserrat-Bold, Montserrat;
+        font-weight: 700;
+      }
+
+      .cls-4 {
+        fill: #322833;
+        font-size: 22.23px;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="M64.33,72.21l18.23-13.29c11.07-8.07,5.52-16.73.63-26.46l-6.27-12.57,13.09,17.59c6.71,9.01,15.47,7.1,24.77,1.87l39.98-22.5-37.95,25.2c-8.97,5.96-14.76,14.03-9.61,24.16l9.45,18.58-12.56-16.87c-5.03-6.76-12.57-9.69-20.08-5.82l-19.67,10.11Z"/>
+  <text class="cls-4" transform="translate(25.23 121.42)"><tspan class="cls-3"><tspan x="0" y="0">BEAUTYBOX</tspan></tspan><tspan class="cls-2"><tspan x="33.81" y="26.68">MEDIA</tspan></tspan></text>
+</svg>

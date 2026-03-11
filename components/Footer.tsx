@@ -19,9 +19,19 @@ export default function Footer() {
           <div className={styles.column}>
             <h4>Navigation</h4>
             <ul>
-              <li><Link href="/">Home</Link></li>
               <li><Link href="/services">Services</Link></li>
+              <li><Link href="/case-studies">Case Studies</Link></li>
+              <li><Link href="/about">About Us</Link></li>
               <li><Link href="/contact">Contact</Link></li>
+            </ul>
+          </div>
+
+          <div className={styles.column}>
+            <h4>Legal</h4>
+            <ul>
+              <li><Link href="/terms">Terms &amp; Privacy</Link></li>
+              <li><Link href="/accessibility">Accessibility</Link></li>
+              <li><Link href="/cookies">Cookie Policy</Link></li>
             </ul>
           </div>
 

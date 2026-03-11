@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 701.26 170.16">
+  <defs>
+    <style>
+      .cls-1 {
+        fill-rule: evenodd;
+      }
+
+      .cls-1, .cls-2, .cls-3 {
+        fill: #433847;
+      }
+
+      .cls-4 {
+        font-size: 63.5px;
+      }
+
+      .cls-2 {
+        font-family: Montserrat-Light, Montserrat;
+        font-weight: 300;
+      }
+
+      .cls-3 {
+        font-size: 27.52px;
+      }
+
+      .cls-3, .cls-5 {
+        font-family: Montserrat-Medium, Montserrat;
+        font-weight: 500;
+      }
+
+      .cls-5 {
+        fill: #7c3e63;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="M683.54,32.93l-17.97,6.79c-10.92,4.13-8.48,12.52-6.84,21.65l2.09,11.78-6.41-17.47c-3.29-8.95-10.86-9.37-19.66-7.18l-37.82,9.42,36.82-12.11c8.71-2.86,15.33-8.19,13.57-17.71l-3.22-17.45,6.16,16.76c2.47,6.71,7.89,10.84,14.91,9.37l18.38-3.84Z"/>
+  <text class="cls-4" transform="translate(21.28 112.43)"><tspan class="cls-5" x="0" y="0">BEAUTYBOX</tspan><tspan class="cls-2" x="405.22" y="0">MEDIA</tspan></text>
+  <text class="cls-3" transform="translate(319.65 145.6)"><tspan x="0" y="0">we grow beauty brands</tspan></text>
+</svg>
