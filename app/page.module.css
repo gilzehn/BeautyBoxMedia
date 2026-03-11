@@ -54,45 +54,97 @@
   100% { transform: translateX(-50%); }
 }
 
-/* ── Services ── */
+/* ── Services Zigzag ── */
 
-.servicesGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+.zigzag {
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
 }
 
-.serviceCard {
+.zigzagRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.zigzagRowReverse {
+  direction: rtl;
+}
+
+.zigzagRowReverse > * {
+  direction: ltr;
+}
+
+.zigzagImage {
+  position: relative;
+}
+
+.zigzagPlaceholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 36px 28px;
-  transition: all var(--transition);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  overflow: hidden;
 }
 
-.serviceCard:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--accent);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 32px rgba(255, 45, 123, 0.1);
+.zigzagImage::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 16px;
+  right: 16px;
+  height: 40px;
+  background: var(--accent);
+  opacity: 0.15;
+  border-radius: var(--radius-lg);
+  filter: blur(20px);
+  z-index: -1;
 }
 
-.serviceIcon {
-  font-size: 2rem;
-  margin-bottom: 16px;
+.zigzagContent {
+  padding: 20px 0;
+}
+
+.zigzagLabel {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: var(--accent);
-}
-
-.serviceTitle {
-  font-size: 1.25rem;
-  font-weight: 700;
   margin-bottom: 12px;
 }
 
-.serviceDesc {
+.zigzagTitle {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.zigzagDesc {
+  font-size: 1.05rem;
   color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+
+.zigzagLink {
   font-size: 0.95rem;
-  line-height: 1.7;
+  font-weight: 600;
+  color: var(--accent);
+  transition: opacity var(--transition);
+}
+
+.zigzagLink:hover {
+  opacity: 0.7;
 }
 
 .whyGrid {
@@ -148,8 +200,21 @@
 }
 
 @media (max-width: 768px) {
-  .servicesGrid {
+  .zigzag {
+    gap: 48px;
+  }
+
+  .zigzagRow {
     grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .zigzagRowReverse {
+    direction: ltr;
+  }
+
+  .zigzagTitle {
+    font-size: 1.5rem;
   }
 
   .whyGrid {
