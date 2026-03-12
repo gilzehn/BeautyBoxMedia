@@ -96,52 +96,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
-      <section className="section">
-        <div className="container">
-          <h2 className="section-title" style={{ textAlign: 'center' }}>
-            Why <span className="accent-text">Choose Us</span>
-          </h2>
-          <p className="section-subtitle" style={{ textAlign: 'center', margin: '0 auto 48px' }}>
-            We&apos;re passionate about helping brands shine in the digital world.
-          </p>
-
-          <div className={styles.whyGrid}>
-            <div className={styles.whyItem}>
-              <h3 className={styles.whyNumber}>01</h3>
-              <h4 className={styles.whyTitle}>Results-Driven</h4>
-              <p className={styles.whyDesc}>
-                Every strategy is backed by data and designed to deliver measurable growth.
-              </p>
-            </div>
-
-            <div className={styles.whyItem}>
-              <h3 className={styles.whyNumber}>02</h3>
-              <h4 className={styles.whyTitle}>Creative Excellence</h4>
-              <p className={styles.whyDesc}>
-                Bold, beautiful content that stops the scroll and captures attention.
-              </p>
-            </div>
-
-            <div className={styles.whyItem}>
-              <h3 className={styles.whyNumber}>03</h3>
-              <h4 className={styles.whyTitle}>Personal Touch</h4>
-              <p className={styles.whyDesc}>
-                We treat every brand as unique, crafting tailored solutions that fit your vision.
-              </p>
-            </div>
-
-            <div className={styles.whyItem}>
-              <h3 className={styles.whyNumber}>04</h3>
-              <h4 className={styles.whyTitle}>Always On</h4>
-              <p className={styles.whyDesc}>
-                Dedicated support and transparent communication every step of the way.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className={styles.cta}>
         <div className="container" style={{ textAlign: 'center' }}>
