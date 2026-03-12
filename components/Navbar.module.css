@@ -80,7 +80,7 @@
   background: var(--accent-hover);
 }
 
-/* ── Mega Menu ── */
+/* ── Dropdown Menus ── */
 
 .servicesWrap {
   position: relative;
@@ -88,52 +88,36 @@
   margin: -20px 0;
 }
 
-.mega {
+.dropdown {
   position: absolute;
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  width: 1080px;
+  width: 340px;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition: opacity var(--transition), visibility var(--transition);
 }
 
-.mega::before {
+.dropdown::before {
   content: '';
   display: block;
   height: 16px;
 }
 
-.megaOpen {
+.dropdownOpen {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
 }
 
-.megaPanel {
+.dropdownPanel {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
-}
-
-.megaInner {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-  padding: 28px 0;
-}
-
-.megaCol {
-  padding: 0 28px;
-  border-right: 1px solid var(--border);
-}
-
-.megaCol:last-child {
-  border-right: none;
+  padding: 24px;
 }
 
 .megaHeadingLink {
@@ -189,22 +173,6 @@
   padding-left: 4px;
 }
 
-.megaFooter {
-  border-top: 1px solid var(--border);
-  padding: 14px 28px;
-  text-align: center;
-}
-
-.megaFooterLink {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--accent);
-  transition: opacity var(--transition);
-}
-
-.megaFooterLink:hover {
-  opacity: 0.8;
-}
 
 /* ── Hamburger ── */
 
@@ -277,46 +245,26 @@
     width: 100%;
   }
 
-  .mega {
+  .dropdown {
     position: static;
     transform: none;
     width: 100%;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    background: transparent;
-    padding: 0;
     display: none;
   }
 
-  .megaOpen {
+  .dropdownOpen {
     display: block;
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
   }
 
-  .megaInner {
-    grid-template-columns: 1fr;
-    padding: 8px 0;
-    gap: 20px;
-  }
-
-  .megaCol {
-    padding: 0;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 16px;
-  }
-
-  .megaCol:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-
-  .megaFooter {
-    padding: 12px 0;
-    text-align: left;
+  .dropdownPanel {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 8px 0 8px 12px;
   }
 
   .ctaLink {
