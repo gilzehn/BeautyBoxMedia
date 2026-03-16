@@ -6,14 +6,16 @@ export default function PaidSearch() {
     <>
       <section className={styles.header}>
         <div className="container">
-          <span className={styles.tagline}>D2C &middot; Paid Search &amp; Social Campaign Management</span>
+          <span className={styles.tagline}>D2C Services</span>
           <h1 className={styles.title}>
             Paid Search &amp; Social Campaign <span className="accent-text">Management.</span>
           </h1>
-          <p className={styles.intro}>
-            <em>Google Ads done right is one of the highest-ROI channels available to beauty and fashion brands.</em>
+          <p className={styles.subtitle}>
+            Paid search done right is one of the highest-ROI channels available to beauty and fashion brands. Done wrong, it is the fastest way to burn through budget with nothing to show for it. We manage the full paid media stack across Google and Meta so every dollar is working as hard as possible for your brand.
           </p>
-          <p className={styles.subtitle}>BEAUTYBOXMEDIA manages the full Google paid media stack: Search campaigns capturing high-intent shoppers at the moment of decision, Shopping and Performance Max campaigns built to outperform category benchmarks, and YouTube ads that reach beauty audiences while brand preferences are still forming. Every campaign is measured against MER and LTV — not just clicks and impressions — because CMOs and CFOs need to understand what the spend is actually building. You&apos;ll always know exactly where your budget is going and exactly what it&apos;s returning.</p>
+          <p className={styles.subtitle} style={{ marginTop: '20px' }}>
+            We build and manage full-funnel campaigns that capture demand at every stage of the buyer journey. High-intent search campaigns put your brand in front of shoppers at the moment of decision. Shopping and Performance Max campaigns showcase your products visually and outperform category benchmarks. Meta campaigns build awareness, drive consideration, and retarget high-intent visitors back to purchase. Every campaign is measured against MER and LTV, not just clicks and impressions, because CMOs and CFOs need to understand what the spend is actually building for the brand over time.
+          </p>
         </div>
       </section>
 
@@ -24,19 +26,26 @@ export default function PaidSearch() {
               <div className={styles.content}>
                 <h2 className={styles.itemTitle}>What&apos;s Included</h2>
                 <ul className={styles.includedList}>
-                  <li>Google Search campaign management</li>
-                  <li>Shopping &amp; Performance Max campaigns</li>
-                  <li>YouTube advertising</li>
-                  <li>MER &amp; LTV-based measurement</li>
-                  <li>Weekly budget &amp; performance reporting</li>
-                  <li>Continuous bid &amp; audience optimization</li>
+                  <li>Google Search campaign setup and management</li>
+                  <li>Google Shopping and Performance Max campaign management</li>
+                  <li>YouTube ad campaign setup and management</li>
+                  <li>Meta Facebook and Instagram campaign setup and management</li>
+                  <li>Full-funnel campaign architecture across awareness, consideration, and conversion</li>
+                  <li>Daily bid and budget optimization across all platforms</li>
+                  <li>Audience targeting and segmentation strategy</li>
+                  <li>Creative strategy and ad copy recommendations</li>
+                  <li>Performance tracking against MER, LTV, ROAS, and CAC</li>
+                  <li>Weekly performance summaries</li>
+                  <li>Monthly strategic reports built for leadership review</li>
                 </ul>
               </div>
             </div>
             <div className={styles.item}>
               <div className={styles.content}>
-                <h2 className={styles.itemTitle}>Who It&apos;s For</h2>
-                <p className={styles.itemDesc}>CMOs and CFOs who need transparent, ROI-focused paid media management.</p>
+                <h2 className={styles.itemTitle}>Who This Is For</h2>
+                <p className={styles.itemDesc}>
+                  CMOs and performance marketing leads running paid campaigns that are not delivering the right return. Brands scaling their D2C channel who need a more sophisticated paid media infrastructure. Business owners who want full visibility into where every paid media dollar is going and what it is returning. Any brand preparing for a major campaign moment like a product launch or seasonal sale.
+                </p>
               </div>
             </div>
           </div>
@@ -48,7 +57,7 @@ export default function PaidSearch() {
           <h2 className={styles.ctaTitle}>Ready to Scale Your D2C Brand?</h2>
           <p className={styles.ctaSubtitle}>Let&apos;s build a growth strategy that compounds.</p>
           <Link href="/contact" className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
-            Get Started
+            Scale Your Paid Campaigns
           </Link>
         </div>
       </section>

@@ -1,10 +1,11 @@
 .hero {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: calc(var(--nav-height) + 40px) 24px 80px;
+  padding: calc(var(--nav-height) + 40px) 24px 0;
   position: relative;
   overflow: hidden;
 }
@@ -31,6 +32,11 @@
   position: relative;
   z-index: 1;
   max-width: 800px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .tagline {
@@ -72,6 +78,64 @@
   gap: 16px;
   justify-content: center;
   flex-wrap: wrap;
+}
+
+/* ── Logo Strip ── */
+
+.logoStrip {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 32px 0;
+  border-top: 1px solid var(--border);
+}
+
+.logoLabel {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.logoTrack {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.logoSlide {
+  display: flex;
+  width: max-content;
+  animation: scroll 20s linear infinite;
+}
+
+.logoSet {
+  display: flex;
+  gap: 64px;
+  padding: 0 32px;
+}
+
+.logoPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  height: 48px;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0.5;
+}
+
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 @media (max-width: 768px) {

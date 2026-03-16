@@ -6,14 +6,16 @@ export default function Influencer() {
     <>
       <section className={styles.header}>
         <div className="container">
-          <span className={styles.tagline}>D2C &middot; Influencer &amp; Creator Marketing</span>
+          <span className={styles.tagline}>D2C Services</span>
           <h1 className={styles.title}>
             Influencer &amp; Creator <span className="accent-text">Marketing.</span>
           </h1>
-          <p className={styles.intro}>
-            <em>Creator-driven content is one of the most efficient customer acquisition tools available.</em>
+          <p className={styles.subtitle}>
+            In the U.S. beauty and fashion market, the right creator voice moves more product than almost any paid media format. But creator marketing only delivers results when it is executed with the right infrastructure, the right briefs, and the right measurement framework. We build creator programs that generate authentic content and scalable, attributable revenue.
           </p>
-          <p className={styles.subtitle}>BEAUTYBOXMEDIA sources and vets creators whose audience demographics, aesthetic, and brand values align with your ideal customer profile — not just their follower count. We brief creators to produce authentic UGC that works organically and as high-performing paid media assets. For CMOs and Brand Directors managing tight CPAs, UGC consistently outperforms studio-produced content in paid campaigns. We also build affiliate and ambassador program tracking infrastructure so your top creator partnerships generate measurable, attributable revenue at scale.</p>
+          <p className={styles.subtitle} style={{ marginTop: '20px' }}>
+            We source and vet creators whose audience demographics, aesthetic, and brand values align with your ideal customer profile, not just their follower count. We brief them to produce raw, native-feeling content that works both organically and as high-performing paid media assets. For CMOs and Brand Directors managing tight CPAs, UGC consistently outperforms studio-produced content in paid campaigns at a fraction of the production cost. We also build affiliate and ambassador program infrastructure so your best creator partnerships generate measurable revenue long after the initial campaign ends.
+          </p>
         </div>
       </section>
 
@@ -24,19 +26,25 @@ export default function Influencer() {
               <div className={styles.content}>
                 <h2 className={styles.itemTitle}>What&apos;s Included</h2>
                 <ul className={styles.includedList}>
-                  <li>Creator sourcing &amp; vetting</li>
-                  <li>Audience demographic alignment</li>
-                  <li>UGC content briefing &amp; production</li>
-                  <li>Paid media asset optimization</li>
-                  <li>Affiliate &amp; ambassador program setup</li>
-                  <li>Revenue attribution tracking</li>
+                  <li>Creator sourcing and vetting aligned to your brand and audience profile</li>
+                  <li>Campaign strategy and creative briefing</li>
+                  <li>UGC video and photo content production coordination</li>
+                  <li>Gifting and seeding program management</li>
+                  <li>Paid media integration of creator content across Meta and Google</li>
+                  <li>Spark Ads and boosted post setup and management</li>
+                  <li>Affiliate program setup and tracking infrastructure</li>
+                  <li>Ambassador program development and management</li>
+                  <li>Performance tracking across reach, engagement, and attributed revenue</li>
+                  <li>Monthly creator program reporting</li>
                 </ul>
               </div>
             </div>
             <div className={styles.item}>
               <div className={styles.content}>
-                <h2 className={styles.itemTitle}>Who It&apos;s For</h2>
-                <p className={styles.itemDesc}>CMOs and Brand Directors managing tight CPAs who want creator-driven content that converts.</p>
+                <h2 className={styles.itemTitle}>Who This Is For</h2>
+                <p className={styles.itemDesc}>
+                  CMOs and Brand Directors looking to build social proof and acquire customers more efficiently. Brands whose studio-produced ad creative is underperforming and needs a fresh UGC approach. Business owners who want to build a scalable creator program that generates consistent content and revenue. Any brand preparing for a product launch that needs authentic creator coverage to build awareness and drive sales.
+                </p>
               </div>
             </div>
           </div>
@@ -48,7 +56,7 @@ export default function Influencer() {
           <h2 className={styles.ctaTitle}>Ready to Scale Your D2C Brand?</h2>
           <p className={styles.ctaSubtitle}>Let&apos;s build a growth strategy that compounds.</p>
           <Link href="/contact" className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
-            Get Started
+            Build Your Creator Program
           </Link>
         </div>
       </section>

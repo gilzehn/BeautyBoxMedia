@@ -19,47 +19,49 @@
   font-size: 3rem;
   font-weight: 900;
   letter-spacing: -0.03em;
-  margin-bottom: 16px;
-}
-
-.subtitle {
-  font-size: 1.125rem;
-  color: var(--text-secondary);
-  max-width: 560px;
+  max-width: 700px;
   margin: 0 auto;
-  line-height: 1.7;
 }
 
-/* ── Team ── */
+/* ── Founders ── */
 
-.team {
-  display: flex;
-  flex-direction: column;
-  gap: 80px;
+.foundersIntro {
+  text-align: center;
+  margin-bottom: 48px;
 }
 
-.member {
+.sectionLabel {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.foundersName {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.founders {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 60px;
+  align-items: start;
+}
+
+.founderPhotos {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 60px;
-  align-items: center;
-}
-
-.memberReverse {
-  direction: rtl;
-}
-
-.memberReverse > * {
-  direction: ltr;
-}
-
-.imageWrap {
-  position: relative;
+  gap: 20px;
 }
 
 .imagePlaceholder {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 3 / 4;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -70,45 +72,53 @@
   overflow: hidden;
 }
 
-.imageWrap::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 16px;
-  right: 16px;
-  height: 40px;
-  background: var(--accent);
-  opacity: 0.15;
-  border-radius: var(--radius-lg);
-  filter: blur(20px);
-  z-index: -1;
+.founderBio {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.bio {
-  padding: 20px 0;
+.founderBio p {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
 }
 
-.role {
-  display: inline-block;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--accent);
-  margin-bottom: 12px;
+/* ── Why Section ── */
+
+.whyTitle {
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+  max-width: 600px;
 }
 
-.name {
-  font-size: 2rem;
-  font-weight: 800;
+.whyText {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  max-width: 800px;
+}
+
+/* ── CTA ── */
+
+.cta {
+  padding: 100px 0;
+  background: linear-gradient(135deg, rgba(255, 45, 123, 0.1) 0%, var(--bg-primary) 100%);
+}
+
+.ctaTitle {
+  font-size: 2.5rem;
+  font-weight: 900;
   letter-spacing: -0.02em;
   margin-bottom: 16px;
 }
 
-.bioText {
-  font-size: 1.05rem;
+.ctaSubtitle {
+  font-size: 1.25rem;
   color: var(--text-secondary);
-  line-height: 1.8;
+  margin-bottom: 40px;
 }
 
 @media (max-width: 768px) {
@@ -116,20 +126,20 @@
     font-size: 2.25rem;
   }
 
-  .team {
-    gap: 48px;
+  .foundersName {
+    font-size: 1.75rem;
   }
 
-  .member {
+  .founders {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 32px;
   }
 
-  .memberReverse {
-    direction: ltr;
+  .whyTitle {
+    font-size: 1.75rem;
   }
 
-  .name {
-    font-size: 1.5rem;
+  .ctaTitle {
+    font-size: 2rem;
   }
 }

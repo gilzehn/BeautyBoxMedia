@@ -1,31 +1,5 @@
+import Link from 'next/link';
 import styles from './page.module.css';
-
-const team = [
-  {
-    name: 'Team Member',
-    role: 'Founder & CEO',
-    bio: 'A visionary leader with a passion for beauty and digital innovation. With years of experience in the industry, they drive the creative direction and strategic growth of Beauty Box Media.',
-    image: '/team-placeholder.svg',
-  },
-  {
-    name: 'Team Member',
-    role: 'Head of Strategy',
-    bio: 'A data-driven strategist who transforms insights into action. They specialize in building scalable growth frameworks for beauty brands across marketplaces and direct-to-consumer channels.',
-    image: '/team-placeholder.svg',
-  },
-  {
-    name: 'Team Member',
-    role: 'Creative Director',
-    bio: 'The creative force behind every campaign. From brand identity to content production, they bring bold ideas to life with an eye for design and a deep understanding of the beauty space.',
-    image: '/team-placeholder.svg',
-  },
-  {
-    name: 'Team Member',
-    role: 'Head of Advertising',
-    bio: 'A performance marketing expert who maximizes every dollar spent. They manage paid media across platforms, optimizing campaigns to deliver measurable results for beauty brands.',
-    image: '/team-placeholder.svg',
-  },
-];
 
 export default function About() {
   return (
@@ -33,42 +7,77 @@ export default function About() {
       {/* Page Header */}
       <section className={styles.header}>
         <div className="container">
-          <span className={styles.tagline}>Who We Are</span>
+          <span className={styles.tagline}>Our Story</span>
           <h1 className={styles.title}>
-            Meet the <span className="accent-text">Team</span>
+            We Don&apos;t Just Know Beauty.
+            <span className="accent-text"> We&apos;ve Lived It.</span>
           </h1>
-          <p className={styles.subtitle}>
-            We&apos;re a team of strategists, creatives, and data enthusiasts
-            dedicated to growing beauty brands in the digital space.
+        </div>
+      </section>
+
+      {/* Meet the Founders */}
+      <section className="section">
+        <div className="container">
+          <div className={styles.foundersIntro}>
+            <span className={styles.sectionLabel}>Meet the Founders</span>
+            <h2 className={styles.foundersName}>Regina Tseikhin &amp; Mariann Marinberg</h2>
+          </div>
+
+          <div className={styles.founders}>
+            <div className={styles.founderPhotos}>
+              <div className={styles.imagePlaceholder}>
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <div className={styles.imagePlaceholder}>
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+            </div>
+
+            <div className={styles.founderBio}>
+              <p>
+                Regina and Mariann are sisters who have spent over 20 years building, scaling, and selling luxury beauty and fashion brands at the highest commercial level. They built retail stores from the ground up, mastered the art of selling premium brands online, and became two of the most respected operators in the Amazon luxury space long before most agencies knew it existed. Their expertise spans the full beauty and fashion landscape, skincare, cosmetics, fragrance, and fashion, each category mastered at the luxury level over two decades of hands-on operation.
+              </p>
+              <p>
+                They are the founders and operators of The Beauty Box Inc, an actively operating company that acquires, resells, and manages qualified luxury beauty and fashion brands at the highest commercial level. They are not former operators who moved into consulting. They are active brand owners and resellers who built an agency because they saw exactly what the market was missing. Every strategy BEAUTYBOXMEDIA builds is informed by decisions Regina and Mariann are making in their own business today, with their own capital at risk.
+              </p>
+              <p>
+                Their approach to every brand is the same. They see the full commercial picture. The margin implications of every creative decision. The brand equity cost of every pricing move. The long-term revenue consequence of every platform strategy. When they sit across the table from a CMO or founder they are not pitching services. They are solving a business problem with the authority of people who have solved the same problems themselves, at scale, with real stakes.
+              </p>
+              <p>
+                Over two decades they have carefully assembled a team of specialists and platform experts who are the best in the beauty and fashion space. Every person in the BEAUTYBOXMEDIA network was personally selected by Regina and Mariann because they meet one standard: exceptional expertise in this specific category. Not generalists. Not borrowed talent. The right people, chosen for the right reasons, accountable to the same level of excellence that Regina and Mariann have held themselves to throughout their careers.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why BEAUTYBOXMEDIA */}
+      <section className="section" style={{ background: 'var(--bg-secondary)' }}>
+        <div className="container">
+          <span className={styles.sectionLabel}>Why BEAUTYBOXMEDIA</span>
+          <h2 className={styles.whyTitle}>
+            This Is All We Do. <span className="accent-text">By Design.</span>
+          </h2>
+          <p className={styles.whyText}>
+            BEAUTYBOXMEDIA works exclusively in beauty and fashion. Not as a specialty practice within a larger agency, but as the entire focus of everything we do. Every service we offer, every team member we hire, and every strategy we build is designed specifically for this category. That level of focus means your brand is never being handled by someone learning your industry on your budget. You get specialists who live and breathe beauty and fashion every single day, backed by founders who have been operating in it for over two decades.
           </p>
         </div>
       </section>
 
-      {/* Team Grid */}
-      <section className="section">
-        <div className="container">
-          <div className={styles.team}>
-            {team.map((member, i) => (
-              <div
-                key={i}
-                className={`${styles.member} ${i % 2 !== 0 ? styles.memberReverse : ''}`}
-              >
-                <div className={styles.imageWrap}>
-                  <div className={styles.imagePlaceholder}>
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  </div>
-                </div>
-                <div className={styles.bio}>
-                  <span className={styles.role}>{member.role}</span>
-                  <h2 className={styles.name}>{member.name}</h2>
-                  <p className={styles.bioText}>{member.bio}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* CTA */}
+      <section className={styles.cta}>
+        <div className="container" style={{ textAlign: 'center' }}>
+          <h2 className={styles.ctaTitle}>Ready to Work With People Who Actually Get It?</h2>
+          <p className={styles.ctaSubtitle}>Let&apos;s talk about your brand.</p>
+          <Link href="/contact" className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
+            Schedule a Call
+          </Link>
         </div>
       </section>
     </>

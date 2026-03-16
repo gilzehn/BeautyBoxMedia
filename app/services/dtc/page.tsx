@@ -5,27 +5,27 @@ const services = [
   {
     slug: 'market-research',
     title: 'Market Feasibility & Strategic Research',
-    description: 'A comprehensive research package covering high-intent keyword opportunities, seasonal demand patterns, competitor strategies, and AI answer engine analysis — the data-backed foundation your investment decisions deserve.',
+    description: 'Before your team allocates a single dollar to Google, you need to know exactly what the competitive landscape looks like and where the real opportunity is. We deliver a comprehensive research package covering high-intent keyword opportunities, seasonal demand patterns, competitor backlink and content strategies, and technical benchmarks your site needs to beat. We go beyond traditional SEO research by analyzing how AI answer engines like ChatGPT and Gemini currently categorize brands in your category.',
   },
   {
     slug: 'paid-search',
     title: 'Paid Search & Social Campaign Management',
-    description: 'Full Google paid media management: Search, Shopping, Performance Max, and YouTube — measured against MER and LTV, not just clicks and impressions.',
+    description: 'Google Ads done right is one of the highest-ROI channels available to beauty and fashion brands, but only when the strategy, structure, and daily management are all dialed in. We manage the full Google paid media stack: Search campaigns capturing high-intent shoppers at the moment of decision, Shopping and Performance Max campaigns built to outperform category benchmarks, and YouTube ads that reach beauty audiences while brand preferences are still forming.',
   },
   {
     slug: 'seo-geo',
     title: 'SEO & Generative Engine Optimization (GEO)',
-    description: 'Technical SEO, E-E-A-T authority building, and GEO content structuring so AI-powered discovery engines like Perplexity and SearchGPT recommend your brand.',
+    description: 'Paid media drives fast results. SEO builds the kind of channel equity that keeps compounding long after the campaign ends. We invest in both and we go further than any standard SEO agency by optimizing your brand for the AI-powered discovery engines that are rapidly reshaping how consumers find products. GEO structures your site content and data so that tools like Perplexity and SearchGPT extract, understand, and recommend your brand when users ask for beauty solutions.',
   },
   {
     slug: 'email-lifecycle',
     title: 'Lifecycle & Email Marketing',
-    description: 'Intelligent email and SMS automation: abandoned cart recovery, re-engagement campaigns, seasonal execution, and deep segmentation that makes every message feel personal.',
+    description: 'The most profitable customer you can acquire is the one you already have and most beauty brands are dramatically undermonetizing their existing database. We build intelligent email and SMS automation systems that recover abandoned carts, re-engage lapsed customers, educate post-purchase buyers, and execute high-revenue seasonal campaigns for moments like Black Friday, Mother\'s Day, and product launches.',
   },
   {
     slug: 'influencer',
     title: 'Influencer & Creator Marketing',
-    description: 'Creator sourcing, UGC production, paid media optimization, and affiliate program infrastructure — so your top creator partnerships generate measurable, attributable revenue at scale.',
+    description: 'In the U.S. beauty and fashion market, creator-driven content is no longer a nice-to-have. It is one of the most efficient customer acquisition tools available when it is executed with the right infrastructure. We source and vet creators whose audience demographics, aesthetic, and brand values align with your ideal customer profile, not just their follower count. We brief creators to produce authentic UGC that works organically and as high-performing paid media assets.',
   },
 ];
 
@@ -36,13 +36,13 @@ export default function DTC() {
         <div className="container">
           <span className={styles.tagline}>Shopify &amp; Web</span>
           <h1 className={styles.title}>
-            D2C <span className="accent-text">Services.</span>
+            D2C Services <span className="accent-text">Breakdown.</span>
           </h1>
           <p className={styles.intro}>
             <em>Be found by the customers who are already looking for you.</em>
           </p>
           <p className={styles.subtitle}>
-            Google is where purchase decisions are made — and for beauty and fashion brands, the stakes have never been higher. Between paid search, SEO, and the rise of AI-powered discovery engines, the brands that win are the ones with a cohesive, multi-layer strategy. BEAUTYBOXMEDIA builds that strategy and executes it end to end.
+            Google is where purchase decisions are made and for beauty and fashion brands, the stakes have never been higher. Between paid search, SEO, and the rise of AI-powered discovery engines, the brands that win on Google are the ones with a cohesive, multi-layer strategy. If you&apos;re a CMO, VP of Marketing, or business owner trying to reduce CAC, build long-term channel equity, and show up where your best customers are searching, we build that strategy and execute it end to end.
           </p>
         </div>
       </section>
@@ -69,9 +69,9 @@ export default function DTC() {
       <section className={styles.cta}>
         <div className="container" style={{ textAlign: 'center' }}>
           <h2 className={styles.ctaTitle}>Ready to Scale Your D2C Brand?</h2>
-          <p className={styles.ctaSubtitle}>Let&apos;s build a Google growth strategy that compounds.</p>
+          <p className={styles.ctaSubtitle}>Let&apos;s build a growth strategy that compounds.</p>
           <Link href="/contact" className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
-            Get Started
+            Schedule a Call
           </Link>
         </div>
       </section>

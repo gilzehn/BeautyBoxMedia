@@ -5,17 +5,17 @@ const services = [
   {
     slug: 'audience-targeting',
     title: 'Audience Targeting & Data Strategy',
-    description: 'Data-driven audience segments, lookalike models, and targeting strategies that connect your beauty brand with high-intent customers across every platform.',
+    description: 'Reach the right people with the right message. We build data-driven audience segments, lookalike models, and targeting strategies that connect your beauty brand with high-intent customers across every platform.',
   },
   {
     slug: 'performance-reporting',
     title: 'Performance Optimization & Reporting',
-    description: 'Cross-channel KPI monitoring, continuous optimization cycles, and clear reporting that cuts through vanity metrics to surface the numbers that actually drive business decisions.',
+    description: 'Transparent, actionable insights that drive smarter decisions. We monitor KPIs across all channels, run continuous optimization cycles, and deliver clear reporting so you always know what\'s working and why.',
   },
   {
     slug: 'attribution',
     title: 'Attribution Modeling',
-    description: 'Multi-touch attribution frameworks that reveal how your marketing channels work together — so you can allocate budget where it matters most.',
+    description: 'Understand the true value of every touchpoint. We implement multi-touch attribution frameworks that reveal how your marketing channels work together, helping you allocate budget where it matters most.',
   },
 ];
 
@@ -32,7 +32,7 @@ export default function GrowthData() {
             <em>Data-powered growth across every channel.</em>
           </p>
           <p className={styles.subtitle}>
-            We connect the dots between platforms to optimize performance and maximize your marketing ROI. From audience targeting to attribution modeling, our data layer gives your leadership team the clarity to make confident investment decisions.
+            We connect the dots between platforms to optimize performance and maximize your marketing ROI. The brands winning across Amazon, Google, and Meta aren&apos;t just running campaigns, they are making smarter decisions with better data. BEAUTYBOXMEDIA&apos;s Growth &amp; Data practice gives your leadership team the intelligence layer that makes every other investment more efficient.
           </p>
         </div>
       </section>
@@ -61,7 +61,7 @@ export default function GrowthData() {
           <h2 className={styles.ctaTitle}>Ready to Unlock Your Data?</h2>
           <p className={styles.ctaSubtitle}>Let&apos;s turn your data into your competitive advantage.</p>
           <Link href="/contact" className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
-            Get Started
+            Schedule a Call
           </Link>
         </div>
       </section>

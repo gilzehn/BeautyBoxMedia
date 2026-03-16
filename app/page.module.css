@@ -54,74 +54,90 @@
   100% { transform: translateX(-50%); }
 }
 
-/* ── Platform Cards ── */
+/* ── Services Zigzag ── */
 
-.platformGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
-}
-
-.platformCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 40px 32px;
+.zigzag {
   display: flex;
   flex-direction: column;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  gap: 80px;
 }
 
-.platformCard:hover {
-  border-color: var(--accent);
-  box-shadow: 0 0 24px rgba(255, 45, 123, 0.1);
-}
-
-.platformIcon {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 45, 123, 0.1);
-  display: flex;
+.zigzagRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
   align-items: center;
-  justify-content: center;
-  color: var(--accent);
-  margin-bottom: 20px;
 }
 
-.platformLabel {
+.zigzagRowReverse {
+  direction: rtl;
+}
+
+.zigzagRowReverse > * {
+  direction: ltr;
+}
+
+.zigzagImage {
+  position: relative;
+}
+
+.zigzagImg {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+  display: block;
+}
+
+.zigzagImage::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 16px;
+  right: 16px;
+  height: 40px;
+  background: var(--accent);
+  opacity: 0.15;
+  border-radius: var(--radius-lg);
+  filter: blur(20px);
+  z-index: -1;
+}
+
+.zigzagContent {
+  padding: 20px 0;
+}
+
+.zigzagLabel {
   display: inline-block;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--accent);
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
-.platformTitle {
-  font-size: 1.5rem;
+.zigzagTitle {
+  font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   margin-bottom: 16px;
 }
 
-.platformDesc {
-  font-size: 1rem;
+.zigzagDesc {
+  font-size: 1.05rem;
   color: var(--text-secondary);
   line-height: 1.8;
   margin-bottom: 24px;
-  flex: 1;
 }
 
-.platformLink {
+.zigzagLink {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--accent);
   transition: opacity var(--transition);
 }
 
-.platformLink:hover {
+.zigzagLink:hover {
   opacity: 0.7;
 }
 
@@ -147,8 +163,21 @@
 }
 
 @media (max-width: 768px) {
-  .platformGrid {
+  .zigzag {
+    gap: 48px;
+  }
+
+  .zigzagRow {
     grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .zigzagRowReverse {
+    direction: ltr;
+  }
+
+  .zigzagTitle {
+    font-size: 1.5rem;
   }
 
   .ctaTitle {

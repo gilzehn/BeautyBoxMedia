@@ -1,20 +1,20 @@
 import Link from 'next/link';
 import styles from '../page.module.css';
 
-export default function BrandOnboardingPage() {
+export default function BrandOnboarding() {
   return (
     <>
       <section className={styles.header}>
         <div className="container">
-          <span className={styles.tagline}>Amazon &middot; Brand Onboarding</span>
+          <span className={styles.tagline}>Amazon Services</span>
           <h1 className={styles.title}>
             Amazon Brand <span className="accent-text">Onboarding.</span>
           </h1>
-          <p className={styles.intro}>
-            <em>Get your brand live on Amazon — the right way, the first time.</em>
-          </p>
           <p className={styles.subtitle}>
-            Launching on Amazon involves dozens of moving parts that can delay or derail even the most promising brands. BEAUTYBOXMEDIA handles the complete onboarding process: Seller Central or Vendor Central setup, brand registry enrollment, ASIN creation, catalog structuring, and compliance review. We ensure your brand is properly configured from day one — avoiding the costly mistakes that slow down launches and create operational headaches down the road.
+            Your brand is already winning online or in retail. Now it is time to own Amazon too. We take your brand from zero to fully operational on Amazon, built from scratch, aligned to your brand book, and set up to compete from day one.
+          </p>
+          <p className={styles.subtitle} style={{ marginTop: '20px' }}>
+            We handle everything. Every decision we make is informed by deep competitive research specific to your category so your brand does not just show up on Amazon, it shows up better than everyone else. You get a complete, professional Amazon presence that reflects the brand equity you have already built and positions it to take market share immediately. No learning curve. No costly setup mistakes. Just a clean, compliant, conversion-ready Amazon business built to your standards.
           </p>
         </div>
       </section>
@@ -26,19 +26,23 @@ export default function BrandOnboardingPage() {
               <div className={styles.content}>
                 <h2 className={styles.itemTitle}>What&apos;s Included</h2>
                 <ul className={styles.includedList}>
-                  <li>Seller Central or Vendor Central account setup</li>
-                  <li>Brand Registry enrollment</li>
-                  <li>ASIN creation &amp; catalog structuring</li>
-                  <li>Compliance &amp; policy review</li>
-                  <li>Launch readiness audit</li>
+                  <li>Amazon Seller Central account setup and brand registry</li>
+                  <li>Brand book review and Amazon brand guidelines alignment</li>
+                  <li>Full catalog setup and product listing creation</li>
+                  <li>A+ content design and copy</li>
+                  <li>Amazon Storefront design and build</li>
+                  <li>Backend attribute configuration and keyword indexation</li>
+                  <li>FBA shipment setup and logistics configuration</li>
+                  <li>Policy and compliance review</li>
+                  <li>Competitive research and category positioning</li>
                 </ul>
               </div>
             </div>
             <div className={styles.item}>
               <div className={styles.content}>
-                <h2 className={styles.itemTitle}>Who It&apos;s For</h2>
+                <h2 className={styles.itemTitle}>Who This Is For</h2>
                 <p className={styles.itemDesc}>
-                  Beauty and fashion brands launching on Amazon for the first time or migrating to a new account structure.
+                  Established beauty and fashion brands selling successfully through their own website or retail channels that are ready to add Amazon as a new revenue stream. Founders who want Amazon done right the first time. CMOs who need a new channel launched without disrupting the core business.
                 </p>
               </div>
             </div>
@@ -51,7 +55,7 @@ export default function BrandOnboardingPage() {
           <h2 className={styles.ctaTitle}>Ready to Get Started?</h2>
           <p className={styles.ctaSubtitle}>Let&apos;s build your Amazon growth strategy.</p>
           <Link href="/contact" className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
-            Get Started
+            Start Your Onboarding
           </Link>
         </div>
       </section>

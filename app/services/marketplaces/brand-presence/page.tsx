@@ -1,20 +1,20 @@
 import Link from 'next/link';
 import styles from '../page.module.css';
 
-export default function BrandPresencePage() {
+export default function BrandPresence() {
   return (
     <>
       <section className={styles.header}>
         <div className="container">
-          <span className={styles.tagline}>Amazon &middot; Brand Presence Optimization</span>
+          <span className={styles.tagline}>Amazon Services</span>
           <h1 className={styles.title}>
             Brand Presence <span className="accent-text">Optimization.</span>
           </h1>
-          <p className={styles.intro}>
-            <em>If your listings aren&apos;t converting, you&apos;re handing revenue to your competitors.</em>
-          </p>
           <p className={styles.subtitle}>
-            Your brand&apos;s Amazon listings are being seen by thousands of shoppers every day — and if they&apos;re not converting, you&apos;re handing revenue to your competitors on a silver platter. BEAUTYBOXMEDIA rebuilds your product presence from the ground up: keyword-engineered titles, benefit-driven copy, A+ content that tells your brand&apos;s story, and product imagery that communicates premium quality in under two seconds on mobile. For CMOs and Brand Directors who&apos;ve worked hard to build a brand, we make sure Amazon reflects it accurately. A fully designed Storefront and a brand story module complete the picture — turning a fragmented catalog into a cohesive brand destination that earns trust and drives repeat purchase.
+            Your Amazon listings are being seen by thousands of shoppers every day. If they are not converting at the rate your brand deserves, you are leaving revenue on the table and handing it directly to your competitors. We rebuild your entire Amazon presence from the ground up so every touchpoint reflects your brand accurately and converts with consistency.
+          </p>
+          <p className={styles.subtitle} style={{ marginTop: '20px' }}>
+            We start with deep keyword and competitor research to identify the highest-leverage opportunities in your category. From there we rebuild every element of your product pages and brand presence. For CMOs and Brand Directors who have invested years building a brand, we make sure Amazon reflects every bit of that investment and converts it into revenue.
           </p>
         </div>
       </section>
@@ -26,20 +26,24 @@ export default function BrandPresencePage() {
               <div className={styles.content}>
                 <h2 className={styles.itemTitle}>What&apos;s Included</h2>
                 <ul className={styles.includedList}>
-                  <li>Keyword-engineered titles &amp; bullet points</li>
-                  <li>Benefit-driven product copy</li>
-                  <li>A+ Content design &amp; copywriting</li>
-                  <li>Product imagery consultation</li>
-                  <li>Brand Storefront design</li>
-                  <li>Brand Story module</li>
+                  <li>Keyword and competitor research</li>
+                  <li>Title copywriting and optimization</li>
+                  <li>Bullet point copywriting</li>
+                  <li>Product image design and copy</li>
+                  <li>A+ content design and copy</li>
+                  <li>Brand story creation</li>
+                  <li>Amazon Storefront design and build</li>
+                  <li>Backend product enrichment and keyword indexation</li>
+                  <li>Video implementation</li>
+                  <li>SEO and organic visibility optimization</li>
                 </ul>
               </div>
             </div>
             <div className={styles.item}>
               <div className={styles.content}>
-                <h2 className={styles.itemTitle}>Who It&apos;s For</h2>
+                <h2 className={styles.itemTitle}>Who This Is For</h2>
                 <p className={styles.itemDesc}>
-                  CMOs and Brand Directors who want their Amazon presence to reflect the quality of their brand.
+                  Brands already on Amazon with listings that are underperforming. CMOs and Brand Directors who know their Amazon presence does not reflect the quality of their brand. Founders who have launched on Amazon but are not seeing the conversion rates they expected. Any brand preparing for a major sales event like Prime Day or Black Friday.
                 </p>
               </div>
             </div>
@@ -52,7 +56,7 @@ export default function BrandPresencePage() {
           <h2 className={styles.ctaTitle}>Ready to Get Started?</h2>
           <p className={styles.ctaSubtitle}>Let&apos;s build your Amazon growth strategy.</p>
           <Link href="/contact" className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
-            Get Started
+            Optimize Your Brand Presence
           </Link>
         </div>
       </section>
