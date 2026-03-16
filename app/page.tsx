@@ -21,7 +21,7 @@ export default function Home() {
           <div className={styles.zigzag}>
             <div className={styles.zigzagRow}>
               <div className={styles.zigzagImage}>
-                <Image src="/img-marketplaces.png" alt="Amazon Marketplace Services" width={600} height={450} className={styles.zigzagImg} />
+                <Image src="/img-marketplaces.webp" alt="Amazon Marketplace Services" width={600} height={450} className={styles.zigzagImg} />
               </div>
               <div className={styles.zigzagContent}>
                 <span className={styles.zigzagLabel}>Amazon &amp; Beyond</span>
@@ -37,7 +37,7 @@ export default function Home() {
 
             <div className={`${styles.zigzagRow} ${styles.zigzagRowReverse}`}>
               <div className={styles.zigzagImage}>
-                <Image src="/img-dtc.png" alt="Direct-to-Consumer Services" width={600} height={450} className={styles.zigzagImg} />
+                <Image src="/img-dtc.webp" alt="Direct-to-Consumer Services" width={600} height={450} className={styles.zigzagImg} />
               </div>
               <div className={styles.zigzagContent}>
                 <span className={styles.zigzagLabel}>Shopify &amp; Web</span>
@@ -53,7 +53,7 @@ export default function Home() {
 
             <div className={styles.zigzagRow}>
               <div className={styles.zigzagImage}>
-                <Image src="/img-growth-data.png" alt="Growth and Data Services" width={600} height={450} className={styles.zigzagImg} />
+                <Image src="/img-growth-data.webp" alt="Growth and Data Services" width={600} height={450} className={styles.zigzagImg} />
               </div>
               <div className={styles.zigzagContent}>
                 <span className={styles.zigzagLabel}>Cross-Platform</span>
