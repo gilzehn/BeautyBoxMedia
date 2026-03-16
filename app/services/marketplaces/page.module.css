@@ -83,6 +83,33 @@
   max-width: 780px;
 }
 
+.includedList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 780px;
+}
+
+.includedList li {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  padding-left: 24px;
+  position: relative;
+}
+
+.includedList li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
 .learnMore {
   display: inline-block;
   margin-top: 20px;

@@ -3,19 +3,19 @@ import styles from '../marketplaces/page.module.css';
 
 const services = [
   {
-    id: 'audience-targeting',
+    slug: 'audience-targeting',
     title: 'Audience Targeting & Data Strategy',
-    description: 'Reach the right people with the right message. We build data-driven audience segments, lookalike models, and targeting strategies that connect your beauty brand with high-intent customers across every platform.',
+    description: 'Data-driven audience segments, lookalike models, and targeting strategies that connect your beauty brand with high-intent customers across every platform.',
   },
   {
-    id: 'performance-reporting',
+    slug: 'performance-reporting',
     title: 'Performance Optimization & Reporting',
-    description: 'Transparent, actionable insights that drive smarter decisions. We monitor KPIs across all channels, run continuous optimization cycles, and deliver clear reporting so you always know what\'s working and why.',
+    description: 'Cross-channel KPI monitoring, continuous optimization cycles, and clear reporting that cuts through vanity metrics to surface the numbers that actually drive business decisions.',
   },
   {
-    id: 'attribution',
+    slug: 'attribution',
     title: 'Attribution Modeling',
-    description: 'Understand the true value of every touchpoint. We implement multi-touch attribution frameworks that reveal how your marketing channels work together, helping you allocate budget where it matters most.',
+    description: 'Multi-touch attribution frameworks that reveal how your marketing channels work together — so you can allocate budget where it matters most.',
   },
 ];
 
@@ -26,11 +26,13 @@ export default function GrowthData() {
         <div className="container">
           <span className={styles.tagline}>Cross-Platform</span>
           <h1 className={styles.title}>
-            <span className="accent-text">Growth &amp; Data Layer</span>
+            Growth &amp; Data <span className="accent-text">Layer.</span>
           </h1>
+          <p className={styles.intro}>
+            <em>Data-powered growth across every channel.</em>
+          </p>
           <p className={styles.subtitle}>
-            Data-powered growth across every channel. We connect the dots between
-            platforms to optimize performance and maximize your marketing ROI.
+            We connect the dots between platforms to optimize performance and maximize your marketing ROI. From audience targeting to attribution modeling, our data layer gives your leadership team the clarity to make confident investment decisions.
           </p>
         </div>
       </section>
@@ -39,11 +41,14 @@ export default function GrowthData() {
         <div className="container">
           <div className={styles.list}>
             {services.map((service, i) => (
-              <div key={i} id={service.id} className={styles.item}>
+              <div key={i} className={styles.item}>
                 <div className={styles.number}>0{i + 1}</div>
                 <div className={styles.content}>
                   <h2 className={styles.itemTitle}>{service.title}</h2>
                   <p className={styles.itemDesc}>{service.description}</p>
+                  <Link href={`/services/growth-data/${service.slug}`} className={styles.learnMore}>
+                    Learn More &rarr;
+                  </Link>
                 </div>
               </div>
             ))}

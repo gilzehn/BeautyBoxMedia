@@ -54,131 +54,78 @@
   100% { transform: translateX(-50%); }
 }
 
-/* ── Services Zigzag ── */
+/* ── Platform Cards ── */
 
-.zigzag {
-  display: flex;
-  flex-direction: column;
-  gap: 80px;
-}
-
-.zigzagRow {
+.platformGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
-  align-items: center;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
 }
 
-.zigzagRowReverse {
-  direction: rtl;
-}
-
-.zigzagRowReverse > * {
-  direction: ltr;
-}
-
-.zigzagImage {
-  position: relative;
-}
-
-.zigzagPlaceholder {
-  width: 100%;
-  aspect-ratio: 4 / 3;
+.platformCard {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.platformCard:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 24px rgba(255, 45, 123, 0.1);
+}
+
+.platformIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 45, 123, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
-  overflow: hidden;
+  color: var(--accent);
+  margin-bottom: 20px;
 }
 
-.zigzagImage::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 16px;
-  right: 16px;
-  height: 40px;
-  background: var(--accent);
-  opacity: 0.15;
-  border-radius: var(--radius-lg);
-  filter: blur(20px);
-  z-index: -1;
-}
-
-.zigzagContent {
-  padding: 20px 0;
-}
-
-.zigzagLabel {
+.platformLabel {
   display: inline-block;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--accent);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
-.zigzagTitle {
-  font-size: 2rem;
+.platformTitle {
+  font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   margin-bottom: 16px;
 }
 
-.zigzagDesc {
-  font-size: 1.05rem;
+.platformDesc {
+  font-size: 1rem;
   color: var(--text-secondary);
   line-height: 1.8;
   margin-bottom: 24px;
+  flex: 1;
 }
 
-.zigzagLink {
+.platformLink {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--accent);
   transition: opacity var(--transition);
 }
 
-.zigzagLink:hover {
+.platformLink:hover {
   opacity: 0.7;
 }
 
-.whyGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 32px;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.whyItem {
-  padding: 32px;
-  border-left: 3px solid var(--accent);
-}
-
-.whyNumber {
-  font-size: 2.5rem;
-  font-weight: 900;
-  color: var(--accent);
-  opacity: 0.4;
-  margin-bottom: 8px;
-}
-
-.whyTitle {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.whyDesc {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  line-height: 1.7;
-}
+/* ── CTA ── */
 
 .cta {
   padding: 100px 0;
@@ -200,24 +147,7 @@
 }
 
 @media (max-width: 768px) {
-  .zigzag {
-    gap: 48px;
-  }
-
-  .zigzagRow {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-
-  .zigzagRowReverse {
-    direction: ltr;
-  }
-
-  .zigzagTitle {
-    font-size: 1.5rem;
-  }
-
-  .whyGrid {
+  .platformGrid {
     grid-template-columns: 1fr;
   }
 

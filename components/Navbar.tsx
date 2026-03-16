@@ -60,11 +60,12 @@ export default function Navbar() {
                   <p className={styles.megaLabel}>Amazon &amp; Beyond</p>
                 </Link>
                 <ul className={styles.megaLinks}>
-                  <li><Link href="/services/marketplaces#market-feasibility" onClick={closeAll}>Market Feasibility &amp; Strategic Research</Link></li>
-                  <li><Link href="/services/marketplaces#brand-presence" onClick={closeAll}>Brand Presence Optimization</Link></li>
-                  <li><Link href="/services/marketplaces#advertising-mgmt" onClick={closeAll}>Advertising Management</Link></li>
-                  <li><Link href="/services/marketplaces#account-mgmt" onClick={closeAll}>Full Account Management</Link></li>
-                  <li><Link href="/services/marketplaces#consulting" onClick={closeAll}>Consulting &amp; Advisory</Link></li>
+                  <li><Link href="/services/marketplaces/consulting" onClick={closeAll}>Consulting &amp; Advisory</Link></li>
+                  <li><Link href="/services/marketplaces/market-feasibility" onClick={closeAll}>Market Feasibility &amp; Strategic Research</Link></li>
+                  <li><Link href="/services/marketplaces/brand-onboarding" onClick={closeAll}>Amazon Brand Onboarding</Link></li>
+                  <li><Link href="/services/marketplaces/brand-presence" onClick={closeAll}>Brand Presence Optimization</Link></li>
+                  <li><Link href="/services/marketplaces/advertising" onClick={closeAll}>Advertising Management</Link></li>
+                  <li><Link href="/services/marketplaces/full-management" onClick={closeAll}>Full Account Management</Link></li>
                 </ul>
               </div>
             </div>
@@ -91,11 +92,11 @@ export default function Navbar() {
                   <p className={styles.megaLabel}>Shopify &amp; Web</p>
                 </Link>
                 <ul className={styles.megaLinks}>
-                  <li><Link href="/services/dtc#dtc-research" onClick={closeAll}>Market Feasibility &amp; Strategic Research</Link></li>
-                  <li><Link href="/services/dtc#paid-search" onClick={closeAll}>Paid Search &amp; Social Campaign Management</Link></li>
-                  <li><Link href="/services/dtc#seo-geo" onClick={closeAll}>SEO &amp; Generative Engine Optimization (GEO)</Link></li>
-                  <li><Link href="/services/dtc#lifecycle-email" onClick={closeAll}>Lifecycle &amp; Email Marketing</Link></li>
-                  <li><Link href="/services/dtc#influencer" onClick={closeAll}>Influencer &amp; Creator Marketing</Link></li>
+                  <li><Link href="/services/dtc/market-research" onClick={closeAll}>Market Feasibility &amp; Strategic Research</Link></li>
+                  <li><Link href="/services/dtc/paid-search" onClick={closeAll}>Paid Search &amp; Social Campaign Management</Link></li>
+                  <li><Link href="/services/dtc/seo-geo" onClick={closeAll}>SEO &amp; Generative Engine Optimization (GEO)</Link></li>
+                  <li><Link href="/services/dtc/email-lifecycle" onClick={closeAll}>Lifecycle &amp; Email Marketing</Link></li>
+                  <li><Link href="/services/dtc/influencer" onClick={closeAll}>Influencer &amp; Creator Marketing</Link></li>
                 </ul>
               </div>
             </div>
@@ -122,9 +123,9 @@ export default function Navbar() {
                   <p className={styles.megaLabel}>Cross-Platform</p>
                 </Link>
                 <ul className={styles.megaLinks}>
-                  <li><Link href="/services/growth-data#audience-targeting" onClick={closeAll}>Audience Targeting &amp; Data Strategy</Link></li>
-                  <li><Link href="/services/growth-data#performance-reporting" onClick={closeAll}>Performance Optimization &amp; Reporting</Link></li>
-                  <li><Link href="/services/growth-data#attribution" onClick={closeAll}>Attribution Modeling</Link></li>
+                  <li><Link href="/services/growth-data/audience-targeting" onClick={closeAll}>Audience Targeting &amp; Data Strategy</Link></li>
+                  <li><Link href="/services/growth-data/performance-reporting" onClick={closeAll}>Performance Optimization &amp; Reporting</Link></li>
+                  <li><Link href="/services/growth-data/attribution" onClick={closeAll}>Attribution Modeling</Link></li>
                 </ul>
               </div>
             </div>
