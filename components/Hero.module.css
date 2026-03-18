@@ -118,19 +118,17 @@
   padding: 0 32px;
 }
 
-.logoPlaceholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.logoImg {
   width: 140px;
   height: 48px;
-  border: 1px dashed var(--border);
-  border-radius: 4px;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 500;
-  white-space: nowrap;
-  opacity: 0.5;
+  object-fit: contain;
+  opacity: 0.6;
+  transition: opacity var(--transition);
+  filter: brightness(0) invert(1);
+}
+
+.logoImg:hover {
+  opacity: 1;
 }
 
 @keyframes scroll {

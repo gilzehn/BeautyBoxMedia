@@ -1,5 +1,19 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './Hero.module.css';
+
+const logos = [
+  { src: '/logos/brush-clean-pro.svg', alt: 'Brush Clean PRO' },
+  { src: '/logos/chaun-legend.svg', alt: 'Chaun Legend' },
+  { src: '/logos/cosmedica.svg', alt: 'Cosmedica' },
+  { src: '/logos/demeter.svg', alt: 'Demeter' },
+  { src: '/logos/govino.svg', alt: 'Govino' },
+  { src: '/logos/glimmer-goddess.svg', alt: 'Glimmer Goddess' },
+  { src: '/logos/kai.svg', alt: 'Kai' },
+  { src: '/logos/lifefactory.svg', alt: 'Lifefactory' },
+  { src: '/logos/nina-ibrow.svg', alt: 'Nina Ibrow' },
+  { src: '/logos/water-colors.svg', alt: 'Water Colors' },
+];
 
 export default function Hero() {
   return (
@@ -30,12 +44,16 @@ export default function Hero() {
           <div className={styles.logoSlide}>
             {[...Array(2)].map((_, i) => (
               <div key={i} className={styles.logoSet}>
-                <span className={styles.logoPlaceholder}>Brand Logo</span>
-                <span className={styles.logoPlaceholder}>Brand Logo</span>
-                <span className={styles.logoPlaceholder}>Brand Logo</span>
-                <span className={styles.logoPlaceholder}>Brand Logo</span>
-                <span className={styles.logoPlaceholder}>Brand Logo</span>
-                <span className={styles.logoPlaceholder}>Brand Logo</span>
+                {logos.map((logo, j) => (
+                  <Image
+                    key={j}
+                    src={logo.src}
+                    alt={logo.alt}
+                    width={140}
+                    height={48}
+                    className={styles.logoImg}
+                  />
+                ))}
               </div>
             ))}
           </div>
