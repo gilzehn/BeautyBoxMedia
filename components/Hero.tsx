@@ -19,7 +19,6 @@ export default function Hero() {
   return (
     <section className={styles.hero}>
       <div className={styles.content}>
-        <span className={styles.tagline}>Digital Media Agency for Beauty Brands</span>
         <h1 className={styles.title}>
           Your Brand,
           <span className={styles.titleAccent}>Beautifully Bold.</span>
