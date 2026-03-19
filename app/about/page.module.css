@@ -60,15 +60,12 @@
 }
 
 .imagePlaceholder {
+  position: relative;
   width: 100%;
   aspect-ratio: 3 / 4;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
   overflow: hidden;
 }
 

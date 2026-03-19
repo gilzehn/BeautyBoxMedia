@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import styles from './page.module.css';
 
@@ -26,16 +27,10 @@ export default function About() {
           <div className={styles.founders}>
             <div className={styles.founderPhotos}>
               <div className={styles.imagePlaceholder}>
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
+                <Image src="/Regina.jpeg" alt="Regina Tseikhin" fill style={{ objectFit: 'cover' }} />
               </div>
               <div className={styles.imagePlaceholder}>
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
+                <Image src="/Mariann.jpeg" alt="Mariann Marinberg" fill style={{ objectFit: 'cover' }} />
               </div>
             </div>
 
