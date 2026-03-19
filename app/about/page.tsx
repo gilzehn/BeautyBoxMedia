@@ -27,10 +27,10 @@ export default function About() {
           <div className={styles.founders}>
             <div className={styles.founderPhotos}>
               <div className={styles.imagePlaceholder}>
-                <Image src="/Regina.jpeg" alt="Regina Tseikhin" fill style={{ objectFit: 'cover' }} />
+                <Image src="/Regina.webp" alt="Regina Tseikhin" fill style={{ objectFit: 'cover' }} />
               </div>
               <div className={styles.imagePlaceholder}>
-                <Image src="/Mariann.jpeg" alt="Mariann Marinberg" fill style={{ objectFit: 'cover' }} />
+                <Image src="/Mariann.webp" alt="Mariann Marinberg" fill style={{ objectFit: 'cover' }} />
               </div>
             </div>
 
