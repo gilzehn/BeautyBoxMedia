@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ContactButton from '@/components/ContactButton';
 import styles from './page.module.css';
 
 const sections = [
@@ -87,9 +88,9 @@ export default function Services() {
           <p className={styles.ctaSubtitle}>
             Let&apos;s discuss how we can help your brand thrive.
           </p>
-          <Link href="/contact" className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
+          <ContactButton className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
             Contact Us
-          </Link>
+          </ContactButton>
         </div>
       </section>
     </>

@@ -1,5 +1,6 @@
 import Hero from '@/components/Hero';
 import Link from 'next/link';
+import ContactButton from '@/components/ContactButton';
 import Image from 'next/image';
 import styles from './page.module.css';
 
@@ -79,9 +80,9 @@ export default function Home() {
           <p className={styles.ctaSubtitle}>
             Let&apos;s talk about your brand.
           </p>
-          <Link href="/contact" className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
+          <ContactButton className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
             Schedule a Call
-          </Link>
+          </ContactButton>
         </div>
       </section>
     </>

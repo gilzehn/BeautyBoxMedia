@@ -68,6 +68,9 @@
 .ctaLink {
   font-size: 0.95rem;
   font-weight: 500;
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
   background: var(--accent);
   color: white;
   padding: 10px 24px;

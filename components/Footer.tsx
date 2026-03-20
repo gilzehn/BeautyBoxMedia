@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ContactButton from './ContactButton';
 import styles from './Footer.module.css';
 
 export default function Footer() {
@@ -22,7 +23,7 @@ export default function Footer() {
               <li><Link href="/services">Services</Link></li>
               <li><Link href="/case-studies">Case Studies</Link></li>
               <li><Link href="/about">About Us</Link></li>
-              <li><Link href="/contact">Contact</Link></li>
+              <li><ContactButton className={styles.contactLink} style={{}}>Contact</ContactButton></li>
             </ul>
           </div>
 

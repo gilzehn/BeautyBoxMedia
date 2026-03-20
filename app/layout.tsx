@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { ContactModalProvider } from '@/components/ContactModal';
 
 export const metadata: Metadata = {
   title: 'Beauty Box Media',
@@ -21,9 +22,11 @@ export default function RootLayout({
         <meta httpEquiv="Expires" content="0" />
       </head>
       <body>
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+        <ContactModalProvider>
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
+        </ContactModalProvider>
       </body>
     </html>
   );

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import ContactButton from './ContactButton';
 import styles from './Hero.module.css';
 
 const logos = [
@@ -31,9 +32,9 @@ export default function Hero() {
           <Link href="/services" className="btn btn-primary">
             Our Services
           </Link>
-          <Link href="/contact" className="btn btn-outline">
+          <ContactButton className="btn btn-outline">
             Get in Touch
-          </Link>
+          </ContactButton>
         </div>
       </div>
 

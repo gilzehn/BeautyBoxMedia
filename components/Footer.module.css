@@ -61,6 +61,21 @@
   color: var(--accent);
 }
 
+.contactLink {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.contactLink:hover {
+  color: var(--accent);
+}
+
 .bottom {
   border-top: 1px solid var(--border);
   padding-top: 24px;

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import ContactButton from './ContactButton';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
@@ -137,9 +138,9 @@ export default function Navbar() {
             </Link>
           </li>
           <li>
-            <Link href="/contact" className={styles.ctaLink} onClick={() => setMenuOpen(false)}>
+            <ContactButton className={styles.ctaLink} style={{}}>
               Contact
-            </Link>
+            </ContactButton>
           </li>
         </ul>
       </div>

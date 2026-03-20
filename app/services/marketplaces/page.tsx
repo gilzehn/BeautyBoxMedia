@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ContactButton from '@/components/ContactButton';
 import styles from './page.module.css';
 
 const services = [
@@ -75,9 +76,9 @@ export default function Marketplaces() {
         <div className="container" style={{ textAlign: 'center' }}>
           <h2 className={styles.ctaTitle}>Ready to Own the Marketplace?</h2>
           <p className={styles.ctaSubtitle}>Let&apos;s build your Amazon growth strategy.</p>
-          <Link href="/contact" className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
+          <ContactButton className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
             Schedule a Call
-          </Link>
+          </ContactButton>
         </div>
       </section>
     </>

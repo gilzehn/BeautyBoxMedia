@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import ContactButton from '@/components/ContactButton';
 import styles from '../../marketplaces/page.module.css';
 
 export default function MarketResearch() {
@@ -55,9 +55,9 @@ export default function MarketResearch() {
         <div className="container" style={{ textAlign: 'center' }}>
           <h2 className={styles.ctaTitle}>Ready to Scale Your D2C Brand?</h2>
           <p className={styles.ctaSubtitle}>Let&apos;s build a growth strategy that compounds.</p>
-          <Link href="/contact" className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
+          <ContactButton className="btn btn-primary" style={{ fontSize: '1.125rem', padding: '16px 40px' }}>
             Get Your D2C Research
-          </Link>
+          </ContactButton>
         </div>
       </section>
     </>
