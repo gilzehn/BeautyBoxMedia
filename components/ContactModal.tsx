@@ -50,7 +50,7 @@ export function ContactModalProvider({ children }: { children: ReactNode }) {
             <button className={styles.close} onClick={close} aria-label="Close">
               &times;
             </button>
-            <div data-tf-live="01KM5E6Z346PNTTN3E9M1DKZ42" style={{ width: '100%', height: '100%' }} />
+            <div data-tf-widget="01KM5E6Z346PNTTN3E9M1DKZ42" style={{ width: '100%', height: '100%' }} />
           </div>
         </div>
       )}
