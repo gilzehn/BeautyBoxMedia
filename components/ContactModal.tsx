@@ -31,16 +31,6 @@ export function ContactModalProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [isOpen, close]);
 
-  useEffect(() => {
-    if (isOpen) {
-      const script = document.createElement('script');
-      script.src = '//embed.typeform.com/next/embed.js';
-      script.async = true;
-      document.body.appendChild(script);
-      return () => { document.body.removeChild(script); };
-    }
-  }, [isOpen]);
-
   return (
     <ContactModalContext.Provider value={{ open }}>
       {children}
@@ -50,7 +40,11 @@ export function ContactModalProvider({ children }: { children: ReactNode }) {
             <button className={styles.close} onClick={close} aria-label="Close">
               &times;
             </button>
-            <div data-tf-widget="01KM5E6Z346PNTTN3E9M1DKZ42" style={{ width: '100%', height: '100%' }} />
+            <iframe
+              src="https://xqz7khwhnvc.typeform.com/to/BZ1eOL93"
+              style={{ width: '100%', height: '100%', border: 'none' }}
+              allow="camera; microphone; autoplay; encrypted-media;"
+            />
           </div>
         </div>
       )}
