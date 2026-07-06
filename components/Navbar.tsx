@@ -1,14 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import ContactButton from './ContactButton';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  // The management console stands alone — no marketing chrome.
+  if (pathname?.startsWith('/bizmanage')) return null;
 
   const closeAll = () => { setMenuOpen(false); setOpenDropdown(null); };
 
