@@ -122,10 +122,22 @@
 
 .pageHead {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
+}
+
+.addBtn {
+  padding: 11px 20px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.plus {
+  font-size: 1.15rem;
+  line-height: 1;
+  margin-top: -1px;
 }
 
 .pageTitle {
@@ -218,11 +230,160 @@
   background: rgba(107, 203, 119, 0.12);
 }
 
+.statusActive {
+  color: #6bcB77;
+  background: rgba(107, 203, 119, 0.12);
+}
+
+.statusClosing {
+  color: #ffd166;
+  background: rgba(255, 209, 102, 0.12);
+}
+
+/* ---- Cell helpers ---- */
+.tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+}
+
+.dash {
+  color: var(--text-muted);
+}
+
+.noteCell {
+  white-space: normal;
+  min-width: 220px;
+  max-width: 320px;
+  color: var(--text-muted);
+}
+
+/* ---- Add-brand modal ---- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 20px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  width: 100%;
+  max-width: 640px;
+  margin: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modalHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modalTitle {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.6rem;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition), background var(--transition);
+}
+
+.close:hover {
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.req {
+  color: var(--accent);
+}
+
+.select {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.textarea {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancelBtn,
+.saveBtn {
+  padding: 11px 22px;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 600px) {
   .authCard {
     padding: 32px 24px;
   }
   .content {
     padding: 24px 16px;
+  }
+  .formGrid {
+    grid-template-columns: 1fr;
   }
 }
