@@ -4,53 +4,42 @@
 -- placeholder rows with live data.
 --
 -- Column names mirror the brand portfolio schema (see supabase/README.md).
--- Enumerated columns use CHECK constraints rather than native ENUM types so the
--- allowed sets can be widened later with a plain ALTER ... DROP/ADD CONSTRAINT.
+-- Dropdown columns (source, brand_registry, reseller_type, owned_by, urgency,
+-- status) are NOT constrained here: their allowed values live in the
+-- public.dropdown_options table (see 20260707010000_dropdown_options.sql), so a
+-- new option can be added with a single row insert instead of a migration. A
+-- trigger in that migration validates brand rows against those options.
 
 create table if not exists public.brands (
   id             bigint primary key,
   brand          text        not null,
 
-  -- Which account list the brand belongs to.
-  source         text        not null
-                   check (source in ('NRG/RMR', 'TBB/TB')),
+  -- Which account list the brand belongs to. Dropdown → dropdown_options.
+  source         text        not null,
 
-  -- Amazon Brand Registry status.
-  brand_registry text        not null
-                   check (brand_registry in ('Yes', 'No', 'N/A')),
+  -- Amazon Brand Registry status. Dropdown → dropdown_options.
+  brand_registry text        not null,
 
-  -- Affiliation / reseller relationship.
-  reseller_type  text        not null
-                   check (reseller_type in (
-                     'Exclusive',
-                     'Semi-Exclusive',
-                     'Pending Exclusive',
-                     'Reseller',
-                     'Exclusive for ASINs we create under Skin Revolution',
-                     'Created new ASINs under TBB Brand Registry',
-                     'Not specified'
-                   )),
+  -- Affiliation / reseller relationship. Dropdown → dropdown_options.
+  reseller_type  text        not null,
 
   -- Number of ASINs; null until filled in.
   num_asins      integer     check (num_asins is null or num_asins >= 0),
 
   account_name   text        not null default '',
 
-  -- Owner; '' means unassigned.
-  owned_by       text        not null default ''
-                   check (owned_by in ('', 'BBMEDIA', 'Regina', 'Mariann')),
+  -- Owner; '' means unassigned. Dropdown → dropdown_options.
+  owned_by       text        not null default '',
 
-  -- Work urgency; '' means unset.
-  urgency        text        not null default ''
-                   check (urgency in ('', 'High', 'Medium', 'Low')),
+  -- Work urgency; '' means unset. Dropdown → dropdown_options.
+  urgency        text        not null default '',
 
   -- Global rank 1-30, unique across all brands; null until ranked.
   priority       integer     unique
                    check (priority is null or priority between 1 and 30),
 
-  -- Lifecycle status.
-  status         text        not null default 'Active'
-                   check (status in ('Active', 'Closing Out')),
+  -- Lifecycle status. Dropdown → dropdown_options.
+  status         text        not null default 'Active',
 
   est_sow        text        not null default '',
   note           text        not null default '',
