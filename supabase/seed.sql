@@ -1,0 +1,92 @@
+-- Seed: iCommerceteam Brand Portfolio
+-- Generated from the "CURRENT BRANDS - AS OF JUNE 2026" export (58 brands).
+-- Idempotent: re-running refreshes every row from this file (upsert on id).
+-- account_name is the seller account (dropdown); pairs were split NRG/RMR->NRG,
+-- TBB/TB->TBB (re-assign the RMR / TB ones per brand as needed).
+-- num_asins is free text, entered manually (empty until filled).
+-- Column order:
+--   id, brand, account_name, brand_registry, reseller_type, num_asins,
+--   owned_by, urgency, priority, status, est_sow, note
+
+insert into public.brands
+  (id, brand, account_name, brand_registry, reseller_type, num_asins,
+   owned_by, urgency, priority, status, est_sow, note)
+values
+  (1, 'Ariston', 'NRG', 'Yes', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (2, 'Baobab', 'NRG', 'No', 'Reseller', '', '', '', null, 'Active', '', 'Affiliation not specified in source'),
+  (3, 'Bodi Fresh', 'NRG', 'Yes', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (4, 'Brandywine', 'NRG', 'No', 'Reseller', '', '', '', null, 'Active', '', ''),
+  (5, 'Demeter', 'NRG', 'Yes', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (6, 'H-42', 'NRG', 'Yes', 'Exclusive under Skin Revolution', '', '', '', null, 'Active', '', ''),
+  (7, 'Inglot', 'NRG', 'No', 'Reseller', '', '', '', null, 'Active', '', 'Also on TBB/TB list (Semi-Exclusive)'),
+  (8, 'Kitoko', 'NRG', 'No', 'Reseller', '', '', '', null, 'Active', '', ''),
+  (9, 'Leather Luster', 'NRG', 'Yes', 'Exclusive under Skin Revolution', '', '', '', null, 'Active', '', ''),
+  (10, 'Midway', 'NRG', 'No', 'Reseller', '', '', '', null, 'Active', '', ''),
+  (11, 'Milagros', 'NRG', 'Yes', 'Exclusive under Skin Revolution', '', '', '', null, 'Active', '', ''),
+  (12, 'Mina Brow', 'NRG', 'Yes', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (13, 'Olé Capilar', 'NRG', 'Yes', 'Exclusive under Skin Revolution', '', '', '', null, 'Active', '', ''),
+  (14, 'Ritual Botanico', 'NRG', 'Yes', 'Exclusive under Skin Revolution', '', '', '', null, 'Active', '', ''),
+  (15, 'Scimera', 'NRG', 'Yes', 'Exclusive', '', '', '', null, 'Active', '', 'Also on TBB/TB list (Exclusive)'),
+  (16, 'Sqwinchers', 'NRG', 'No', 'Reseller', '', '', '', null, 'Active', '', ''),
+  (17, 'Two Old Goats', 'NRG', 'No', 'Reseller', '', '', '', null, 'Active', '', ''),
+  (18, 'WPP', 'NRG', 'Yes', 'Exclusive', '', '', '', null, 'Active', '', 'Color mask variation only, for now'),
+  (19, 'Y-Not Natural', 'NRG', 'Yes', 'Exclusive', '', '', '', null, 'Active', '', 'Need to determine if there is a path forward'),
+  (20, 'Do/Mastey', 'NRG', 'No', 'Not specified', '', '', '', null, 'Closing Out', '', ''),
+  (21, 'Glimmer Goddess', 'NRG', 'No', 'Not specified', '', '', '', null, 'Closing Out', '', 'Closing out on NRG; still active on TBB/TB'),
+  (22, 'Kiara Sky', 'NRG', 'No', 'Not specified', '', '', '', null, 'Closing Out', '', 'Also closing out on TBB/TB'),
+  (23, 'Life Factory', 'NRG', 'No', 'Not specified', '', '', '', null, 'Closing Out', '', ''),
+  (24, 'Lineco', 'NRG', 'No', 'Not specified', '', '', '', null, 'Closing Out', '', ''),
+  (25, 'Plantlife', 'NRG', 'No', 'Not specified', '', '', '', null, 'Closing Out', '', ''),
+  (26, 'Saratoga Olive Oil Co', 'NRG', 'No', 'Not specified', '', '', '', null, 'Closing Out', '', ''),
+  (27, 'Staleks', 'NRG', 'No', 'Not specified', '', '', '', null, 'Closing Out', '', 'Also closing out on TBB/TB'),
+  (28, 'NutriRoot', 'TBB', 'N/A', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (29, 'Cosmedica Skincare', 'TBB', 'N/A', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (30, 'Chihtsai', 'TBB', 'N/A', 'Pending Exclusive', '', '', '', null, 'Active', '', ''),
+  (31, 'Eagle Fortress', 'TBB', 'N/A', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (32, 'El Gallito Coffee', 'TBB', 'N/A', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (33, 'French Farm', 'TBB', 'N/A', 'Not specified', '', '', '', null, 'Active', '', ''),
+  (34, 'Glimmer Goddess', 'TBB', 'N/A', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (35, 'Golden Rabbit', 'TBB', 'N/A', 'Semi-Exclusive', '', '', '', null, 'Active', '', ''),
+  (36, 'Govino', 'TBB', 'N/A', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (37, 'H2Pro', 'TBB', 'N/A', 'Not specified', '', '', '', null, 'Active', '', ''),
+  (38, 'Inglot', 'TBB', 'N/A', 'Semi-Exclusive', '', '', '', null, 'Active', '', 'Also on NRG list (Reseller)'),
+  (39, 'Kai', 'TBB', 'N/A', 'Not specified', '', '', '', null, 'Active', '', ''),
+  (40, 'Le Blanc', 'TBB', 'N/A', 'Not specified', '', '', '', null, 'Active', '', ''),
+  (41, 'Lifefactory', 'TBB', 'N/A', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (42, 'Lisap Haircare', 'TBB', 'N/A', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (43, 'Mason Pearson', 'TBB', 'N/A', 'Not specified', '', '', '', null, 'Active', '', ''),
+  (44, 'Mizon', 'TBB', 'N/A', 'Semi-Exclusive', '', '', '', null, 'Active', '', 'Korean skincare · Shopify full SKU / Amazon all besides snail mucin'),
+  (45, 'Nailplex Shield', 'TBB', 'N/A', 'Semi-Exclusive', '', '', '', null, 'Active', '', ''),
+  (46, 'Nailtiques', 'TBB', 'N/A', 'Not specified', '', '', '', null, 'Active', '', ''),
+  (47, 'Orange Chronic', 'TBB', 'N/A', 'Not specified', '', '', '', null, 'Active', '', ''),
+  (48, 'Redavid', 'TBB', 'N/A', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (49, 'Restorsea', 'TBB', 'N/A', 'Semi-Exclusive', '', '', '', null, 'Active', '', ''),
+  (50, 'Roxanne Rizzo', 'TBB', 'N/A', 'Semi-Exclusive', '', '', '', null, 'Active', '', ''),
+  (51, 'Ruminae', 'TBB', 'N/A', 'Pending Exclusive', '', '', '', null, 'Active', '', ''),
+  (52, 'Scimera', 'TBB', 'N/A', 'Exclusive', '', '', '', null, 'Active', '', 'Also on NRG list (Exclusive)'),
+  (53, 'Sonoma Syrup Co', 'TBB', 'N/A', 'Exclusive', '', '', '', null, 'Active', '', ''),
+  (54, 'The Balm Cosmetics', 'TBB', 'N/A', 'Semi-Exclusive', '', '', '', null, 'Active', '', ''),
+  (55, 'Three Lollies', 'TBB', 'N/A', 'Not specified', '', '', '', null, 'Active', '', ''),
+  (56, 'Toweldry', 'TBB', 'N/A', 'Pending Exclusive', '', '', '', null, 'Active', '', ''),
+  (57, 'Vivioptal', 'TBB', 'N/A', 'Pending Exclusive', '', '', '', null, 'Active', '', ''),
+  (58, 'Watercolors Haircare', 'TBB', 'N/A', 'Exclusive', '', '', '', null, 'Active', '', '')
+on conflict (id) do update set
+  brand          = excluded.brand,
+  account_name   = excluded.account_name,
+  brand_registry = excluded.brand_registry,
+  reseller_type  = excluded.reseller_type,
+  num_asins      = excluded.num_asins,
+  owned_by       = excluded.owned_by,
+  urgency        = excluded.urgency,
+  priority       = excluded.priority,
+  status         = excluded.status,
+  est_sow        = excluded.est_sow,
+  note           = excluded.note;
+
+-- Keep the id sequence ahead of the explicitly-seeded ids so new console
+-- inserts don't collide with them. (brands.id is GENERATED BY DEFAULT AS
+-- IDENTITY; explicit inserts above do not advance its sequence.)
+select setval(
+  pg_get_serial_sequence('public.brands', 'id'),
+  greatest((select max(id) from public.brands), 1)
+);
