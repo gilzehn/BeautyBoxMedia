@@ -58,7 +58,8 @@ create index if not exists brands_priority_idx     on public.brands (priority);
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
-as $$
+set search_path = ''
+as $
 begin
   new.updated_at = now();
   return new;

@@ -88,7 +88,8 @@ create policy dropdown_options_write_authenticated
 create or replace function public.validate_brand_dropdowns()
 returns trigger
 language plpgsql
-as $$
+set search_path = ''
+as $
 declare
   bad_field text;
   bad_value text;
