@@ -143,3 +143,12 @@ export async function getDropdownOptions(): Promise<Record<string, string[]>> {
   }
   return grouped;
 }
+
+// Adds a new allowed value for a select field (used by the "+ Add new…"
+// affordance in the edit dropdowns). New values sort after the seeded ones.
+export async function addDropdownOption(field: string, value: string): Promise<void> {
+  const { error } = await client()
+    .from(DROPDOWN_TABLE)
+    .insert({ field, value, sort_order: 999 });
+  if (error) throw error;
+}

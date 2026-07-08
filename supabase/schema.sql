@@ -44,7 +44,11 @@ create table if not exists public.dropdown_options (
 );
 
 comment on table public.dropdown_options is
-  'Allowed values for every BizManage dropdown (account_name, brand_registry, reseller_type, owned_by, urgency, status).';
+  'Allowed values for every BizManage dropdown (account_name, brand_registry, reseller_type, owned_by, urgency, status, est_sow).';
+
+-- Prevents duplicate options (e.g. two sessions using "+ Add new…" at once).
+create unique index if not exists dropdown_options_field_value_uniq
+  on public.dropdown_options (field, lower(value));
 
 -- 3. Row-Level Security ------------------------------------------------------
 -- Only signed-in (authenticated) users may read or write. This is what makes it
@@ -95,3 +99,13 @@ select * from (values
   ('status',         'Closing Out', 2)
 ) as seed(field, value, sort_order)
 where not exists (select 1 from public.dropdown_options);
+
+-- 4b. est_sow seed — idempotent independently of the block above, because that
+-- block only runs when the table is empty and live databases already have rows.
+insert into public.dropdown_options (field, value, sort_order)
+select * from (values
+  ('est_sow', 'High',   1),
+  ('est_sow', 'Medium', 2),
+  ('est_sow', 'Low',    3)
+) as seed(field, value, sort_order)
+where not exists (select 1 from public.dropdown_options where field = 'est_sow');

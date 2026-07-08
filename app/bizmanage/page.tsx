@@ -12,6 +12,7 @@ import {
   updateBrand,
   deleteBrand,
   getDropdownOptions,
+  addDropdownOption,
 } from '@/lib/brands';
 
 // Column definitions drive the header (sorting), the read cells, the edit
@@ -25,6 +26,7 @@ interface Column {
   kind: ColKind;
   dropdownField?: string; // dropdown_options.field for select columns
   numericAlign?: boolean; // right-align numeric-ish values
+  truncate?: boolean; // ellipsize long values (title tooltip shows the rest)
 }
 const COLUMNS: Column[] = [
   { key: 'brand', label: 'Brand', kind: 'text' },
@@ -36,12 +38,39 @@ const COLUMNS: Column[] = [
   { key: 'urgency', label: 'Urgency', kind: 'select', dropdownField: 'urgency' },
   { key: 'priority', label: 'Priority', kind: 'number', numericAlign: true },
   { key: 'status', label: 'Status', kind: 'select', dropdownField: 'status' },
-  { key: 'estSow', label: 'Est. SOW', kind: 'text' },
-  { key: 'note', label: 'Note', kind: 'text' },
+  { key: 'estSow', label: 'Est. SOW', kind: 'select', dropdownField: 'est_sow' },
+  { key: 'note', label: 'Note', kind: 'text', truncate: true },
 ];
 
 const FILTER_COLUMNS = COLUMNS.filter((c) => c.kind === 'select');
-const PILL_LEVELS = ['High', 'Medium', 'Low'];
+
+// Value -> pill styling per column. Level pills (High/Medium/Low) are shared
+// by Urgency and Est. SOW; unmapped values (e.g. added via "+ Add new…") fall
+// back to a neutral badge or plain text.
+const LEVEL_CLASS: Record<string, string> = {
+  High: 'levelHigh',
+  Medium: 'levelMedium',
+  Low: 'levelLow',
+};
+const LEVEL_RANK: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
+const LEVEL_SORT_KEYS: ColKey[] = ['urgency', 'estSow'];
+const ACCOUNT_CLASS: Record<string, string> = {
+  NRG: 'accountNRG',
+  TBB: 'accountTBB',
+};
+const PILL_CLASS: Partial<Record<ColKey, (v: string) => string | undefined>> = {
+  urgency: (v) => LEVEL_CLASS[v],
+  estSow: (v) => LEVEL_CLASS[v],
+  status: (v) =>
+    v === 'Active' ? 'levelLow' : v === 'Closing Out' ? 'levelMedium' : 'badgeNeutral',
+  accountName: (v) => ACCOUNT_CLASS[v] ?? 'badgeNeutral',
+  brandRegistry: (v) => (v === 'Yes' ? 'levelLow' : undefined),
+  resellerType: () => 'badgeNeutral',
+};
+
+// Sentinel option in edit dropdowns that prompts for a brand-new value.
+const ADD_NEW = '__add_new__';
+const PRIORITY_RANKS = Array.from({ length: 30 }, (_, i) => i + 1);
 
 // The editable draft keeps every field as a string for smooth typing; it is
 // converted to a BrandInput on save.
@@ -211,6 +240,14 @@ export default function BizManagePage() {
         else if (an === null) return 1;
         else if (bn === null) return -1;
         else cmp = an - bn;
+      } else if (LEVEL_SORT_KEYS.includes(sortKey)) {
+        // Level columns: High -> Medium -> Low; unknown/empty always last.
+        const ar = LEVEL_RANK[String(av)] ?? null;
+        const br = LEVEL_RANK[String(bv)] ?? null;
+        if (ar === null && br === null) cmp = 0;
+        else if (ar === null) return 1;
+        else if (br === null) return -1;
+        else cmp = ar - br;
       } else {
         cmp = String(av).localeCompare(String(bv));
       }
@@ -232,6 +269,37 @@ export default function BizManagePage() {
     setSearch('');
     setFilters({});
   };
+
+  // Stat chips toggle the matching single-column filter on/off.
+  const toggleChipFilter = (key: ColKey, value: string) =>
+    setFilters((f) => ({ ...f, [key]: f[key] === value ? undefined : value }));
+
+  // Summary counts for the stat chips (per status and per account).
+  const stats = useMemo(() => {
+    const statusCounts = new Map<string, number>();
+    const accountCounts = new Map<string, number>();
+    for (const r of rows) {
+      if (r.status) statusCounts.set(r.status, (statusCounts.get(r.status) ?? 0) + 1);
+      if (r.accountName) accountCounts.set(r.accountName, (accountCounts.get(r.accountName) ?? 0) + 1);
+    }
+    const sorted = (m: Map<string, number>) =>
+      Array.from(m).sort(([a], [b]) => a.localeCompare(b));
+    return { status: sorted(statusCounts), account: sorted(accountCounts) };
+  }, [rows]);
+
+  // Per-column value counts shown in the filter dropdown labels.
+  const filterCounts = useMemo(() => {
+    const counts: Partial<Record<ColKey, Map<string, number>>> = {};
+    for (const col of FILTER_COLUMNS) {
+      const m = new Map<string, number>();
+      for (const r of rows) {
+        const v = String(r[col.key] ?? '');
+        if (v) m.set(v, (m.get(v) ?? 0) + 1);
+      }
+      counts[col.key] = m;
+    }
+    return counts;
+  }, [rows]);
 
   // --- Editing ------------------------------------------------------------
   // editingId is a stringified row id, 'new' for the add-row, or null.
@@ -257,6 +325,44 @@ export default function BizManagePage() {
   const setField = (key: ColKey, value: string) =>
     setDraft((d) => ({ ...d, [key]: value }));
 
+  // Ranks held by rows other than the one being edited; those options are
+  // disabled in the priority select (the DB enforces uniqueness).
+  const takenPriorities = useMemo(() => {
+    const taken = new Set<number>();
+    for (const r of rows) {
+      if (String(r.id) !== editingId && r.priority !== null) taken.add(r.priority);
+    }
+    return taken;
+  }, [rows, editingId]);
+
+  // Select change for dropdown-backed cells. Picking the sentinel prompts for
+  // a brand-new value and persists it to dropdown_options for next time.
+  const handleSelectChange = async (col: Column, raw: string) => {
+    if (raw !== ADD_NEW) {
+      setField(col.key, raw);
+      return;
+    }
+    const entered = window.prompt(`Add a new ${col.label} option:`);
+    const value = entered?.trim();
+    if (!value || value === ADD_NEW) return; // cancel/empty: draft untouched
+    const existing = valuesFor(col).find((v) => v.toLowerCase() === value.toLowerCase());
+    if (existing) {
+      setField(col.key, existing); // reuse canonical casing
+      return;
+    }
+    setField(col.key, value);
+    const field = col.dropdownField;
+    if (!field) return;
+    try {
+      await addDropdownOption(field, value);
+      setOptions((prev) => ({ ...prev, [field]: [...(prev[field] ?? []), value] }));
+    } catch {
+      setRowError(
+        `"${value}" is set on this row, but saving it as a reusable ${col.label} option failed.`
+      );
+    }
+  };
+
   const saveEdit = async () => {
     const input = draftToInput(draft);
     if (!input.brand) {
@@ -275,7 +381,13 @@ export default function BizManagePage() {
       }
       setEditingId(null);
     } catch (err) {
-      setRowError(err instanceof Error ? err.message : 'Failed to save.');
+      const msg = err instanceof Error ? err.message : 'Failed to save.';
+      // Unique-constraint race: another editor grabbed the rank after we loaded.
+      if (msg.includes('brands_priority_key') || msg.includes('23505')) {
+        setRowError('That priority rank was just taken by another row — refresh and pick a different rank.');
+      } else {
+        setRowError(msg);
+      }
     } finally {
       setSaving(false);
     }
@@ -295,6 +407,26 @@ export default function BizManagePage() {
   // --- Cell renderers -----------------------------------------------------
   const renderEditCell = (col: Column) => {
     const alignClass = col.numericAlign ? styles.numCol : undefined;
+    if (col.key === 'priority') {
+      // Rank picker: taken ranks stay visible but disabled, so the whole
+      // 1–30 landscape is scannable and unique violations can't happen here.
+      return (
+        <td key={col.key} className={alignClass}>
+          <select
+            className={styles.cellSelect}
+            value={draft.priority}
+            onChange={(e) => setField('priority', e.target.value)}
+          >
+            <option value="">Unranked</option>
+            {PRIORITY_RANKS.map((rank) => (
+              <option key={rank} value={String(rank)} disabled={takenPriorities.has(rank)}>
+                {takenPriorities.has(rank) ? `${rank} — taken` : rank}
+              </option>
+            ))}
+          </select>
+        </td>
+      );
+    }
     if (col.kind === 'select') {
       const opts = uniq([...valuesFor(col), draft[col.key]].filter(Boolean));
       return (
@@ -302,7 +434,7 @@ export default function BizManagePage() {
           <select
             className={styles.cellSelect}
             value={draft[col.key]}
-            onChange={(e) => setField(col.key, e.target.value)}
+            onChange={(e) => handleSelectChange(col, e.target.value)}
           >
             <option value="">—</option>
             {opts.map((v) => (
@@ -310,6 +442,7 @@ export default function BizManagePage() {
                 {v}
               </option>
             ))}
+            <option value={ADD_NEW}>＋ Add new…</option>
           </select>
         </td>
       );
@@ -318,12 +451,10 @@ export default function BizManagePage() {
       <td key={col.key} className={alignClass}>
         <input
           className={styles.cellInput}
-          type={col.kind === 'number' ? 'number' : 'text'}
-          min={col.kind === 'number' ? 1 : undefined}
-          max={col.kind === 'number' ? 30 : undefined}
+          type="text"
+          inputMode={col.key === 'numAsins' ? 'numeric' : undefined}
           value={draft[col.key]}
           onChange={(e) => setField(col.key, e.target.value)}
-          placeholder={col.key === 'priority' ? '1–30' : undefined}
         />
       </td>
     );
@@ -338,22 +469,43 @@ export default function BizManagePage() {
         </td>
       );
     }
-    if (col.key === 'urgency') {
-      const val = row.urgency;
+    const value = row[col.key];
+    const text = value === null ? '' : String(value);
+    if (text === '') {
       return (
-        <td key={col.key}>
-          {PILL_LEVELS.includes(val) ? (
-            <span className={`${styles.pill} ${styles[`level${val}`]}`}>{val}</span>
-          ) : (
-            val
-          )}
+        <td key={col.key} className={alignClass}>
+          <span className={styles.muted}>—</span>
         </td>
       );
     }
-    const value = row[col.key];
+    const pillClass = PILL_CLASS[col.key]?.(text);
+    if (pillClass && styles[pillClass]) {
+      return (
+        <td key={col.key}>
+          <span className={`${styles.pill} ${styles[pillClass]}`}>{text}</span>
+        </td>
+      );
+    }
+    if (col.key === 'brandRegistry') {
+      // Only "Yes" earns a pill; No / N/A stay quiet.
+      return (
+        <td key={col.key}>
+          <span className={styles.muted}>{text}</span>
+        </td>
+      );
+    }
+    if (col.truncate) {
+      return (
+        <td key={col.key} className={alignClass}>
+          <span className={styles.truncate} title={text}>
+            {text}
+          </span>
+        </td>
+      );
+    }
     return (
       <td key={col.key} className={alignClass}>
-        {value === null || value === '' ? <span className={styles.muted}>—</span> : String(value)}
+        {text}
       </td>
     );
   };
@@ -456,6 +608,40 @@ export default function BizManagePage() {
           </p>
         </div>
 
+        {/* Stat chips: totals + click-to-filter status/account counts */}
+        <div className={styles.statsRow}>
+          <div className={styles.statChip}>
+            <span className={styles.statLabel}>Total</span>
+            <span className={styles.statValue}>{rows.length}</span>
+          </div>
+          {stats.status.map(([value, count]) => (
+            <button
+              key={`status-${value}`}
+              type="button"
+              className={`${styles.statChip} ${styles.statChipButton} ${
+                filters.status === value ? styles.statChipActive : ''
+              }`}
+              onClick={() => toggleChipFilter('status', value)}
+            >
+              <span className={styles.statLabel}>{value}</span>
+              <span className={styles.statValue}>{count}</span>
+            </button>
+          ))}
+          {stats.account.map(([value, count]) => (
+            <button
+              key={`account-${value}`}
+              type="button"
+              className={`${styles.statChip} ${styles.statChipButton} ${
+                filters.accountName === value ? styles.statChipActive : ''
+              }`}
+              onClick={() => toggleChipFilter('accountName', value)}
+            >
+              <span className={styles.statLabel}>{value}</span>
+              <span className={styles.statValue}>{count}</span>
+            </button>
+          ))}
+        </div>
+
         {/* Toolbar: search + filters + add */}
         <div className={styles.toolbar}>
           <div className={styles.toolbarFilters}>
@@ -469,7 +655,9 @@ export default function BizManagePage() {
             {FILTER_COLUMNS.map((col) => (
               <select
                 key={col.key}
-                className={styles.filterSelect}
+                className={`${styles.filterSelect} ${
+                  filters[col.key] ? styles.filterSelectActive : ''
+                }`}
                 value={filters[col.key] ?? ''}
                 onChange={(e) =>
                   setFilters((f) => ({ ...f, [col.key]: e.target.value || undefined }))
@@ -478,7 +666,7 @@ export default function BizManagePage() {
                 <option value="">All {col.label}</option>
                 {valuesFor(col).map((v) => (
                   <option key={v} value={v}>
-                    {v}
+                    {v} ({filterCounts[col.key]?.get(v) ?? 0})
                   </option>
                 ))}
               </select>

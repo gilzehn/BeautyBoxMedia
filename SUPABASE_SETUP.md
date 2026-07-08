@@ -36,10 +36,13 @@ Registry**, **Reseller Type**, **# ASINs** (`num_asins`), **Owned By**,
 **Urgency**, **Priority** (a unique 1–30 ranking; blank = unranked), **Status**,
 **Est. SOW** (`est_sow`), and **Note**.
 
-The **Account, Brand Registry, Reseller Type, Owned By, Urgency, and Status**
-fields are chosen from dropdowns. To add, rename, or hide an allowed value, edit
-the **`dropdown_options`** table (insert a row with the `field` + `value`, or set
-`active = false` to hide one) — no code change or redeploy needed.
+The **Account, Brand Registry, Reseller Type, Owned By, Urgency, Status, and
+Est. SOW** fields are chosen from dropdowns. **Priority** is picked from a 1–30
+rank list that greys out ranks already taken by another brand. To add a new
+dropdown value, pick **＋ Add new…** inside any dropdown while editing a row —
+it's saved to **`dropdown_options`** automatically. You can also edit that table
+directly (insert a row with the `field` + `value`, or set `active = false` to
+hide one) — no code change or redeploy needed.
 
 ## 3. Create your admin login
 
