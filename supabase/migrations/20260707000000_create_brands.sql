@@ -4,7 +4,7 @@
 -- placeholder rows with live data.
 --
 -- Column names mirror the brand portfolio schema (see supabase/README.md).
--- Dropdown columns (user_account, brand_registry, reseller_type, owned_by,
+-- Dropdown columns (account_name, brand_registry, reseller_type, owned_by,
 -- urgency, status) are NOT constrained here: their allowed values live in the
 -- public.dropdown_options table (see 20260707010000_dropdown_options.sql), so a
 -- new option can be added with a single row insert instead of a migration. A
@@ -15,7 +15,7 @@ create table if not exists public.brands (
   brand          text        not null,
 
   -- Which seller account the brand belongs to. Dropdown → dropdown_options.
-  user_account   text        not null,
+  account_name   text        not null,
 
   -- Amazon Brand Registry status. Dropdown → dropdown_options.
   brand_registry text        not null,
@@ -25,8 +25,6 @@ create table if not exists public.brands (
 
   -- Number of ASINs; free text, entered manually. '' until filled in.
   num_asins      text        not null default '',
-
-  account_name   text        not null default '',
 
   -- Owner; '' means unassigned. Dropdown → dropdown_options.
   owned_by       text        not null default '',
@@ -52,7 +50,7 @@ comment on table public.brands is
   'iCommerceteam multi-brand Amazon portfolio (NRG/RMR + The Beauty Box). A brand may appear on both account lists, so (brand) is not unique; id is the stable key.';
 
 -- Helpful filters for the console (account tabs, status, ranked ordering).
-create index if not exists brands_user_account_idx on public.brands (user_account);
+create index if not exists brands_account_name_idx  on public.brands (account_name);
 create index if not exists brands_status_idx       on public.brands (status);
 create index if not exists brands_priority_idx     on public.brands (priority);
 

@@ -16,7 +16,7 @@ const SESSION_KEY = 'bizmanage:auth';
 const BRANDS_KEY = 'bizmanage:brands';
 
 // --- Schema (mirrors the Supabase `brands` table) ------------------------
-type UserAccount = 'NRG' | 'RMR' | 'TBB' | 'TB';
+type AccountName = 'NRG' | 'RMR' | 'TBB' | 'TB';
 type Registry = 'Yes' | 'No' | 'N/A';
 type Status = 'Active' | 'Closing Out';
 type Urgency = '' | 'High' | 'Medium' | 'Low';
@@ -25,11 +25,10 @@ type Owner = '' | 'BBMEDIA' | 'Regina' | 'Mariann';
 interface BrandRow {
   id: number;
   brand: string;
-  userAccount: UserAccount;
+  accountName: AccountName;
   brandRegistry: Registry;
   resellerType: string;
   numAsins: string;
-  accountName: string;
   ownedBy: Owner;
   urgency: Urgency;
   priority: number | null;
@@ -43,7 +42,7 @@ interface BrandRow {
 // there (`select value from dropdown_options where field = … and active`) so a
 // new option added in the database shows up here without a code change.
 const DROPDOWNS = {
-  userAccount: ['NRG', 'RMR', 'TBB', 'TB'] as UserAccount[],
+  accountName: ['NRG', 'RMR', 'TBB', 'TB'] as AccountName[],
   brandRegistry: ['Yes', 'No', 'N/A'] as Registry[],
   resellerType: [
     'Exclusive',
@@ -64,7 +63,7 @@ const DROPDOWNS = {
 type SeedRow = {
   id: number;
   brand: string;
-  userAccount: UserAccount;
+  accountName: AccountName;
   brandRegistry: Registry;
   resellerType: string;
   status: Status;
@@ -72,69 +71,68 @@ type SeedRow = {
 };
 
 const SEED: SeedRow[] = [
-  { id: 1, brand: 'Ariston', userAccount: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active' },
-  { id: 2, brand: 'Baobab', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active', note: 'Affiliation not specified in source' },
-  { id: 3, brand: 'Bodi Fresh', userAccount: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active' },
-  { id: 4, brand: 'Brandywine', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active' },
-  { id: 5, brand: 'Demeter', userAccount: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active' },
-  { id: 6, brand: 'H-42', userAccount: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive under Skin Revolution', status: 'Active' },
-  { id: 7, brand: 'Inglot', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active', note: 'Also on TBB/TB list (Semi-Exclusive)' },
-  { id: 8, brand: 'Kitoko', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active' },
-  { id: 9, brand: 'Leather Luster', userAccount: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive under Skin Revolution', status: 'Active' },
-  { id: 10, brand: 'Midway', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active' },
-  { id: 11, brand: 'Milagros', userAccount: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive under Skin Revolution', status: 'Active' },
-  { id: 12, brand: 'Mina Brow', userAccount: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active' },
-  { id: 13, brand: 'Olé Capilar', userAccount: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive under Skin Revolution', status: 'Active' },
-  { id: 14, brand: 'Ritual Botanico', userAccount: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive under Skin Revolution', status: 'Active' },
-  { id: 15, brand: 'Scimera', userAccount: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active', note: 'Also on TBB/TB list (Exclusive)' },
-  { id: 16, brand: 'Sqwinchers', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active' },
-  { id: 17, brand: 'Two Old Goats', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active' },
-  { id: 18, brand: 'WPP', userAccount: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active', note: 'Color mask variation only, for now' },
-  { id: 19, brand: 'Y-Not Natural', userAccount: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active', note: 'Need to determine if there is a path forward' },
-  { id: 20, brand: 'Do/Mastey', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out' },
-  { id: 21, brand: 'Glimmer Goddess', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out', note: 'Closing out on NRG; still active on TBB/TB' },
-  { id: 22, brand: 'Kiara Sky', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out', note: 'Also closing out on TBB/TB' },
-  { id: 23, brand: 'Life Factory', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out' },
-  { id: 24, brand: 'Lineco', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out' },
-  { id: 25, brand: 'Plantlife', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out' },
-  { id: 26, brand: 'Saratoga Olive Oil Co', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out' },
-  { id: 27, brand: 'Staleks', userAccount: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out', note: 'Also closing out on TBB/TB' },
-  { id: 28, brand: 'NutriRoot', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
-  { id: 29, brand: 'Cosmedica Skincare', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
-  { id: 30, brand: 'Chihtsai', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Pending Exclusive', status: 'Active' },
-  { id: 31, brand: 'Eagle Fortress', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
-  { id: 32, brand: 'El Gallito Coffee', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
-  { id: 33, brand: 'French Farm', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
-  { id: 34, brand: 'Glimmer Goddess', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
-  { id: 35, brand: 'Golden Rabbit', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active' },
-  { id: 36, brand: 'Govino', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
-  { id: 37, brand: 'H2Pro', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
-  { id: 38, brand: 'Inglot', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active', note: 'Also on NRG list (Reseller)' },
-  { id: 39, brand: 'Kai', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
-  { id: 40, brand: 'Le Blanc', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
-  { id: 41, brand: 'Lifefactory', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
-  { id: 42, brand: 'Lisap Haircare', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
-  { id: 43, brand: 'Mason Pearson', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
-  { id: 44, brand: 'Mizon', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active', note: 'Korean skincare · Shopify full SKU / Amazon all besides snail mucin' },
-  { id: 45, brand: 'Nailplex Shield', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active' },
-  { id: 46, brand: 'Nailtiques', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
-  { id: 47, brand: 'Orange Chronic', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
-  { id: 48, brand: 'Redavid', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
-  { id: 49, brand: 'Restorsea', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active' },
-  { id: 50, brand: 'Roxanne Rizzo', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active' },
-  { id: 51, brand: 'Ruminae', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Pending Exclusive', status: 'Active' },
-  { id: 52, brand: 'Scimera', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active', note: 'Also on NRG list (Exclusive)' },
-  { id: 53, brand: 'Sonoma Syrup Co', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
-  { id: 54, brand: 'The Balm Cosmetics', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active' },
-  { id: 55, brand: 'Three Lollies', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
-  { id: 56, brand: 'Toweldry', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Pending Exclusive', status: 'Active' },
-  { id: 57, brand: 'Vivioptal', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Pending Exclusive', status: 'Active' },
-  { id: 58, brand: 'Watercolors Haircare', userAccount: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
+  { id: 1, brand: 'Ariston', accountName: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active' },
+  { id: 2, brand: 'Baobab', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active', note: 'Affiliation not specified in source' },
+  { id: 3, brand: 'Bodi Fresh', accountName: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active' },
+  { id: 4, brand: 'Brandywine', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active' },
+  { id: 5, brand: 'Demeter', accountName: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active' },
+  { id: 6, brand: 'H-42', accountName: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive under Skin Revolution', status: 'Active' },
+  { id: 7, brand: 'Inglot', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active', note: 'Also on TBB/TB list (Semi-Exclusive)' },
+  { id: 8, brand: 'Kitoko', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active' },
+  { id: 9, brand: 'Leather Luster', accountName: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive under Skin Revolution', status: 'Active' },
+  { id: 10, brand: 'Midway', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active' },
+  { id: 11, brand: 'Milagros', accountName: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive under Skin Revolution', status: 'Active' },
+  { id: 12, brand: 'Mina Brow', accountName: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active' },
+  { id: 13, brand: 'Olé Capilar', accountName: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive under Skin Revolution', status: 'Active' },
+  { id: 14, brand: 'Ritual Botanico', accountName: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive under Skin Revolution', status: 'Active' },
+  { id: 15, brand: 'Scimera', accountName: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active', note: 'Also on TBB/TB list (Exclusive)' },
+  { id: 16, brand: 'Sqwinchers', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active' },
+  { id: 17, brand: 'Two Old Goats', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Reseller', status: 'Active' },
+  { id: 18, brand: 'WPP', accountName: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active', note: 'Color mask variation only, for now' },
+  { id: 19, brand: 'Y-Not Natural', accountName: 'NRG', brandRegistry: 'Yes', resellerType: 'Exclusive', status: 'Active', note: 'Need to determine if there is a path forward' },
+  { id: 20, brand: 'Do/Mastey', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out' },
+  { id: 21, brand: 'Glimmer Goddess', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out', note: 'Closing out on NRG; still active on TBB/TB' },
+  { id: 22, brand: 'Kiara Sky', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out', note: 'Also closing out on TBB/TB' },
+  { id: 23, brand: 'Life Factory', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out' },
+  { id: 24, brand: 'Lineco', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out' },
+  { id: 25, brand: 'Plantlife', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out' },
+  { id: 26, brand: 'Saratoga Olive Oil Co', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out' },
+  { id: 27, brand: 'Staleks', accountName: 'NRG', brandRegistry: 'No', resellerType: 'Not specified', status: 'Closing Out', note: 'Also closing out on TBB/TB' },
+  { id: 28, brand: 'NutriRoot', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
+  { id: 29, brand: 'Cosmedica Skincare', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
+  { id: 30, brand: 'Chihtsai', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Pending Exclusive', status: 'Active' },
+  { id: 31, brand: 'Eagle Fortress', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
+  { id: 32, brand: 'El Gallito Coffee', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
+  { id: 33, brand: 'French Farm', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
+  { id: 34, brand: 'Glimmer Goddess', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
+  { id: 35, brand: 'Golden Rabbit', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active' },
+  { id: 36, brand: 'Govino', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
+  { id: 37, brand: 'H2Pro', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
+  { id: 38, brand: 'Inglot', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active', note: 'Also on NRG list (Reseller)' },
+  { id: 39, brand: 'Kai', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
+  { id: 40, brand: 'Le Blanc', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
+  { id: 41, brand: 'Lifefactory', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
+  { id: 42, brand: 'Lisap Haircare', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
+  { id: 43, brand: 'Mason Pearson', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
+  { id: 44, brand: 'Mizon', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active', note: 'Korean skincare · Shopify full SKU / Amazon all besides snail mucin' },
+  { id: 45, brand: 'Nailplex Shield', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active' },
+  { id: 46, brand: 'Nailtiques', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
+  { id: 47, brand: 'Orange Chronic', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
+  { id: 48, brand: 'Redavid', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
+  { id: 49, brand: 'Restorsea', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active' },
+  { id: 50, brand: 'Roxanne Rizzo', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active' },
+  { id: 51, brand: 'Ruminae', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Pending Exclusive', status: 'Active' },
+  { id: 52, brand: 'Scimera', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active', note: 'Also on NRG list (Exclusive)' },
+  { id: 53, brand: 'Sonoma Syrup Co', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
+  { id: 54, brand: 'The Balm Cosmetics', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Semi-Exclusive', status: 'Active' },
+  { id: 55, brand: 'Three Lollies', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Not specified', status: 'Active' },
+  { id: 56, brand: 'Toweldry', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Pending Exclusive', status: 'Active' },
+  { id: 57, brand: 'Vivioptal', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Pending Exclusive', status: 'Active' },
+  { id: 58, brand: 'Watercolors Haircare', accountName: 'TBB', brandRegistry: 'N/A', resellerType: 'Exclusive', status: 'Active' },
 ];
 
 const withDefaults = (r: SeedRow): BrandRow => ({
   numAsins: '',
-  accountName: '',
   ownedBy: '',
   urgency: '',
   priority: null,
@@ -148,11 +146,10 @@ const INITIAL_ROWS: BrandRow[] = SEED.map(withDefaults);
 // --- Add-brand form draft ------------------------------------------------
 interface Draft {
   brand: string;
-  userAccount: UserAccount;
+  accountName: AccountName;
   brandRegistry: Registry;
   resellerType: string;
   numAsins: string;
-  accountName: string;
   ownedBy: Owner;
   urgency: Urgency;
   priority: string;
@@ -163,11 +160,10 @@ interface Draft {
 
 const blankDraft = (): Draft => ({
   brand: '',
-  userAccount: 'NRG',
+  accountName: 'NRG',
   brandRegistry: 'Yes',
   resellerType: 'Exclusive',
   numAsins: '',
-  accountName: '',
   ownedBy: '',
   urgency: '',
   priority: '',
@@ -286,11 +282,10 @@ export default function BizManagePage() {
     saveBrand({
       id: nextId,
       brand: draft.brand.trim(),
-      userAccount: draft.userAccount,
+      accountName: draft.accountName,
       brandRegistry: draft.brandRegistry,
       resellerType: draft.resellerType,
       numAsins: draft.numAsins.trim(),
-      accountName: draft.accountName.trim(),
       ownedBy: draft.ownedBy,
       urgency: draft.urgency,
       priority: pri === '' ? null : Number(pri),
@@ -373,11 +368,10 @@ export default function BizManagePage() {
             <thead>
               <tr>
                 <th>Brand</th>
-                <th>User Account</th>
+                <th>Account Name</th>
                 <th>Brand Registry</th>
                 <th>Reseller Type</th>
                 <th># ASINs</th>
-                <th>Account Name</th>
                 <th>Owned By</th>
                 <th>Urgency</th>
                 <th className={styles.numCol}>Priority</th>
@@ -389,11 +383,10 @@ export default function BizManagePage() {
               {rows.map((row) => (
                 <tr key={row.id}>
                   <td className={styles.strong}>{row.brand}</td>
-                  <td><span className={styles.tag}>{row.userAccount}</span></td>
+                  <td><span className={styles.tag}>{row.accountName}</span></td>
                   <td>{row.brandRegistry}</td>
                   <td>{row.resellerType}</td>
                   <td>{dash(row.numAsins)}</td>
-                  <td>{dash(row.accountName)}</td>
                   <td>{dash(row.ownedBy)}</td>
                   <td>
                     {row.urgency
@@ -445,9 +438,9 @@ export default function BizManagePage() {
               </label>
 
               <label className={styles.field}>
-                <span className={styles.label}>User Account</span>
-                <select className={styles.select} value={draft.userAccount} onChange={(e) => set('userAccount', e.target.value as UserAccount)}>
-                  {DROPDOWNS.userAccount.map((o) => <option key={o} value={o}>{o}</option>)}
+                <span className={styles.label}>Account Name</span>
+                <select className={styles.select} value={draft.accountName} onChange={(e) => set('accountName', e.target.value as AccountName)}>
+                  {DROPDOWNS.accountName.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
               </label>
 
@@ -471,16 +464,6 @@ export default function BizManagePage() {
                   className={styles.input}
                   value={draft.numAsins}
                   onChange={(e) => set('numAsins', e.target.value)}
-                  placeholder="optional"
-                />
-              </label>
-
-              <label className={styles.field}>
-                <span className={styles.label}>Account Name</span>
-                <input
-                  className={styles.input}
-                  value={draft.accountName}
-                  onChange={(e) => set('accountName', e.target.value)}
                   placeholder="optional"
                 />
               </label>

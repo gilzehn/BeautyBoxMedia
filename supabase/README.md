@@ -26,11 +26,10 @@ Column names mirror the source portfolio schema:
 | --- | --- | --- |
 | `id` | `bigint` PK | Stable row id from the source export. |
 | `brand` | `text` | Brand name. Not unique — a brand can appear on both account lists (e.g. Inglot, Scimera, Glimmer Goddess). |
-| `user_account` | `text` | Seller account: `NRG`, `RMR`, `TBB`, `TB`. **Dropdown** → `dropdown_options`. |
+| `account_name` | `text` | Seller account: `NRG`, `RMR`, `TBB`, `TB`. **Dropdown** → `dropdown_options`. |
 | `brand_registry` | `text` | Amazon Brand Registry status. **Dropdown** → `dropdown_options`. |
 | `reseller_type` | `text` | Affiliation. **Dropdown** → `dropdown_options`. |
 | `num_asins` | `text` | Free text, entered manually; `''` until filled. |
-| `account_name` | `text` | Seller account name; `''` until filled (from BigQuery). |
 | `owned_by` | `text` | Owner; `''` = unassigned. **Dropdown** → `dropdown_options`. |
 | `urgency` | `text` | `''` = unset. **Dropdown** → `dropdown_options`. |
 | `priority` | `integer` | Global rank 1–30, **unique**; nullable until ranked. |
@@ -59,7 +58,7 @@ this table filtered by `field` and `active = true`, ordered by `sort_order`.
 
 | Column | Notes |
 | --- | --- |
-| `field` | Which dropdown: `user_account`, `brand_registry`, `reseller_type`, `owned_by`, `urgency`, `status`. |
+| `field` | Which dropdown: `account_name`, `brand_registry`, `reseller_type`, `owned_by`, `urgency`, `status`. |
 | `value` | The stored value, e.g. `Regina`. Unique per `field`. |
 | `label` | Optional display text; the UI falls back to `value`. |
 | `sort_order` | Order the option appears in the list. |
@@ -115,6 +114,6 @@ placeholder client-side login. To go live:
    is what the RLS policies key off).
 3. Fetch from `public.brands` (e.g. `order by priority nulls last, brand`)
    instead of the seed array.
-4. Build the Owner / Urgency / Status / Reseller Type / Registry / Source
+4. Build the Account / Owner / Urgency / Status / Reseller Type / Registry
    dropdowns from `public.dropdown_options` (`where active order by sort_order`)
    so option lists stay editable from the database.

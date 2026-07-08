@@ -21,7 +21,7 @@ create table if not exists public.dropdown_options (
 );
 
 comment on table public.dropdown_options is
-  'Allowed values for every BizManage dropdown (user_account, brand_registry, reseller_type, owned_by, urgency, status). One row per option. Add a value by inserting a row — no migration needed.';
+  'Allowed values for every BizManage dropdown (account_name, brand_registry, reseller_type, owned_by, urgency, status). One row per option. Add a value by inserting a row — no migration needed.';
 
 create index if not exists dropdown_options_field_idx
   on public.dropdown_options (field, active, sort_order);
@@ -32,10 +32,10 @@ create index if not exists dropdown_options_field_idx
 -- blank value on the brand row and a "— unassigned" placeholder in the UI, so
 -- they are intentionally NOT seeded as options here.
 insert into public.dropdown_options (field, value, sort_order) values
-  ('user_account', 'NRG', 1),
-  ('user_account', 'RMR', 2),
-  ('user_account', 'TBB', 3),
-  ('user_account', 'TB', 4),
+  ('account_name', 'NRG', 1),
+  ('account_name', 'RMR', 2),
+  ('account_name', 'TBB', 3),
+  ('account_name', 'TB', 4),
 
   ('brand_registry', 'Yes', 1),
   ('brand_registry', 'No', 2),
@@ -97,7 +97,7 @@ begin
   select p.field, p.value
     into bad_field, bad_value
   from (values
-    ('user_account',   new.user_account),
+    ('account_name',   new.account_name),
     ('brand_registry', new.brand_registry),
     ('reseller_type',  new.reseller_type),
     ('owned_by',       new.owned_by),
