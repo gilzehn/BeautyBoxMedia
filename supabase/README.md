@@ -85,35 +85,45 @@ that trigger and validate in the app instead.
 
 ## Applying it
 
+**One-shot (Supabase SQL Editor):** paste all of `supabase/setup.sql` into a
+new query and Run. It concatenates every migration plus the seed and is safe
+to re-run.
+
 **Supabase CLI (local dev):**
 
 ```bash
 supabase db reset          # re-applies migrations + seed against local db
 ```
 
-**Hosted project (SQL editor / psql):** run the migration file once, then the
-seed file:
-
-```bash
-psql "$DATABASE_URL" -f supabase/migrations/20260707000000_create_brands.sql
-psql "$DATABASE_URL" -f supabase/seed.sql
-```
+**psql:** apply the files in `migrations/` in timestamp order, then `seed.sql`.
 
 > The `anon`, `authenticated`, and `service_role` roles referenced by the RLS
 > policies are pre-created on every Supabase project. On a plain Postgres
 > instance, create them first.
 
-## Next step: wire up BizManage
+## BizManage wiring (done)
 
-`app/bizmanage/page.tsx` still uses a hardcoded `ROWS` array and a
-placeholder client-side login. To go live:
+`app/bizmanage/page.tsx` talks to Supabase through `lib/supabase.ts`:
 
-1. Add `@supabase/supabase-js` and set `NEXT_PUBLIC_SUPABASE_URL` /
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-2. Replace the placeholder gate with Supabase Auth (the `authenticated` role
-   is what the RLS policies key off).
-3. Fetch from `public.brands` (e.g. `order by priority nulls last, brand`)
-   instead of the seed array.
-4. Build the Account / Owner / Urgency / Status / Reseller Type / Registry
-   dropdowns from `public.dropdown_options` (`where active order by sort_order`)
-   so option lists stay editable from the database.
+- **Env:** copy `.env.example` to `.env.local` and fill in
+  `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Project
+  Settings → API). Without them the console falls back to its built-in seed
+  data and localStorage ("offline — seed data" in the header).
+- **Reads:** brands from `public.brands` (ordered by id) and every dropdown
+  list from `public.dropdown_options` (`active = true`, ordered by
+  `sort_order`) — add an option row in the database and the form picks it up
+  on next load, no deploy.
+- **Writes:** "+ Add brand" inserts into `public.brands`; the database assigns
+  the id (identity) and the validation trigger / unique priority constraint
+  reject bad values, which surface inline in the form.
+
+### Temporary access model — read before shipping anything sensitive
+
+The console still uses its **client-side placeholder login**, so the browser
+reaches the database with the public **anon key**. The
+`20260707030000_temp_anon_access.sql` migration therefore grants `anon`
+read on both tables and insert on `brands`. Anyone who extracts the anon key
+from the page bundle gets that same access — acceptable for this
+low-sensitivity brand list, not for more. To harden: switch the gate to
+Supabase Auth (email/password), then drop the three `*_anon_*_temp` policies;
+the `authenticated` policies already in place take over.

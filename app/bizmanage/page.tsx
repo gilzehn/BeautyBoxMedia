@@ -2,6 +2,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import styles from './bizmanage.module.css';
+import { supabase } from '@/lib/supabase';
 
 // --- Placeholder access gate ---------------------------------------------
 // Client-side only — NOT real security. Swap for a real auth backend
@@ -10,40 +11,92 @@ const ACCESS_EMAIL = 'admin@thebeautyboxmedia.com';
 const ACCESS_PASSWORD = 'beautybox';
 const SESSION_KEY = 'bizmanage:auth';
 
-// Where brands added via the form are persisted so they survive a refresh.
-// Only user-added brands are stored; the 58 seed rows always come from code, so
-// updates to the seed still flow through. Swap for Supabase later.
+// Offline fallback only (used when Supabase env vars are missing): brands
+// added via the form are mirrored to localStorage so they survive a refresh.
+// When Supabase is configured, the database is the store and this is unused.
 const BRANDS_KEY = 'bizmanage:brands';
 
 // --- Schema (mirrors the Supabase `brands` table) ------------------------
-type AccountName = 'NRG' | 'RMR' | 'TBB' | 'TB';
-type Registry = 'Yes' | 'No' | 'N/A';
-type Status = 'Active' | 'Closing Out';
-type Urgency = '' | 'High' | 'Medium' | 'Low';
-type Owner = '' | 'BBMEDIA' | 'Regina' | 'Mariann';
-
+// Dropdown-driven fields are plain strings: their allowed values live in the
+// dropdown_options table, not in code.
 interface BrandRow {
   id: number;
   brand: string;
-  accountName: AccountName;
-  brandRegistry: Registry;
+  accountName: string;
+  brandRegistry: string;
   resellerType: string;
   numAsins: string;
-  ownedBy: Owner;
-  urgency: Urgency;
+  ownedBy: string;
+  urgency: string;
   priority: number | null;
-  status: Status;
+  status: string;
   estSow: string;
   note: string;
 }
 
-// Dropdown option lists. These mirror the values seeded into the Supabase
-// `dropdown_options` table — once the app reads from Supabase, fetch them from
-// there (`select value from dropdown_options where field = … and active`) so a
-// new option added in the database shows up here without a code change.
-const DROPDOWNS = {
-  accountName: ['NRG', 'RMR', 'TBB', 'TB'] as AccountName[],
-  brandRegistry: ['Yes', 'No', 'N/A'] as Registry[],
+// A public.brands row as Supabase returns it (snake_case).
+interface DbBrand {
+  id: number;
+  brand: string;
+  account_name: string;
+  brand_registry: string;
+  reseller_type: string;
+  num_asins: string;
+  owned_by: string;
+  urgency: string;
+  priority: number | null;
+  status: string;
+  est_sow: string;
+  note: string;
+}
+
+const fromDb = (r: DbBrand): BrandRow => ({
+  id: r.id,
+  brand: r.brand,
+  accountName: r.account_name,
+  brandRegistry: r.brand_registry,
+  resellerType: r.reseller_type,
+  numAsins: r.num_asins,
+  ownedBy: r.owned_by,
+  urgency: r.urgency,
+  priority: r.priority,
+  status: r.status,
+  estSow: r.est_sow,
+  note: r.note,
+});
+
+const toDb = (r: Omit<BrandRow, 'id'>): Omit<DbBrand, 'id'> => ({
+  brand: r.brand,
+  account_name: r.accountName,
+  brand_registry: r.brandRegistry,
+  reseller_type: r.resellerType,
+  num_asins: r.numAsins,
+  owned_by: r.ownedBy,
+  urgency: r.urgency,
+  priority: r.priority,
+  status: r.status,
+  est_sow: r.estSow,
+  note: r.note,
+});
+
+// dropdown_options.field (snake_case) -> UI key.
+const FIELD_KEYS = {
+  account_name: 'accountName',
+  brand_registry: 'brandRegistry',
+  reseller_type: 'resellerType',
+  owned_by: 'ownedBy',
+  urgency: 'urgency',
+  status: 'status',
+} as const;
+type DropdownKey = (typeof FIELD_KEYS)[keyof typeof FIELD_KEYS];
+type Dropdowns = Record<DropdownKey, string[]>;
+
+// Fallback dropdown lists, used until the live ones load (and as the offline
+// default). The live lists come from the dropdown_options table — add a row
+// there and it shows up here with no code change.
+const DEFAULT_DROPDOWNS: Dropdowns = {
+  accountName: ['NRG', 'RMR', 'TBB', 'TB'],
+  brandRegistry: ['Yes', 'No', 'N/A'],
   resellerType: [
     'Exclusive',
     'Semi-Exclusive',
@@ -52,9 +105,9 @@ const DROPDOWNS = {
     'Exclusive under Skin Revolution',
     'Not specified',
   ],
-  ownedBy: ['BBMEDIA', 'Regina', 'Mariann'] as Exclude<Owner, ''>[],
-  urgency: ['High', 'Medium', 'Low'] as Exclude<Urgency, ''>[],
-  status: ['Active', 'Closing Out'] as Status[],
+  ownedBy: ['BBMEDIA', 'Regina', 'Mariann'],
+  urgency: ['High', 'Medium', 'Low'],
+  status: ['Active', 'Closing Out'],
 };
 
 // Seed rows: only the non-empty fields are listed; operational fields
@@ -63,10 +116,10 @@ const DROPDOWNS = {
 type SeedRow = {
   id: number;
   brand: string;
-  accountName: AccountName;
-  brandRegistry: Registry;
+  accountName: string;
+  brandRegistry: string;
   resellerType: string;
-  status: Status;
+  status: string;
   note?: string;
 };
 
@@ -146,28 +199,28 @@ const INITIAL_ROWS: BrandRow[] = SEED.map(withDefaults);
 // --- Add-brand form draft ------------------------------------------------
 interface Draft {
   brand: string;
-  accountName: AccountName;
-  brandRegistry: Registry;
+  accountName: string;
+  brandRegistry: string;
   resellerType: string;
   numAsins: string;
-  ownedBy: Owner;
-  urgency: Urgency;
+  ownedBy: string;
+  urgency: string;
   priority: string;
-  status: Status;
+  status: string;
   estSow: string;
   note: string;
 }
 
-const blankDraft = (): Draft => ({
+const blankDraft = (d: Dropdowns): Draft => ({
   brand: '',
-  accountName: 'NRG',
-  brandRegistry: 'Yes',
-  resellerType: 'Exclusive',
+  accountName: d.accountName[0] ?? '',
+  brandRegistry: d.brandRegistry[0] ?? '',
+  resellerType: d.resellerType[0] ?? '',
   numAsins: '',
   ownedBy: '',
   urgency: '',
   priority: '',
-  status: 'Active',
+  status: d.status[0] ?? 'Active',
   estSow: '',
   note: '',
 });
@@ -182,8 +235,12 @@ export default function BizManagePage() {
   const [error, setError] = useState('');
 
   const [rows, setRows] = useState<BrandRow[]>(INITIAL_ROWS);
+  const [dropdowns, setDropdowns] = useState<Dropdowns>(DEFAULT_DROPDOWNS);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [draft, setDraft] = useState<Draft>(blankDraft);
+  const [draft, setDraft] = useState<Draft>(() => blankDraft(DEFAULT_DROPDOWNS));
+  const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
   // Restore a remembered session on load.
@@ -193,10 +250,10 @@ export default function BizManagePage() {
     }
   }, []);
 
-  // Rehydrate brands added in a previous session (kept in localStorage until
-  // Supabase is wired). Runs after mount so the server/initial render matches.
+  // Offline fallback: rehydrate locally-added brands. Runs after mount so the
+  // server/initial render matches. Skipped entirely when Supabase is live.
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (supabase || typeof window === 'undefined') return;
     try {
       const raw = localStorage.getItem(BRANDS_KEY);
       if (!raw) return;
@@ -208,6 +265,44 @@ export default function BizManagePage() {
       /* ignore malformed storage */
     }
   }, []);
+
+  // Live data: once signed in, load brands and dropdown option lists from
+  // Supabase. The seed rows render until this resolves.
+  useEffect(() => {
+    if (!authed || !supabase) return;
+    const sb = supabase;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setLoadError('');
+      const [brandsRes, optionsRes] = await Promise.all([
+        sb.from('brands').select('*').order('id'),
+        sb
+          .from('dropdown_options')
+          .select('field,value,sort_order')
+          .eq('active', true)
+          .order('sort_order'),
+      ]);
+      if (cancelled) return;
+      if (brandsRes.error || optionsRes.error) {
+        setLoadError(
+          `Could not load from Supabase: ${(brandsRes.error ?? optionsRes.error)!.message}`,
+        );
+      } else {
+        setRows((brandsRes.data as DbBrand[]).map(fromDb));
+        const live: Partial<Dropdowns> = {};
+        for (const o of optionsRes.data as { field: string; value: string }[]) {
+          const key = FIELD_KEYS[o.field as keyof typeof FIELD_KEYS];
+          if (key) (live[key] ??= []).push(o.value);
+        }
+        setDropdowns({ ...DEFAULT_DROPDOWNS, ...live });
+      }
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authed]);
 
   // Close the form on Escape.
   useEffect(() => {
@@ -239,11 +334,9 @@ export default function BizManagePage() {
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
 
-  // Persist a new brand. For now it updates state and mirrors user-added brands
-  // to localStorage so they survive a refresh. TODO(supabase): replace the body
-  // with `await supabase.from('brands').insert(row)` then refetch — kept
-  // isolated so wiring Supabase is a one-function change.
-  const saveBrand = (row: BrandRow) => {
+  // Offline fallback: keep the new brand in state + localStorage. The live
+  // path inserts into Supabase inside submitForm instead.
+  const saveBrandLocal = (row: BrandRow) => {
     setRows((prev) => [row, ...prev]);
     if (typeof window === 'undefined') return;
     try {
@@ -256,12 +349,12 @@ export default function BizManagePage() {
   };
 
   const openForm = () => {
-    setDraft(blankDraft());
+    setDraft(blankDraft(dropdowns));
     setFormError('');
     setShowForm(true);
   };
 
-  const submitForm = (e: FormEvent) => {
+  const submitForm = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!draft.brand.trim()) {
@@ -278,9 +371,7 @@ export default function BizManagePage() {
       return;
     }
 
-    const nextId = rows.reduce((max, r) => Math.max(max, r.id), 0) + 1;
-    saveBrand({
-      id: nextId,
+    const newBrand: Omit<BrandRow, 'id'> = {
       brand: draft.brand.trim(),
       accountName: draft.accountName,
       brandRegistry: draft.brandRegistry,
@@ -292,7 +383,27 @@ export default function BizManagePage() {
       status: draft.status,
       estSow: draft.estSow.trim(),
       note: draft.note.trim(),
-    });
+    };
+
+    if (supabase) {
+      // Live path: the database assigns the id and enforces the dropdown +
+      // priority rules; surface any rejection inline.
+      setSaving(true);
+      const { data, error: insertError } = await supabase
+        .from('brands')
+        .insert(toDb(newBrand))
+        .select()
+        .single();
+      setSaving(false);
+      if (insertError) {
+        setFormError(insertError.message);
+        return;
+      }
+      setRows((prev) => [fromDb(data as DbBrand), ...prev]);
+    } else {
+      const nextId = rows.reduce((max, r) => Math.max(max, r.id), 0) + 1;
+      saveBrandLocal({ id: nextId, ...newBrand });
+    }
     setShowForm(false);
   };
 
@@ -356,12 +467,18 @@ export default function BizManagePage() {
         <div className={styles.pageHead}>
           <div>
             <h2 className={styles.pageTitle}>Brand Accounts</h2>
-            <p className={styles.pageMeta}>{rows.length} brands</p>
+            <p className={styles.pageMeta}>
+              {loading
+                ? 'Loading from Supabase…'
+                : `${rows.length} brands · ${supabase ? 'live — Supabase' : 'offline — seed data'}`}
+            </p>
           </div>
           <button className={`btn btn-primary ${styles.addBtn}`} onClick={openForm}>
             <span className={styles.plus} aria-hidden="true">+</span> Add brand
           </button>
         </div>
+
+        {loadError && <p className={styles.error}>{loadError}</p>}
 
         <div className={styles.tableWrap}>
           <table className={styles.table}>
@@ -439,22 +556,22 @@ export default function BizManagePage() {
 
               <label className={styles.field}>
                 <span className={styles.label}>Account Name</span>
-                <select className={styles.select} value={draft.accountName} onChange={(e) => set('accountName', e.target.value as AccountName)}>
-                  {DROPDOWNS.accountName.map((o) => <option key={o} value={o}>{o}</option>)}
+                <select className={styles.select} value={draft.accountName} onChange={(e) => set('accountName', e.target.value)}>
+                  {dropdowns.accountName.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
               </label>
 
               <label className={styles.field}>
                 <span className={styles.label}>Brand Registry</span>
-                <select className={styles.select} value={draft.brandRegistry} onChange={(e) => set('brandRegistry', e.target.value as Registry)}>
-                  {DROPDOWNS.brandRegistry.map((o) => <option key={o} value={o}>{o}</option>)}
+                <select className={styles.select} value={draft.brandRegistry} onChange={(e) => set('brandRegistry', e.target.value)}>
+                  {dropdowns.brandRegistry.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
               </label>
 
               <label className={`${styles.field} ${styles.full}`}>
                 <span className={styles.label}>Reseller Type</span>
                 <select className={styles.select} value={draft.resellerType} onChange={(e) => set('resellerType', e.target.value)}>
-                  {DROPDOWNS.resellerType.map((o) => <option key={o} value={o}>{o}</option>)}
+                  {dropdowns.resellerType.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
               </label>
 
@@ -470,17 +587,17 @@ export default function BizManagePage() {
 
               <label className={styles.field}>
                 <span className={styles.label}>Owned By</span>
-                <select className={styles.select} value={draft.ownedBy} onChange={(e) => set('ownedBy', e.target.value as Owner)}>
+                <select className={styles.select} value={draft.ownedBy} onChange={(e) => set('ownedBy', e.target.value)}>
                   <option value="">— Unassigned</option>
-                  {DROPDOWNS.ownedBy.map((o) => <option key={o} value={o}>{o}</option>)}
+                  {dropdowns.ownedBy.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
               </label>
 
               <label className={styles.field}>
                 <span className={styles.label}>Urgency</span>
-                <select className={styles.select} value={draft.urgency} onChange={(e) => set('urgency', e.target.value as Urgency)}>
+                <select className={styles.select} value={draft.urgency} onChange={(e) => set('urgency', e.target.value)}>
                   <option value="">— None</option>
-                  {DROPDOWNS.urgency.map((o) => <option key={o} value={o}>{o}</option>)}
+                  {dropdowns.urgency.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
               </label>
 
@@ -497,8 +614,8 @@ export default function BizManagePage() {
 
               <label className={styles.field}>
                 <span className={styles.label}>Status</span>
-                <select className={styles.select} value={draft.status} onChange={(e) => set('status', e.target.value as Status)}>
-                  {DROPDOWNS.status.map((o) => <option key={o} value={o}>{o}</option>)}
+                <select className={styles.select} value={draft.status} onChange={(e) => set('status', e.target.value)}>
+                  {dropdowns.status.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
               </label>
 
@@ -530,8 +647,8 @@ export default function BizManagePage() {
               <button type="button" className={`btn btn-outline ${styles.cancelBtn}`} onClick={() => setShowForm(false)}>
                 Cancel
               </button>
-              <button type="submit" className={`btn btn-primary ${styles.saveBtn}`}>
-                Add brand
+              <button type="submit" className={`btn btn-primary ${styles.saveBtn}`} disabled={saving}>
+                {saving ? 'Adding…' : 'Add brand'}
               </button>
             </div>
           </form>
