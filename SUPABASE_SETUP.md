@@ -16,15 +16,30 @@ Follow these steps once to go live.
 2. **New project** → pick a name, a database password, and a region → **Create**.
 3. Wait ~1–2 minutes for it to finish provisioning.
 
-## 2. Create the table + seed data
+## 2. Create the tables + dropdown values
 
 1. In your project, open **SQL Editor** (left sidebar) → **New query**.
 2. Open [`supabase/schema.sql`](./supabase/schema.sql) from this repo, copy its
    full contents, paste into the editor, and click **Run**.
-3. This creates the `brands` table, turns on RLS, adds the access policy, and
-   inserts the 8 starter brands. You can confirm under **Table Editor → brands**.
+3. This creates two tables — **`brands`** (the portfolio) and
+   **`dropdown_options`** (the allowed values for each select field) — turns on
+   RLS, adds the authenticated-only access policies, and seeds the dropdown
+   values. You can confirm under **Table Editor**.
 
-> Re-running the script is safe — it only seeds rows when the table is empty.
+> Re-running the script is safe — it only seeds the dropdowns when empty and uses
+> `create table if not exists`. Brand rows are managed from the app, not seeded here.
+
+### The columns
+
+The `brands` table has: **Brand**, **Account** (`account_name`), **Brand
+Registry**, **Reseller Type**, **# ASINs** (`num_asins`), **Owned By**,
+**Urgency**, **Priority** (a unique 1–30 ranking; blank = unranked), **Status**,
+**Est. SOW** (`est_sow`), and **Note**.
+
+The **Account, Brand Registry, Reseller Type, Owned By, Urgency, and Status**
+fields are chosen from dropdowns. To add, rename, or hide an allowed value, edit
+the **`dropdown_options`** table (insert a row with the `field` + `value`, or set
+`active = false` to hide one) — no code change or redeploy needed.
 
 ## 3. Create your admin login
 

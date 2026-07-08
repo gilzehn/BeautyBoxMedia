@@ -412,6 +412,10 @@
   padding: 40px 18px !important;
 }
 
+.muted {
+  color: var(--text-muted);
+}
+
 @media (max-width: 600px) {
   .authCard {
     padding: 32px 24px;

@@ -7,73 +7,95 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import {
   BrandRow,
   BrandInput,
-  Level,
   getBrands,
   addBrand,
   updateBrand,
   deleteBrand,
+  getDropdownOptions,
 } from '@/lib/brands';
 
-const LEVELS: Level[] = ['High', 'Medium', 'Low'];
-
-// Column definitions drive both the header (with sorting) and the cells.
+// Column definitions drive the header (sorting), the read cells, the edit
+// inputs, and the toolbar filters. `select` columns pull their allowed values
+// from the `dropdown_options` table (keyed by `dropdownField`).
 type ColKey = keyof Omit<BrandRow, 'id'>;
-type ColType = 'text' | 'number' | 'level';
+type ColKind = 'text' | 'number' | 'select';
 interface Column {
   key: ColKey;
   label: string;
-  type: ColType;
-  filterable?: boolean;
+  kind: ColKind;
+  dropdownField?: string; // dropdown_options.field for select columns
+  numericAlign?: boolean; // right-align numeric-ish values
 }
 const COLUMNS: Column[] = [
-  { key: 'brand', label: 'Brand', type: 'text' },
-  { key: 'registry', label: 'Brand Registry', type: 'text', filterable: true },
-  { key: 'resellerType', label: 'Reseller Type', type: 'text', filterable: true },
-  { key: 'asins', label: '# ASINs', type: 'number' },
-  { key: 'accountName', label: 'Account Name', type: 'text' },
-  { key: 'ownedBy', label: 'Owned By', type: 'text', filterable: true },
-  { key: 'urgency', label: 'Urgency', type: 'level', filterable: true },
-  { key: 'priority', label: 'Priority', type: 'level', filterable: true },
+  { key: 'brand', label: 'Brand', kind: 'text' },
+  { key: 'accountName', label: 'Account', kind: 'select', dropdownField: 'account_name' },
+  { key: 'brandRegistry', label: 'Brand Registry', kind: 'select', dropdownField: 'brand_registry' },
+  { key: 'resellerType', label: 'Reseller Type', kind: 'select', dropdownField: 'reseller_type' },
+  { key: 'numAsins', label: '# ASINs', kind: 'text', numericAlign: true },
+  { key: 'ownedBy', label: 'Owned By', kind: 'select', dropdownField: 'owned_by' },
+  { key: 'urgency', label: 'Urgency', kind: 'select', dropdownField: 'urgency' },
+  { key: 'priority', label: 'Priority', kind: 'number', numericAlign: true },
+  { key: 'status', label: 'Status', kind: 'select', dropdownField: 'status' },
+  { key: 'estSow', label: 'Est. SOW', kind: 'text' },
+  { key: 'note', label: 'Note', kind: 'text' },
 ];
+
+const FILTER_COLUMNS = COLUMNS.filter((c) => c.kind === 'select');
+const PILL_LEVELS = ['High', 'Medium', 'Low'];
 
 // The editable draft keeps every field as a string for smooth typing; it is
 // converted to a BrandInput on save.
 type Draft = Record<ColKey, string>;
 const EMPTY_DRAFT: Draft = {
   brand: '',
-  registry: '',
-  resellerType: '',
-  asins: '0',
   accountName: '',
+  brandRegistry: '',
+  resellerType: '',
+  numAsins: '',
   ownedBy: '',
-  urgency: 'Low',
-  priority: 'Low',
+  urgency: '',
+  priority: '',
+  status: 'Active',
+  estSow: '',
+  note: '',
 };
 
 function rowToDraft(row: BrandRow): Draft {
   return {
     brand: row.brand,
-    registry: row.registry,
-    resellerType: row.resellerType,
-    asins: String(row.asins),
     accountName: row.accountName,
+    brandRegistry: row.brandRegistry,
+    resellerType: row.resellerType,
+    numAsins: row.numAsins,
     ownedBy: row.ownedBy,
     urgency: row.urgency,
-    priority: row.priority,
+    priority: row.priority === null ? '' : String(row.priority),
+    status: row.status,
+    estSow: row.estSow,
+    note: row.note,
   };
 }
 
 function draftToInput(draft: Draft): BrandInput {
+  const p = parseInt(draft.priority, 10);
   return {
     brand: draft.brand.trim(),
-    registry: draft.registry.trim(),
-    resellerType: draft.resellerType.trim(),
-    asins: parseInt(draft.asins, 10) || 0,
     accountName: draft.accountName.trim(),
+    brandRegistry: draft.brandRegistry.trim(),
+    resellerType: draft.resellerType.trim(),
+    numAsins: draft.numAsins.trim(),
     ownedBy: draft.ownedBy.trim(),
-    urgency: (LEVELS.includes(draft.urgency as Level) ? draft.urgency : 'Low') as Level,
-    priority: (LEVELS.includes(draft.priority as Level) ? draft.priority : 'Low') as Level,
+    urgency: draft.urgency.trim(),
+    priority: draft.priority.trim() === '' || Number.isNaN(p) ? null : p,
+    status: draft.status.trim(),
+    estSow: draft.estSow.trim(),
+    note: draft.note.trim(),
   };
+}
+
+// Preserve-order de-dupe.
+function uniq(values: string[]): string[] {
+  return Array.from(new Set(values));
 }
 
 export default function BizManagePage() {
@@ -126,24 +148,38 @@ export default function BizManagePage() {
 
   // --- Data state ---------------------------------------------------------
   const [rows, setRows] = useState<BrandRow[]>([]);
+  const [options, setOptions] = useState<Record<string, string[]>>({});
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState('');
 
-  const loadRows = useCallback(async () => {
+  const loadData = useCallback(async () => {
     setDataLoading(true);
     setDataError('');
     try {
-      setRows(await getBrands());
+      const [brands, opts] = await Promise.all([getBrands(), getDropdownOptions()]);
+      setRows(brands);
+      setOptions(opts);
     } catch (err) {
-      setDataError(err instanceof Error ? err.message : 'Failed to load brands.');
+      setDataError(err instanceof Error ? err.message : 'Failed to load data.');
     } finally {
       setDataLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (session) loadRows();
-  }, [session, loadRows]);
+    if (session) loadData();
+  }, [session, loadData]);
+
+  // Allowed values for a select column: dropdown_options first, then any extra
+  // values present in the data (so nothing is un-selectable / un-filterable).
+  const valuesFor = useCallback(
+    (col: Column): string[] => {
+      const base = col.dropdownField ? options[col.dropdownField] ?? [] : [];
+      const present = rows.map((r) => String(r[col.key] ?? '')).filter(Boolean);
+      return uniq([...base, ...present]);
+    },
+    [options, rows]
+  );
 
   // --- Filter / search / sort --------------------------------------------
   const [search, setSearch] = useState('');
@@ -151,44 +187,41 @@ export default function BizManagePage() {
   const [sortKey, setSortKey] = useState<ColKey>('brand');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
-  const filterOptions = useMemo(() => {
-    const opts: Partial<Record<ColKey, string[]>> = {};
-    for (const col of COLUMNS) {
-      if (!col.filterable) continue;
-      const values = Array.from(new Set(rows.map((r) => String(r[col.key])).filter(Boolean)));
-      values.sort();
-      opts[col.key] = values;
-    }
-    return opts;
-  }, [rows]);
-
   const visibleRows = useMemo(() => {
     const term = search.trim().toLowerCase();
-    let out = rows.filter((row) => {
-      // Column filters (exact match).
-      for (const col of COLUMNS) {
+    const out = rows.filter((row) => {
+      for (const col of FILTER_COLUMNS) {
         const active = filters[col.key];
-        if (active && String(row[col.key]) !== active) return false;
+        if (active && String(row[col.key] ?? '') !== active) return false;
       }
-      // Free-text search across every field.
       if (!term) return true;
-      return COLUMNS.some((col) => String(row[col.key]).toLowerCase().includes(term));
+      return COLUMNS.some((col) =>
+        String(row[col.key] ?? '').toLowerCase().includes(term)
+      );
     });
-    out = [...out].sort((a, b) => {
+    out.sort((a, b) => {
       const av = a[sortKey];
       const bv = b[sortKey];
       let cmp: number;
-      if (typeof av === 'number' && typeof bv === 'number') cmp = av - bv;
-      else cmp = String(av).localeCompare(String(bv));
+      if (typeof av === 'number' || typeof bv === 'number' || av === null || bv === null) {
+        // Numeric column (priority): nulls always sort last regardless of dir.
+        const an = typeof av === 'number' ? av : null;
+        const bn = typeof bv === 'number' ? bv : null;
+        if (an === null && bn === null) cmp = 0;
+        else if (an === null) return 1;
+        else if (bn === null) return -1;
+        else cmp = an - bn;
+      } else {
+        cmp = String(av).localeCompare(String(bv));
+      }
       return sortDir === 'asc' ? cmp : -cmp;
     });
     return out;
   }, [rows, search, filters, sortKey, sortDir]);
 
   const toggleSort = (key: ColKey) => {
-    if (sortKey === key) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
+    if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    else {
       setSortKey(key);
       setSortDir('asc');
     }
@@ -201,14 +234,14 @@ export default function BizManagePage() {
   };
 
   // --- Editing ------------------------------------------------------------
-  // editingId is a row id, 'new' for the add-row, or null when not editing.
+  // editingId is a stringified row id, 'new' for the add-row, or null.
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [saving, setSaving] = useState(false);
   const [rowError, setRowError] = useState('');
 
   const startEdit = (row: BrandRow) => {
-    setEditingId(row.id);
+    setEditingId(String(row.id));
     setDraft(rowToDraft(row));
     setRowError('');
   };
@@ -237,7 +270,7 @@ export default function BizManagePage() {
         const created = await addBrand(input);
         setRows((prev) => [...prev, created]);
       } else if (editingId) {
-        const updated = await updateBrand(editingId, input);
+        const updated = await updateBrand(Number(editingId), input);
         setRows((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
       }
       setEditingId(null);
@@ -261,7 +294,9 @@ export default function BizManagePage() {
 
   // --- Cell renderers -----------------------------------------------------
   const renderEditCell = (col: Column) => {
-    if (col.type === 'level') {
+    const alignClass = col.numericAlign ? styles.numCol : undefined;
+    if (col.kind === 'select') {
+      const opts = uniq([...valuesFor(col), draft[col.key]].filter(Boolean));
       return (
         <td key={col.key}>
           <select
@@ -269,9 +304,10 @@ export default function BizManagePage() {
             value={draft[col.key]}
             onChange={(e) => setField(col.key, e.target.value)}
           >
-            {LEVELS.map((lvl) => (
-              <option key={lvl} value={lvl}>
-                {lvl}
+            <option value="">—</option>
+            {opts.map((v) => (
+              <option key={v} value={v}>
+                {v}
               </option>
             ))}
           </select>
@@ -279,26 +315,22 @@ export default function BizManagePage() {
       );
     }
     return (
-      <td key={col.key} className={col.type === 'number' ? styles.numCol : undefined}>
+      <td key={col.key} className={alignClass}>
         <input
           className={styles.cellInput}
-          type={col.type === 'number' ? 'number' : 'text'}
+          type={col.kind === 'number' ? 'number' : 'text'}
+          min={col.kind === 'number' ? 1 : undefined}
+          max={col.kind === 'number' ? 30 : undefined}
           value={draft[col.key]}
           onChange={(e) => setField(col.key, e.target.value)}
+          placeholder={col.key === 'priority' ? '1–30' : undefined}
         />
       </td>
     );
   };
 
   const renderReadCell = (col: Column, row: BrandRow) => {
-    if (col.type === 'level') {
-      const val = row[col.key] as Level;
-      return (
-        <td key={col.key}>
-          <span className={`${styles.pill} ${styles[`level${val}`]}`}>{val}</span>
-        </td>
-      );
-    }
+    const alignClass = col.numericAlign ? styles.numCol : undefined;
     if (col.key === 'brand') {
       return (
         <td key={col.key} className={styles.strong}>
@@ -306,9 +338,22 @@ export default function BizManagePage() {
         </td>
       );
     }
+    if (col.key === 'urgency') {
+      const val = row.urgency;
+      return (
+        <td key={col.key}>
+          {PILL_LEVELS.includes(val) ? (
+            <span className={`${styles.pill} ${styles[`level${val}`]}`}>{val}</span>
+          ) : (
+            val
+          )}
+        </td>
+      );
+    }
+    const value = row[col.key];
     return (
-      <td key={col.key} className={col.type === 'number' ? styles.numCol : undefined}>
-        {String(row[col.key])}
+      <td key={col.key} className={alignClass}>
+        {value === null || value === '' ? <span className={styles.muted}>—</span> : String(value)}
       </td>
     );
   };
@@ -389,6 +434,7 @@ export default function BizManagePage() {
 
   // --- Console ------------------------------------------------------------
   const editingNew = editingId === 'new';
+  const colSpan = COLUMNS.length + 1;
 
   return (
     <div className={styles.console}>
@@ -420,7 +466,7 @@ export default function BizManagePage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search…"
             />
-            {COLUMNS.filter((c) => c.filterable).map((col) => (
+            {FILTER_COLUMNS.map((col) => (
               <select
                 key={col.key}
                 className={styles.filterSelect}
@@ -430,7 +476,7 @@ export default function BizManagePage() {
                 }
               >
                 <option value="">All {col.label}</option>
-                {(filterOptions[col.key] ?? []).map((v) => (
+                {valuesFor(col).map((v) => (
                   <option key={v} value={v}>
                     {v}
                   </option>
@@ -463,7 +509,7 @@ export default function BizManagePage() {
                 {COLUMNS.map((col) => (
                   <th
                     key={col.key}
-                    className={`${styles.sortable} ${col.type === 'number' ? styles.numCol : ''}`}
+                    className={`${styles.sortable} ${col.numericAlign ? styles.numCol : ''}`}
                     onClick={() => toggleSort(col.key)}
                   >
                     {col.label}
@@ -481,12 +527,7 @@ export default function BizManagePage() {
                 <tr className={styles.editingRow}>
                   {COLUMNS.map((col) => renderEditCell(col))}
                   <td className={styles.actionsCell}>
-                    <button
-                      className={styles.rowBtnPrimary}
-                      onClick={saveEdit}
-                      disabled={saving}
-                      type="button"
-                    >
+                    <button className={styles.rowBtnPrimary} onClick={saveEdit} disabled={saving} type="button">
                       {saving ? '…' : 'Save'}
                     </button>
                     <button className={styles.rowBtn} onClick={cancelEdit} type="button">
@@ -498,28 +539,23 @@ export default function BizManagePage() {
 
               {dataLoading && rows.length === 0 ? (
                 <tr>
-                  <td colSpan={COLUMNS.length + 1} className={styles.emptyCell}>
+                  <td colSpan={colSpan} className={styles.emptyCell}>
                     Loading…
                   </td>
                 </tr>
               ) : visibleRows.length === 0 && !editingNew ? (
                 <tr>
-                  <td colSpan={COLUMNS.length + 1} className={styles.emptyCell}>
+                  <td colSpan={colSpan} className={styles.emptyCell}>
                     {rows.length === 0 ? 'No brands yet. Add your first one.' : 'No matches.'}
                   </td>
                 </tr>
               ) : (
                 visibleRows.map((row) =>
-                  editingId === row.id ? (
+                  editingId === String(row.id) ? (
                     <tr key={row.id} className={styles.editingRow}>
                       {COLUMNS.map((col) => renderEditCell(col))}
                       <td className={styles.actionsCell}>
-                        <button
-                          className={styles.rowBtnPrimary}
-                          onClick={saveEdit}
-                          disabled={saving}
-                          type="button"
-                        >
+                        <button className={styles.rowBtnPrimary} onClick={saveEdit} disabled={saving} type="button">
                           {saving ? '…' : 'Save'}
                         </button>
                         <button className={styles.rowBtn} onClick={cancelEdit} type="button">

@@ -1,64 +1,78 @@
 import { supabase } from './supabaseClient';
 
 // --- Types ---------------------------------------------------------------
-export type Level = 'High' | 'Medium' | 'Low';
-
-// The camelCase shape used throughout the UI.
+// Mirrors the live `public.brands` table. `id` is a bigint identity (number).
+// Text-ish fields are kept as strings; `priority` is a sparse 1–30 ranking
+// (unique, most rows unranked -> null). Select values come from the
+// `dropdown_options` table (see getDropdownOptions).
 export interface BrandRow {
-  id: string;
+  id: number;
   brand: string;
-  registry: string;
-  resellerType: string;
-  asins: number;
   accountName: string;
+  brandRegistry: string;
+  resellerType: string;
+  numAsins: string;
   ownedBy: string;
-  urgency: Level;
-  priority: Level;
+  urgency: string;
+  priority: number | null;
+  status: string;
+  estSow: string;
+  note: string;
 }
 
 // Fields the user can edit / provide (everything except the DB-managed id).
 export type BrandInput = Omit<BrandRow, 'id'>;
 
-// The snake_case shape as stored in the Postgres `brands` table.
+// The snake_case shape as stored in Postgres.
 interface BrandRecord {
-  id: string;
-  brand: string;
-  registry: string;
-  reseller_type: string;
-  asins: number;
-  account_name: string;
-  owned_by: string;
-  urgency: Level;
-  priority: Level;
+  id: number;
+  brand: string | null;
+  account_name: string | null;
+  brand_registry: string | null;
+  reseller_type: string | null;
+  num_asins: string | null;
+  owned_by: string | null;
+  urgency: string | null;
+  priority: number | null;
+  status: string | null;
+  est_sow: string | null;
+  note: string | null;
 }
 
 const TABLE = 'brands';
+const DROPDOWN_TABLE = 'dropdown_options';
 
 // --- Mapping helpers -----------------------------------------------------
 function fromRecord(r: BrandRecord): BrandRow {
   return {
     id: r.id,
     brand: r.brand ?? '',
-    registry: r.registry ?? '',
-    resellerType: r.reseller_type ?? '',
-    asins: r.asins ?? 0,
     accountName: r.account_name ?? '',
+    brandRegistry: r.brand_registry ?? '',
+    resellerType: r.reseller_type ?? '',
+    numAsins: r.num_asins ?? '',
     ownedBy: r.owned_by ?? '',
-    urgency: (r.urgency ?? 'Low') as Level,
-    priority: (r.priority ?? 'Low') as Level,
+    urgency: r.urgency ?? '',
+    priority: r.priority ?? null,
+    status: r.status ?? '',
+    estSow: r.est_sow ?? '',
+    note: r.note ?? '',
   };
 }
 
 function toRecord(input: BrandInput): Omit<BrandRecord, 'id'> {
   return {
     brand: input.brand,
-    registry: input.registry,
-    reseller_type: input.resellerType,
-    asins: Number.isFinite(input.asins) ? input.asins : 0,
     account_name: input.accountName,
+    brand_registry: input.brandRegistry,
+    reseller_type: input.resellerType,
+    num_asins: input.numAsins,
     owned_by: input.ownedBy,
     urgency: input.urgency,
-    priority: input.priority,
+    priority: input.priority, // null = unranked
+    status: input.status,
+    est_sow: input.estSow,
+    note: input.note,
   };
 }
 
@@ -90,7 +104,7 @@ export async function addBrand(input: BrandInput): Promise<BrandRow> {
   return fromRecord(data as BrandRecord);
 }
 
-export async function updateBrand(id: string, input: BrandInput): Promise<BrandRow> {
+export async function updateBrand(id: number, input: BrandInput): Promise<BrandRow> {
   const { data, error } = await client()
     .from(TABLE)
     .update(toRecord(input))
@@ -101,7 +115,31 @@ export async function updateBrand(id: string, input: BrandInput): Promise<BrandR
   return fromRecord(data as BrandRecord);
 }
 
-export async function deleteBrand(id: string): Promise<void> {
+export async function deleteBrand(id: number): Promise<void> {
   const { error } = await client().from(TABLE).delete().eq('id', id);
   if (error) throw error;
+}
+
+// --- Dropdown options ----------------------------------------------------
+interface DropdownRecord {
+  field: string;
+  value: string;
+}
+
+// Returns allowed values grouped by field, e.g.
+// { account_name: ['NRG','RMR',...], urgency: ['High','Medium','Low'], ... }
+export async function getDropdownOptions(): Promise<Record<string, string[]>> {
+  const { data, error } = await client()
+    .from(DROPDOWN_TABLE)
+    .select('field,value')
+    .eq('active', true)
+    .order('field', { ascending: true })
+    .order('sort_order', { ascending: true });
+  if (error) throw error;
+
+  const grouped: Record<string, string[]> = {};
+  for (const row of data as DropdownRecord[]) {
+    (grouped[row.field] ??= []).push(row.value);
+  }
+  return grouped;
 }
