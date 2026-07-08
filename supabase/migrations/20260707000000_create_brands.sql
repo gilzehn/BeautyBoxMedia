@@ -4,8 +4,8 @@
 -- placeholder rows with live data.
 --
 -- Column names mirror the brand portfolio schema (see supabase/README.md).
--- Dropdown columns (source, brand_registry, reseller_type, owned_by, urgency,
--- status) are NOT constrained here: their allowed values live in the
+-- Dropdown columns (user_account, brand_registry, reseller_type, owned_by,
+-- urgency, status) are NOT constrained here: their allowed values live in the
 -- public.dropdown_options table (see 20260707010000_dropdown_options.sql), so a
 -- new option can be added with a single row insert instead of a migration. A
 -- trigger in that migration validates brand rows against those options.
@@ -14,8 +14,8 @@ create table if not exists public.brands (
   id             bigint primary key,
   brand          text        not null,
 
-  -- Which account list the brand belongs to. Dropdown → dropdown_options.
-  source         text        not null,
+  -- Which seller account the brand belongs to. Dropdown → dropdown_options.
+  user_account   text        not null,
 
   -- Amazon Brand Registry status. Dropdown → dropdown_options.
   brand_registry text        not null,
@@ -51,10 +51,10 @@ create table if not exists public.brands (
 comment on table public.brands is
   'iCommerceteam multi-brand Amazon portfolio (NRG/RMR + The Beauty Box). A brand may appear on both account lists, so (brand) is not unique; id is the stable key.';
 
--- Helpful filters for the console (source tabs, status, ranked ordering).
-create index if not exists brands_source_idx   on public.brands (source);
-create index if not exists brands_status_idx   on public.brands (status);
-create index if not exists brands_priority_idx on public.brands (priority);
+-- Helpful filters for the console (account tabs, status, ranked ordering).
+create index if not exists brands_user_account_idx on public.brands (user_account);
+create index if not exists brands_status_idx       on public.brands (status);
+create index if not exists brands_priority_idx     on public.brands (priority);
 
 -- Keep updated_at fresh on every write.
 create or replace function public.set_updated_at()

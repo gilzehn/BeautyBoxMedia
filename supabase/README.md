@@ -26,7 +26,7 @@ Column names mirror the source portfolio schema:
 | --- | --- | --- |
 | `id` | `bigint` PK | Stable row id from the source export. |
 | `brand` | `text` | Brand name. Not unique — a brand can appear on both account lists (e.g. Inglot, Scimera, Glimmer Goddess). |
-| `source` | `text` | Account list. **Dropdown** → `dropdown_options`. |
+| `user_account` | `text` | Seller account: `NRG`, `RMR`, `TBB`, `TB`. **Dropdown** → `dropdown_options`. |
 | `brand_registry` | `text` | Amazon Brand Registry status. **Dropdown** → `dropdown_options`. |
 | `reseller_type` | `text` | Affiliation. **Dropdown** → `dropdown_options`. |
 | `num_asins` | `integer` | Nullable until filled in (from BigQuery). |
@@ -59,7 +59,7 @@ this table filtered by `field` and `active = true`, ordered by `sort_order`.
 
 | Column | Notes |
 | --- | --- |
-| `field` | Which dropdown: `source`, `brand_registry`, `reseller_type`, `owned_by`, `urgency`, `status`. |
+| `field` | Which dropdown: `user_account`, `brand_registry`, `reseller_type`, `owned_by`, `urgency`, `status`. |
 | `value` | The stored value, e.g. `Regina`. Unique per `field`. |
 | `label` | Optional display text; the UI falls back to `value`. |
 | `sort_order` | Order the option appears in the list. |
