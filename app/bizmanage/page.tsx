@@ -10,6 +10,11 @@ const ACCESS_EMAIL = 'admin@thebeautyboxmedia.com';
 const ACCESS_PASSWORD = 'beautybox';
 const SESSION_KEY = 'bizmanage:auth';
 
+// Where brands added via the form are persisted so they survive a refresh.
+// Only user-added brands are stored; the 58 seed rows always come from code, so
+// updates to the seed still flow through. Swap for Supabase later.
+const BRANDS_KEY = 'bizmanage:brands';
+
 // --- Schema (mirrors the Supabase `brands` table) ------------------------
 type Source = 'NRG/RMR' | 'TBB/TB';
 type Registry = 'Yes' | 'No' | 'N/A';
@@ -193,6 +198,22 @@ export default function BizManagePage() {
     }
   }, []);
 
+  // Rehydrate brands added in a previous session (kept in localStorage until
+  // Supabase is wired). Runs after mount so the server/initial render matches.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(BRANDS_KEY);
+      if (!raw) return;
+      const added = JSON.parse(raw) as BrandRow[];
+      if (Array.isArray(added) && added.length) {
+        setRows([...added, ...INITIAL_ROWS]);
+      }
+    } catch {
+      /* ignore malformed storage */
+    }
+  }, []);
+
   // Close the form on Escape.
   useEffect(() => {
     if (!showForm) return;
@@ -223,10 +244,21 @@ export default function BizManagePage() {
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
 
-  // Persist a new brand. TODO(supabase): replace this local update with
-  //   await supabase.from('brands').insert(row);  // then refetch
-  // Kept isolated so wiring Supabase is a one-function change.
-  const saveBrand = (row: BrandRow) => setRows((prev) => [row, ...prev]);
+  // Persist a new brand. For now it updates state and mirrors user-added brands
+  // to localStorage so they survive a refresh. TODO(supabase): replace the body
+  // with `await supabase.from('brands').insert(row)` then refetch — kept
+  // isolated so wiring Supabase is a one-function change.
+  const saveBrand = (row: BrandRow) => {
+    setRows((prev) => [row, ...prev]);
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(BRANDS_KEY);
+      const added = raw ? (JSON.parse(raw) as BrandRow[]) : [];
+      localStorage.setItem(BRANDS_KEY, JSON.stringify([row, ...added]));
+    } catch {
+      /* ignore storage write failures (e.g. private mode) */
+    }
+  };
 
   const openForm = () => {
     setDraft(blankDraft());
