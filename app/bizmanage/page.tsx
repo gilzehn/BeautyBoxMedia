@@ -28,7 +28,7 @@ interface BrandRow {
   userAccount: UserAccount;
   brandRegistry: Registry;
   resellerType: string;
-  numAsins: number | null;
+  numAsins: string;
   accountName: string;
   ownedBy: Owner;
   urgency: Urgency;
@@ -134,7 +134,7 @@ const SEED: SeedRow[] = [
 ];
 
 const withDefaults = (r: SeedRow): BrandRow => ({
-  numAsins: null,
+  numAsins: '',
   accountName: '',
   ownedBy: '',
   urgency: '',
@@ -273,11 +273,6 @@ export default function BizManagePage() {
       setFormError('Brand name is required.');
       return;
     }
-    const num = draft.numAsins.trim();
-    if (num !== '' && (!/^\d+$/.test(num) || Number(num) < 0)) {
-      setFormError('# ASINs must be a whole number (0 or more).');
-      return;
-    }
     const pri = draft.priority.trim();
     if (pri !== '' && (!/^\d+$/.test(pri) || Number(pri) < 1 || Number(pri) > 30)) {
       setFormError('Priority must be a whole number from 1 to 30.');
@@ -295,7 +290,7 @@ export default function BizManagePage() {
       userAccount: draft.userAccount,
       brandRegistry: draft.brandRegistry,
       resellerType: draft.resellerType,
-      numAsins: num === '' ? null : Number(num),
+      numAsins: draft.numAsins.trim(),
       accountName: draft.accountName.trim(),
       ownedBy: draft.ownedBy,
       urgency: draft.urgency,
@@ -382,7 +377,7 @@ export default function BizManagePage() {
                 <th>User Account</th>
                 <th>Brand Registry</th>
                 <th>Reseller Type</th>
-                <th className={styles.numCol}># ASINs</th>
+                <th># ASINs</th>
                 <th>Account Name</th>
                 <th>Owned By</th>
                 <th>Urgency</th>
@@ -398,7 +393,7 @@ export default function BizManagePage() {
                   <td><span className={styles.tag}>{row.userAccount}</span></td>
                   <td>{row.brandRegistry}</td>
                   <td>{row.resellerType}</td>
-                  <td className={styles.numCol}>{dash(row.numAsins)}</td>
+                  <td>{dash(row.numAsins)}</td>
                   <td>{dash(row.accountName)}</td>
                   <td>{dash(row.ownedBy)}</td>
                   <td>
@@ -477,7 +472,6 @@ export default function BizManagePage() {
                   className={styles.input}
                   value={draft.numAsins}
                   onChange={(e) => set('numAsins', e.target.value)}
-                  inputMode="numeric"
                   placeholder="optional"
                 />
               </label>

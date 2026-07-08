@@ -23,8 +23,8 @@ create table if not exists public.brands (
   -- Affiliation / reseller relationship. Dropdown → dropdown_options.
   reseller_type  text        not null,
 
-  -- Number of ASINs; null until filled in.
-  num_asins      integer     check (num_asins is null or num_asins >= 0),
+  -- Number of ASINs; free text, entered manually. '' until filled in.
+  num_asins      text        not null default '',
 
   account_name   text        not null default '',
 

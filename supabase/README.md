@@ -29,7 +29,7 @@ Column names mirror the source portfolio schema:
 | `user_account` | `text` | Seller account: `NRG`, `RMR`, `TBB`, `TB`. **Dropdown** → `dropdown_options`. |
 | `brand_registry` | `text` | Amazon Brand Registry status. **Dropdown** → `dropdown_options`. |
 | `reseller_type` | `text` | Affiliation. **Dropdown** → `dropdown_options`. |
-| `num_asins` | `integer` | Nullable until filled in (from BigQuery). |
+| `num_asins` | `text` | Free text, entered manually; `''` until filled. |
 | `account_name` | `text` | Seller account name; `''` until filled (from BigQuery). |
 | `owned_by` | `text` | Owner; `''` = unassigned. **Dropdown** → `dropdown_options`. |
 | `urgency` | `text` | `''` = unset. **Dropdown** → `dropdown_options`. |
@@ -42,7 +42,7 @@ Column names mirror the source portfolio schema:
 The dropdown columns are **not** constrained on the table itself — their allowed
 values live in `dropdown_options` (below) and a trigger validates each brand row
 against it. This is what lets you add an option with one row insert instead of a
-migration. `num_asins`/`priority` keep plain range checks.
+migration. `priority` keeps a plain range check (1–30, unique).
 
 ### Row Level Security
 
