@@ -45,9 +45,8 @@ insert into public.dropdown_options (field, value, sort_order) values
   ('reseller_type', 'Semi-Exclusive', 2),
   ('reseller_type', 'Pending Exclusive', 3),
   ('reseller_type', 'Reseller', 4),
-  ('reseller_type', 'Exclusive for ASINs we create under Skin Revolution', 5),
-  ('reseller_type', 'Created new ASINs under TBB Brand Registry', 6),
-  ('reseller_type', 'Not specified', 7),
+  ('reseller_type', 'Exclusive under Skin Revolution', 5),
+  ('reseller_type', 'Not specified', 6),
 
   ('owned_by', 'BBMEDIA', 1),
   ('owned_by', 'Regina', 2),
