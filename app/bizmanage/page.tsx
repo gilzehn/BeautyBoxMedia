@@ -275,29 +275,43 @@ export default function BizManagePage() {
     (async () => {
       setLoading(true);
       setLoadError('');
-      const [brandsRes, optionsRes] = await Promise.all([
-        sb.from('brands').select('*').order('id'),
-        sb
-          .from('dropdown_options')
-          .select('field,value,sort_order')
-          .eq('active', true)
-          .order('sort_order'),
-      ]);
-      if (cancelled) return;
-      if (brandsRes.error || optionsRes.error) {
-        setLoadError(
-          `Could not load from Supabase: ${(brandsRes.error ?? optionsRes.error)!.message}`,
-        );
-      } else {
-        setRows((brandsRes.data as DbBrand[]).map(fromDb));
-        const live: Partial<Dropdowns> = {};
-        for (const o of optionsRes.data as { field: string; value: string }[]) {
-          const key = FIELD_KEYS[o.field as keyof typeof FIELD_KEYS];
-          if (key) (live[key] ??= []).push(o.value);
+      // Don't spin forever if the network blackholes the request.
+      const timeout = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('timed out after 10s — check your network and keys')), 10_000);
+      });
+      try {
+        const [brandsRes, optionsRes] = await Promise.race([
+          Promise.all([
+            sb.from('brands').select('*').order('id'),
+            sb
+              .from('dropdown_options')
+              .select('field,value,sort_order')
+              .eq('active', true)
+              .order('sort_order'),
+          ]),
+          timeout,
+        ]);
+        if (cancelled) return;
+        if (brandsRes.error || optionsRes.error) {
+          setLoadError(
+            `Could not load from Supabase: ${(brandsRes.error ?? optionsRes.error)!.message}`,
+          );
+        } else {
+          setRows((brandsRes.data as DbBrand[]).map(fromDb));
+          const live: Partial<Dropdowns> = {};
+          for (const o of optionsRes.data as { field: string; value: string }[]) {
+            const key = FIELD_KEYS[o.field as keyof typeof FIELD_KEYS];
+            if (key) (live[key] ??= []).push(o.value);
+          }
+          setDropdowns({ ...DEFAULT_DROPDOWNS, ...live });
         }
-        setDropdowns({ ...DEFAULT_DROPDOWNS, ...live });
+      } catch (err) {
+        if (cancelled) return;
+        setLoadError(
+          `Could not load from Supabase: ${err instanceof Error ? err.message : String(err)} — showing built-in seed data.`,
+        );
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     })();
     return () => {
       cancelled = true;
