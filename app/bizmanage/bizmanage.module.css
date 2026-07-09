@@ -220,8 +220,9 @@
 }
 
 .content {
-  /* Full width so every column fits without horizontal sliding on desktop. */
-  max-width: none;
+  /* Wide enough that every column fits without sliding on desktop, capped so
+     ultrawide monitors don't stretch the table into sparse emptiness. */
+  max-width: 1680px;
   margin: 0 auto;
   padding: 32px 32px 64px;
 }
@@ -263,6 +264,13 @@
   border-spacing: 0;
   font-size: 0.9rem;
   white-space: nowrap;
+}
+
+/* Every column except Brand hugs its content (width:1% + nowrap = shrink to
+   fit); the Brand column absorbs the leftover width, so no column develops
+   big internal gaps on wide screens. */
+.table thead th:nth-child(n + 2) {
+  width: 1%;
 }
 
 .table thead th {
@@ -724,6 +732,17 @@
 
 .muted {
   color: var(--text-muted);
+}
+
+/* Mid-size screens: tighter cell padding buys room before the horizontal
+   scroll fallback below has to kick in. */
+@media (max-width: 1400px) {
+  .table thead th {
+    padding: 12px 10px;
+  }
+  .table tbody td {
+    padding: 6px 10px;
+  }
 }
 
 /* Narrow screens: fall back to a horizontally scrollable table (the header
