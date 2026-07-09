@@ -14,6 +14,7 @@ import {
   getDropdownOptions,
   addDropdownOption,
 } from '@/lib/brands';
+import { AdminUserRow, getUsers, createUser } from '@/lib/adminUsers';
 
 // Column definitions drive the header (sorting), the read cells, the edit
 // inputs, and the toolbar filters. `select` columns pull their allowed values
@@ -127,6 +128,127 @@ function uniq(values: string[]): string[] {
   return Array.from(new Set(values));
 }
 
+// Admin-only user management modal. Visibility is gated client-side on the
+// session's app_metadata.role, but authorization is enforced server-side by
+// the admin-users edge function.
+function UsersPanel({ onClose }: { onClose: () => void }) {
+  const [users, setUsers] = useState<AdminUserRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [listError, setListError] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  useEffect(() => {
+    getUsers()
+      .then(setUsers)
+      .catch((err) =>
+        setListError(err instanceof Error ? err.message : 'Failed to load users.')
+      )
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleCreate = async (e: FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    setFormError('');
+    try {
+      const created = await createUser({ email: email.trim(), password, isAdmin });
+      setUsers((prev) => [...prev, created]);
+      setEmail('');
+      setPassword('');
+      setIsAdmin(false);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to create user.');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHead}>
+          <h3 className={styles.modalTitle}>Users</h3>
+          <button className={styles.rowBtn} onClick={onClose} type="button">
+            Close
+          </button>
+        </div>
+
+        {loading ? (
+          <p className={styles.pageMeta}>Loading users…</p>
+        ) : listError ? (
+          <p className={styles.error}>{listError}</p>
+        ) : (
+          <ul className={styles.userList}>
+            {users.map((u) => (
+              <li key={u.id} className={styles.userRow}>
+                <div>
+                  <div className={styles.userEmail}>{u.email}</div>
+                  <div className={styles.userMeta}>
+                    Created {new Date(u.createdAt).toLocaleDateString()}
+                    {u.lastSignInAt
+                      ? ` · last sign-in ${new Date(u.lastSignInAt).toLocaleDateString()}`
+                      : ' · never signed in'}
+                  </div>
+                </div>
+                <span
+                  className={`${styles.pill} ${
+                    u.role === 'admin' ? styles.accountTBB : styles.badgeNeutral
+                  }`}
+                >
+                  {u.role}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <form className={styles.addUserForm} onSubmit={handleCreate}>
+          <h4 className={styles.addUserTitle}>Add user</h4>
+          <label className={styles.field}>
+            <span className={styles.label}>Email</span>
+            <input
+              type="email"
+              className={styles.input}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="teammate@thebeautyboxmedia.com"
+              required
+            />
+          </label>
+          <label className={styles.field}>
+            <span className={styles.label}>Password</span>
+            <input
+              type="password"
+              className={styles.input}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              minLength={8}
+              placeholder="At least 8 characters"
+              required
+            />
+          </label>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={isAdmin}
+              onChange={(e) => setIsAdmin(e.target.checked)}
+            />
+            <span>Administrator (can manage users)</span>
+          </label>
+          {formError && <p className={styles.error}>{formError}</p>}
+          <button type="submit" className="btn btn-primary" disabled={creating}>
+            {creating ? 'Creating…' : 'Create user'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function BizManagePage() {
   // --- Auth state ---------------------------------------------------------
   const [session, setSession] = useState<Session | null>(null);
@@ -173,7 +295,12 @@ export default function BizManagePage() {
     setSession(null);
     setEmail('');
     setPassword('');
+    setUsersOpen(false);
   };
+
+  // Admin-only affordances (enforced for real by the admin-users edge function).
+  const isAdmin = session?.user?.app_metadata?.role === 'admin';
+  const [usersOpen, setUsersOpen] = useState(false);
 
   // --- Data state ---------------------------------------------------------
   const [rows, setRows] = useState<BrandRow[]>([]);
@@ -269,23 +396,6 @@ export default function BizManagePage() {
     setSearch('');
     setFilters({});
   };
-
-  // Stat chips toggle the matching single-column filter on/off.
-  const toggleChipFilter = (key: ColKey, value: string) =>
-    setFilters((f) => ({ ...f, [key]: f[key] === value ? undefined : value }));
-
-  // Summary counts for the stat chips (per status and per account).
-  const stats = useMemo(() => {
-    const statusCounts = new Map<string, number>();
-    const accountCounts = new Map<string, number>();
-    for (const r of rows) {
-      if (r.status) statusCounts.set(r.status, (statusCounts.get(r.status) ?? 0) + 1);
-      if (r.accountName) accountCounts.set(r.accountName, (accountCounts.get(r.accountName) ?? 0) + 1);
-    }
-    const sorted = (m: Map<string, number>) =>
-      Array.from(m).sort(([a], [b]) => a.localeCompare(b));
-    return { status: sorted(statusCounts), account: sorted(accountCounts) };
-  }, [rows]);
 
   // Per-column value counts shown in the filter dropdown labels.
   const filterCounts = useMemo(() => {
@@ -594,10 +704,23 @@ export default function BizManagePage() {
         <div className={styles.brandMark}>
           Biz<span className={styles.accent}>Manage</span>
         </div>
-        <button className={`btn btn-outline ${styles.signOut}`} onClick={handleSignOut}>
-          Sign out
-        </button>
+        <div className={styles.topbarActions}>
+          {isAdmin && (
+            <button
+              className={`btn btn-outline ${styles.signOut}`}
+              onClick={() => setUsersOpen(true)}
+              type="button"
+            >
+              Users
+            </button>
+          )}
+          <button className={`btn btn-outline ${styles.signOut}`} onClick={handleSignOut}>
+            Sign out
+          </button>
+        </div>
       </header>
+
+      {isAdmin && usersOpen && <UsersPanel onClose={() => setUsersOpen(false)} />}
 
       <main className={styles.content}>
         <div className={styles.pageHead}>
@@ -606,40 +729,6 @@ export default function BizManagePage() {
             {visibleRows.length}
             {visibleRows.length !== rows.length ? ` of ${rows.length}` : ''} brands
           </p>
-        </div>
-
-        {/* Stat chips: totals + click-to-filter status/account counts */}
-        <div className={styles.statsRow}>
-          <div className={styles.statChip}>
-            <span className={styles.statLabel}>Total</span>
-            <span className={styles.statValue}>{rows.length}</span>
-          </div>
-          {stats.status.map(([value, count]) => (
-            <button
-              key={`status-${value}`}
-              type="button"
-              className={`${styles.statChip} ${styles.statChipButton} ${
-                filters.status === value ? styles.statChipActive : ''
-              }`}
-              onClick={() => toggleChipFilter('status', value)}
-            >
-              <span className={styles.statLabel}>{value}</span>
-              <span className={styles.statValue}>{count}</span>
-            </button>
-          ))}
-          {stats.account.map(([value, count]) => (
-            <button
-              key={`account-${value}`}
-              type="button"
-              className={`${styles.statChip} ${styles.statChipButton} ${
-                filters.accountName === value ? styles.statChipActive : ''
-              }`}
-              onClick={() => toggleChipFilter('accountName', value)}
-            >
-              <span className={styles.statLabel}>{value}</span>
-              <span className={styles.statValue}>{count}</span>
-            </button>
-          ))}
         </div>
 
         {/* Toolbar: search + filters + add */}
