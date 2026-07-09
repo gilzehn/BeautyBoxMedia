@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState, useEffect, useMemo, useCallback, FormEvent } from 'react';
+import { Fragment, useState, useEffect, useMemo, useCallback, useRef, FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import styles from './bizmanage.module.css';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
@@ -16,9 +16,9 @@ import {
 } from '@/lib/brands';
 import { AdminUserRow, getUsers, createUser } from '@/lib/adminUsers';
 
-// Column definitions drive the header (sorting), the read cells, the edit
-// inputs, and the toolbar filters. `select` columns pull their allowed values
-// from the `dropdown_options` table (keyed by `dropdownField`).
+// Column definitions drive the header (sorting), the always-editable cells,
+// and the toolbar filters. `select` columns pull their allowed values from
+// the `dropdown_options` table (keyed by `dropdownField`).
 type ColKey = keyof Omit<BrandRow, 'id'>;
 type ColKind = 'text' | 'select';
 interface Column {
@@ -29,7 +29,7 @@ interface Column {
   numericAlign?: boolean; // right-align numeric-ish values
 }
 // The `note` field is intentionally not a column: it stays in the data (and in
-// search) but is only shown/edited via the full-width row in edit mode.
+// search) and is edited via the expandable note row under each brand.
 const COLUMNS: Column[] = [
   { key: 'brand', label: 'Brand', kind: 'text' },
   { key: 'accountName', label: 'Account', kind: 'select', dropdownField: 'account_name' },
@@ -74,10 +74,8 @@ const PILL_CLASS: Partial<Record<ColKey, (v: string) => string | undefined>> = {
 // Sentinel option in edit dropdowns that prompts for a brand-new value.
 const ADD_NEW = '__add_new__';
 
-// The editable draft keeps every field as a string for smooth typing; it is
-// converted to a BrandInput on save.
-type Draft = Record<ColKey, string>;
-const EMPTY_DRAFT: Draft = {
+// Blank row used by the add-brand flow.
+const EMPTY_INPUT: BrandInput = {
   brand: '',
   accountName: '',
   brandRegistry: '',
@@ -91,30 +89,30 @@ const EMPTY_DRAFT: Draft = {
   note: '',
 };
 
-function rowToDraft(row: BrandRow): Draft {
-  const { id: _id, ...fields } = row;
-  return { ...fields };
-}
-
-function draftToInput(draft: Draft): BrandInput {
-  return {
-    brand: draft.brand.trim(),
-    accountName: draft.accountName.trim(),
-    brandRegistry: draft.brandRegistry.trim(),
-    resellerType: draft.resellerType.trim(),
-    numAsins: draft.numAsins.trim(),
-    ownedBy: draft.ownedBy.trim(),
-    urgency: draft.urgency.trim(),
-    priority: draft.priority.trim(),
-    status: draft.status.trim(),
-    estSow: draft.estSow.trim(),
-    note: draft.note.trim(),
-  };
-}
-
 // Preserve-order de-dupe.
 function uniq(values: string[]): string[] {
   return Array.from(new Set(values));
+}
+
+function NoteIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6" />
+      <path d="M8 13h8M8 17h5" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 6h18" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  );
 }
 
 // Admin-only user management modal. Visibility is gated client-side on the
@@ -400,188 +398,246 @@ export default function BizManagePage() {
     return counts;
   }, [rows]);
 
-  // --- Editing ------------------------------------------------------------
-  // editingId is a stringified row id, 'new' for the add-row, or null.
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
-  const [saving, setSaving] = useState(false);
-  const [rowError, setRowError] = useState('');
+  // --- Inline editing ------------------------------------------------------
+  // Every cell is always editable: selects save immediately on change, text
+  // cells save on blur/Enter (Escape reverts). Saves are optimistic; each
+  // row's saves run serialized on a promise chain so rapid edits can't race.
+  const [cellDraft, setCellDraft] = useState<{ rowId: number; key: ColKey; value: string } | null>(
+    null
+  );
+  const [savingIds, setSavingIds] = useState<Set<number>>(new Set());
+  const [saveError, setSaveError] = useState('');
+  const [openNoteId, setOpenNoteId] = useState<number | null>(null);
+  const [adding, setAdding] = useState(false);
+  const rowsRef = useRef<BrandRow[]>([]);
+  rowsRef.current = rows;
+  const saveChains = useRef(new Map<number, Promise<void>>());
+  const pendingCounts = useRef(new Map<number, number>());
+  // Escape must suppress the save in the blur that follows it; a ref (not
+  // state) because the blur fires before a state update would land.
+  const skipBlurSave = useRef(false);
 
-  const startEdit = (row: BrandRow) => {
-    setEditingId(String(row.id));
-    setDraft(rowToDraft(row));
-    setRowError('');
-  };
-  const startAdd = () => {
-    setEditingId('new');
-    setDraft(EMPTY_DRAFT);
-    setRowError('');
-  };
-  const cancelEdit = () => {
-    setEditingId(null);
-    setRowError('');
-  };
-  const setField = (key: ColKey, value: string) =>
-    setDraft((d) => ({ ...d, [key]: value }));
+  const saveField = (rowId: number, key: ColKey, value: string) => {
+    const current = rowsRef.current.find((r) => r.id === rowId);
+    if (!current || String(current[key] ?? '') === value) return;
+    if (key === 'brand' && !value.trim()) {
+      setSaveError('Brand name is required — change reverted.');
+      return;
+    }
+    const prevValue = String(current[key] ?? '');
+    const brandLabel = current.brand;
+    setRows((prev) => prev.map((r) => (r.id === rowId ? { ...r, [key]: value } : r)));
+    pendingCounts.current.set(rowId, (pendingCounts.current.get(rowId) ?? 0) + 1);
+    setSavingIds((prev) => new Set(prev).add(rowId));
 
-  // Select change for dropdown-backed cells. Picking the sentinel prompts for
-  // a brand-new value and persists it to dropdown_options for next time.
-  const handleSelectChange = async (col: Column, raw: string) => {
+    const chain = (saveChains.current.get(rowId) ?? Promise.resolve())
+      .then(async () => {
+        const latest = rowsRef.current.find((r) => r.id === rowId);
+        if (!latest) return; // row deleted while queued
+        const { id: _id, ...input } = latest;
+        // The server echo is deliberately ignored: writing it back could
+        // clobber a newer optimistic edit already queued behind this save.
+        await updateBrand(rowId, input);
+      })
+      .catch((err) => {
+        // Revert only if the field still holds the value that failed.
+        setRows((prev) =>
+          prev.map((r) =>
+            r.id === rowId && String(r[key] ?? '') === value ? { ...r, [key]: prevValue } : r
+          )
+        );
+        const label = COLUMNS.find((c) => c.key === key)?.label ?? key;
+        const msg = err instanceof Error ? err.message : 'save failed';
+        setSaveError(`Couldn't save ${label} for "${brandLabel}": ${msg}`);
+      })
+      .finally(() => {
+        const left = (pendingCounts.current.get(rowId) ?? 1) - 1;
+        if (left <= 0) {
+          pendingCounts.current.delete(rowId);
+          saveChains.current.delete(rowId);
+          setSavingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(rowId);
+            return next;
+          });
+        } else {
+          pendingCounts.current.set(rowId, left);
+        }
+      });
+    saveChains.current.set(rowId, chain);
+  };
+
+  // Select change straight from a cell. Picking the sentinel prompts for a
+  // brand-new value and persists it to dropdown_options for next time.
+  const handleCellSelect = async (row: BrandRow, col: Column, raw: string) => {
     if (raw !== ADD_NEW) {
-      setField(col.key, raw);
+      saveField(row.id, col.key, raw);
       return;
     }
     const entered = window.prompt(`Add a new ${col.label} option:`);
     const value = entered?.trim();
-    if (!value || value === ADD_NEW) return; // cancel/empty: draft untouched
+    if (!value || value === ADD_NEW) return; // cancel/empty: select snaps back
     const existing = valuesFor(col).find((v) => v.toLowerCase() === value.toLowerCase());
     if (existing) {
-      setField(col.key, existing); // reuse canonical casing
+      saveField(row.id, col.key, existing); // reuse canonical casing
       return;
     }
-    setField(col.key, value);
+    saveField(row.id, col.key, value);
     const field = col.dropdownField;
     if (!field) return;
     try {
       await addDropdownOption(field, value);
       setOptions((prev) => ({ ...prev, [field]: [...(prev[field] ?? []), value] }));
     } catch {
-      setRowError(
-        `"${value}" is set on this row, but saving it as a reusable ${col.label} option failed.`
+      setSaveError(
+        `"${value}" is saved on this row, but adding it as a reusable ${col.label} option failed.`
       );
     }
   };
 
-  const saveEdit = async () => {
-    const input = draftToInput(draft);
-    if (!input.brand) {
-      setRowError('Brand name is required.');
-      return;
-    }
-    setSaving(true);
-    setRowError('');
+  const handleAddBrand = async () => {
+    const brand = window.prompt('Brand name:')?.trim();
+    if (!brand) return;
+    setAdding(true);
+    setSaveError('');
     try {
-      if (editingId === 'new') {
-        const created = await addBrand(input);
-        setRows((prev) => [...prev, created]);
-      } else if (editingId) {
-        const updated = await updateBrand(Number(editingId), input);
-        setRows((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
-      }
-      setEditingId(null);
+      const created = await addBrand({ ...EMPTY_INPUT, brand });
+      setRows((prev) => [...prev, created]);
+      clearFilters(); // make sure the new row isn't hidden by an active filter
     } catch (err) {
-      setRowError(err instanceof Error ? err.message : 'Failed to save.');
+      setSaveError(err instanceof Error ? err.message : 'Failed to add brand.');
     } finally {
-      setSaving(false);
+      setAdding(false);
     }
   };
 
   const removeRow = async (row: BrandRow) => {
     if (typeof window !== 'undefined' && !window.confirm(`Delete "${row.brand}"?`)) return;
-    setRowError('');
+    setSaveError('');
     try {
       await deleteBrand(row.id);
       setRows((prev) => prev.filter((r) => r.id !== row.id));
+      if (openNoteId === row.id) setOpenNoteId(null);
     } catch (err) {
       setDataError(err instanceof Error ? err.message : 'Failed to delete.');
     }
   };
 
   // --- Cell renderers -----------------------------------------------------
-  const renderEditCell = (col: Column) => {
+  // The read-only look of a value (pill / muted dash / plain), shown under
+  // the invisible overlay select.
+  const renderDisplayValue = (col: Column, text: string) => {
+    if (text === '') return <span className={styles.muted}>—</span>;
+    const pillClass = PILL_CLASS[col.key]?.(text);
+    if (pillClass && styles[pillClass]) {
+      return <span className={`${styles.pill} ${styles[pillClass]}`}>{text}</span>;
+    }
+    if (col.key === 'brandRegistry') {
+      // Only "Yes" earns a pill; No / N/A stay quiet.
+      return <span className={styles.muted}>{text}</span>;
+    }
+    return <>{text}</>;
+  };
+
+  const renderCell = (col: Column, row: BrandRow) => {
+    const text = String(row[col.key] ?? '');
     const alignClass = col.numericAlign ? styles.numCol : undefined;
     if (col.kind === 'select') {
-      const opts = uniq([...valuesFor(col), draft[col.key]].filter(Boolean));
+      const opts = uniq([...valuesFor(col), text].filter(Boolean));
       return (
-        <td key={col.key}>
-          <select
-            className={styles.cellSelect}
-            value={draft[col.key]}
-            onChange={(e) => handleSelectChange(col, e.target.value)}
-          >
-            <option value="">—</option>
-            {opts.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-            <option value={ADD_NEW}>＋ Add new…</option>
-          </select>
+        <td key={col.key} className={alignClass}>
+          <div className={styles.selectCell}>
+            {renderDisplayValue(col, text)}
+            {/* Invisible overlay: the first click opens the native picker,
+                and it keeps the cell keyboard-focusable. */}
+            <select
+              className={styles.overlaySelect}
+              value={text}
+              aria-label={`${col.label} for ${row.brand}`}
+              onChange={(e) => handleCellSelect(row, col, e.target.value)}
+            >
+              <option value="">—</option>
+              {opts.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+              <option value={ADD_NEW}>＋ Add new…</option>
+            </select>
+          </div>
         </td>
       );
     }
+    const isDrafting = cellDraft?.rowId === row.id && cellDraft.key === col.key;
     return (
       <td key={col.key} className={alignClass}>
         <input
-          className={styles.cellInput}
+          className={`${styles.ghostInput} ${col.key === 'brand' ? styles.ghostInputStrong : ''}`}
           type="text"
           inputMode={col.key === 'numAsins' ? 'numeric' : undefined}
-          value={draft[col.key]}
-          onChange={(e) => setField(col.key, e.target.value)}
+          aria-label={`${col.label} for ${row.brand}`}
+          value={isDrafting ? cellDraft.value : text}
+          onFocus={() => setCellDraft({ rowId: row.id, key: col.key, value: text })}
+          onChange={(e) => setCellDraft((d) => (d ? { ...d, value: e.target.value } : d))}
+          onBlur={(e) => {
+            const v = e.target.value;
+            setCellDraft(null);
+            if (skipBlurSave.current) {
+              skipBlurSave.current = false;
+              return; // Escape: revert without saving
+            }
+            saveField(row.id, col.key, v.trim());
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.currentTarget.blur();
+            else if (e.key === 'Escape') {
+              skipBlurSave.current = true;
+              e.currentTarget.blur();
+            }
+          }}
         />
       </td>
     );
   };
 
-  const renderReadCell = (col: Column, row: BrandRow) => {
-    const alignClass = col.numericAlign ? styles.numCol : undefined;
-    if (col.key === 'brand') {
-      return (
-        <td key={col.key} className={styles.strong}>
-          {row.brand}
-        </td>
-      );
-    }
-    const value = row[col.key];
-    const text = value === null ? '' : String(value);
-    if (text === '') {
-      return (
-        <td key={col.key} className={alignClass}>
-          <span className={styles.muted}>—</span>
-        </td>
-      );
-    }
-    const pillClass = PILL_CLASS[col.key]?.(text);
-    if (pillClass && styles[pillClass]) {
-      return (
-        <td key={col.key}>
-          <span className={`${styles.pill} ${styles[pillClass]}`}>{text}</span>
-        </td>
-      );
-    }
-    if (col.key === 'brandRegistry') {
-      // Only "Yes" earns a pill; No / N/A stay quiet.
-      return (
-        <td key={col.key}>
-          <span className={styles.muted}>{text}</span>
-        </td>
-      );
-    }
+  // Expandable full-width note editor under a row (toggled by the note icon).
+  const renderNoteRow = (row: BrandRow) => {
+    const isDrafting = cellDraft?.rowId === row.id && cellDraft.key === 'note';
     return (
-      <td key={col.key} className={alignClass}>
-        {text}
-      </td>
+      <tr className={styles.noteRow}>
+        <td colSpan={COLUMNS.length + 1}>
+          <label className={styles.noteRowInner}>
+            <span className={styles.label}>Note</span>
+            <input
+              className={styles.cellInput}
+              type="text"
+              placeholder="Optional note"
+              value={isDrafting ? cellDraft.value : row.note}
+              onFocus={() => setCellDraft({ rowId: row.id, key: 'note', value: row.note })}
+              onChange={(e) => setCellDraft((d) => (d ? { ...d, value: e.target.value } : d))}
+              onBlur={(e) => {
+                const v = e.target.value;
+                setCellDraft(null);
+                if (skipBlurSave.current) {
+                  skipBlurSave.current = false;
+                  return;
+                }
+                saveField(row.id, 'note', v.trim());
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.currentTarget.blur();
+                else if (e.key === 'Escape') {
+                  skipBlurSave.current = true;
+                  e.currentTarget.blur();
+                  setOpenNoteId(null);
+                }
+              }}
+            />
+          </label>
+        </td>
+      </tr>
     );
   };
-
-  // Full-width companion row shown beneath an editing row: the note lives
-  // here instead of occupying a table column.
-  const renderNoteEditRow = () => (
-    <tr className={styles.editingRow}>
-      <td colSpan={COLUMNS.length + 1}>
-        <label className={styles.noteEditInner}>
-          <span className={styles.label}>Note</span>
-          <input
-            className={styles.cellInput}
-            type="text"
-            value={draft.note}
-            onChange={(e) => setField('note', e.target.value)}
-            placeholder="Optional note"
-          />
-        </label>
-      </td>
-    </tr>
-  );
 
   // --- Not-configured guard ----------------------------------------------
   if (!isSupabaseConfigured) {
@@ -658,7 +714,6 @@ export default function BizManagePage() {
   }
 
   // --- Console ------------------------------------------------------------
-  const editingNew = editingId === 'new';
   const colSpan = COLUMNS.length + 1;
 
   return (
@@ -731,16 +786,23 @@ export default function BizManagePage() {
           </div>
           <button
             className={`btn btn-primary ${styles.addBtn}`}
-            onClick={startAdd}
-            disabled={editingNew}
+            onClick={handleAddBrand}
+            disabled={adding}
             type="button"
           >
-            + Add brand
+            {adding ? 'Adding…' : '+ Add brand'}
           </button>
         </div>
 
         {dataError && <p className={styles.error}>{dataError}</p>}
-        {rowError && <p className={styles.error}>{rowError}</p>}
+        {saveError && (
+          <div className={styles.errorBar} role="alert">
+            <span>{saveError}</span>
+            <button className={styles.errorDismiss} onClick={() => setSaveError('')} type="button">
+              Dismiss
+            </button>
+          </div>
+        )}
 
         <div className={styles.tableWrap}>
           <table className={styles.table}>
@@ -758,81 +820,59 @@ export default function BizManagePage() {
                     </span>
                   </th>
                 ))}
-                <th className={styles.actionsHead}>Actions</th>
+                <th className={styles.actionsHead} aria-label="Actions" />
               </tr>
             </thead>
             <tbody>
-              {/* Inline add row */}
-              {editingNew && (
-                <>
-                  <tr className={styles.editingRow}>
-                    {COLUMNS.map((col) => renderEditCell(col))}
-                    <td className={styles.actionsCell}>
-                      <button className={styles.rowBtnPrimary} onClick={saveEdit} disabled={saving} type="button">
-                        {saving ? '…' : 'Save'}
-                      </button>
-                      <button className={styles.rowBtn} onClick={cancelEdit} type="button">
-                        Cancel
-                      </button>
-                    </td>
-                  </tr>
-                  {renderNoteEditRow()}
-                </>
-              )}
-
               {dataLoading && rows.length === 0 ? (
                 <tr>
                   <td colSpan={colSpan} className={styles.emptyCell}>
                     Loading…
                   </td>
                 </tr>
-              ) : visibleRows.length === 0 && !editingNew ? (
+              ) : visibleRows.length === 0 ? (
                 <tr>
                   <td colSpan={colSpan} className={styles.emptyCell}>
                     {rows.length === 0 ? 'No brands yet. Add your first one.' : 'No matches.'}
                   </td>
                 </tr>
               ) : (
-                visibleRows.map((row) =>
-                  editingId === String(row.id) ? (
-                    <Fragment key={row.id}>
-                      <tr className={styles.editingRow}>
-                        {COLUMNS.map((col) => renderEditCell(col))}
-                        <td className={styles.actionsCell}>
-                          <button className={styles.rowBtnPrimary} onClick={saveEdit} disabled={saving} type="button">
-                            {saving ? '…' : 'Save'}
-                          </button>
-                          <button className={styles.rowBtn} onClick={cancelEdit} type="button">
-                            Cancel
-                          </button>
-                        </td>
-                      </tr>
-                      {renderNoteEditRow()}
-                    </Fragment>
-                  ) : (
-                    <tr key={row.id}>
-                      {COLUMNS.map((col) => renderReadCell(col, row))}
+                // An edit that changes the sorted column repositions the row,
+                // and one excluded by an active filter hides it — accepted,
+                // spreadsheet-style.
+                visibleRows.map((row, i) => (
+                  <Fragment key={row.id}>
+                    <tr className={i % 2 === 1 ? styles.rowEven : undefined}>
+                      {COLUMNS.map((col) => renderCell(col, row))}
                       <td className={styles.actionsCell}>
+                        {savingIds.has(row.id) && (
+                          <span className={styles.savingSpinner} aria-label="Saving" />
+                        )}
                         <button
-                          className={styles.rowBtn}
-                          onClick={() => startEdit(row)}
-                          disabled={editingId !== null}
+                          className={`${styles.iconBtn} ${row.note ? styles.iconBtnAccent : ''} ${
+                            openNoteId === row.id ? styles.iconBtnActive : ''
+                          }`}
+                          onClick={() => setOpenNoteId((v) => (v === row.id ? null : row.id))}
+                          aria-expanded={openNoteId === row.id}
+                          title={row.note ? `Note: ${row.note}` : 'Add note'}
                           type="button"
                         >
-                          Edit
+                          <NoteIcon />
                         </button>
                         <button
-                          className={styles.rowBtnDanger}
+                          className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
                           onClick={() => removeRow(row)}
-                          disabled={editingId !== null}
+                          disabled={savingIds.has(row.id)}
+                          title={`Delete ${row.brand}`}
                           type="button"
                         >
-                          Delete
+                          <TrashIcon />
                         </button>
                       </td>
                     </tr>
-                  )
-                )
+                    {openNoteId === row.id && renderNoteRow(row)}
+                  </Fragment>
+                ))
               )}
             </tbody>
           </table>
