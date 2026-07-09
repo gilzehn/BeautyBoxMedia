@@ -220,9 +220,10 @@
 }
 
 .content {
-  max-width: var(--max-width);
+  /* Full width so every column fits without horizontal sliding on desktop. */
+  max-width: none;
   margin: 0 auto;
-  padding: 40px 24px;
+  padding: 32px 32px 64px;
 }
 
 .pageHead {
@@ -245,13 +246,14 @@
 }
 
 /* ---- Table ---- */
+/* No inner scroll box: the whole table renders and the PAGE scrolls. The
+   wrapper must stay overflow-visible so the sticky header sticks to the
+   viewport (an overflow container would capture it). */
 .tableWrap {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: auto;
-  max-height: calc(100vh - 280px);
-  min-height: 320px;
+  overflow: visible;
 }
 
 .table {
@@ -265,7 +267,7 @@
 
 .table thead th {
   position: sticky;
-  top: 0;
+  top: var(--nav-height); /* pins just below the sticky topbar */
   z-index: 2;
   text-align: left;
   padding: 12px 14px;
@@ -278,8 +280,26 @@
   box-shadow: inset 0 -1px 0 var(--border);
 }
 
+/* Round the table's own corners since the wrapper no longer clips. */
+.table thead th:first-child {
+  border-top-left-radius: calc(var(--radius-lg) - 1px);
+}
+
+.table thead th:last-child {
+  border-top-right-radius: calc(var(--radius-lg) - 1px);
+}
+
+.table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: calc(var(--radius-lg) - 1px);
+}
+
+.table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: calc(var(--radius-lg) - 1px);
+}
+
 .table tbody td {
-  padding: 10px 14px;
+  height: 44px;
+  padding: 6px 14px;
   color: var(--text-secondary);
   border-bottom: 1px solid var(--border);
 }
@@ -292,7 +312,8 @@
   transition: background var(--transition);
 }
 
-.table tbody tr:nth-child(even) {
+/* Explicit zebra class (nth-child breaks when note rows are injected). */
+.rowEven {
   background: rgba(255, 255, 255, 0.015);
 }
 
@@ -305,7 +326,8 @@
   font-weight: 600;
 }
 
-.numCol {
+.numCol,
+.table thead th.numCol {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
@@ -462,15 +484,84 @@
   text-align: right;
 }
 
-/* ---- Inline edit inputs ---- */
-/* Scoped under .table tbody so it outranks the zebra :nth-child rule. */
-.table tbody tr.editingRow,
-.editingRow {
-  background: var(--bg-card-hover);
+/* ---- Always-editable cells ---- */
+/* Select cells: the pill/badge is the display; an invisible select overlays
+   the whole cell so the first click opens the native picker. */
+.selectCell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 6px;
 }
 
-.cellInput,
-.cellSelect {
+.selectCell::after {
+  content: '▾';
+  margin-left: 6px;
+  font-size: 0.7em;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.table tbody tr:hover .selectCell::after {
+  opacity: 1;
+}
+
+.selectCell:focus-within {
+  box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px var(--accent-glow);
+}
+
+.overlaySelect {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: 0;
+  appearance: none;
+  color-scheme: dark;
+}
+
+/* Text cells: inputs that look like plain table text until hover/focus. */
+.ghostInput {
+  width: 100%;
+  min-width: 70px;
+  padding: 5px 8px;
+  margin: -5px -8px;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+
+.ghostInput:hover {
+  border-color: var(--border);
+  background: var(--bg-secondary);
+}
+
+.ghostInput:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--bg-secondary);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.ghostInputStrong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.numCol .ghostInput {
+  text-align: right;
+}
+
+/* Kept for the expandable note row. */
+.cellInput {
   width: 100%;
   min-width: 90px;
   padding: 7px 9px;
@@ -483,12 +574,7 @@
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 
-.cellSelect {
-  cursor: pointer;
-}
-
-.cellInput:focus,
-.cellSelect:focus {
+.cellInput:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
@@ -500,9 +586,8 @@
   white-space: nowrap;
 }
 
-.rowBtn,
-.rowBtnPrimary,
-.rowBtnDanger {
+/* Kept for the Users modal Close button. */
+.rowBtn {
   padding: 6px 12px;
   margin-left: 6px;
   font-family: inherit;
@@ -521,28 +606,114 @@
   border-color: var(--text-muted);
 }
 
-.rowBtnPrimary {
-  color: #fff;
-  background: var(--accent);
+/* Compact ghost icon buttons (note / delete). */
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-left: 4px;
+  vertical-align: middle;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition), background var(--transition);
+}
+
+.iconBtn:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--border);
+  background: var(--bg-secondary);
+}
+
+.iconBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.iconBtnAccent {
+  color: var(--accent);
+}
+
+.iconBtnActive {
+  color: var(--accent);
   border-color: var(--accent);
+  background: rgba(255, 45, 123, 0.08);
 }
 
-.rowBtnPrimary:hover:not(:disabled) {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-}
-
-.rowBtnDanger:hover:not(:disabled) {
+.iconBtnDanger:hover:not(:disabled) {
   color: #ff6b6b;
   border-color: rgba(255, 107, 107, 0.5);
   background: rgba(255, 107, 107, 0.08);
 }
 
-.rowBtn:disabled,
-.rowBtnPrimary:disabled,
-.rowBtnDanger:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.savingSpinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Expandable note row ---- */
+.noteRow td {
+  background: var(--bg-secondary);
+}
+
+.noteRowInner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.noteRowInner input {
+  flex: 1;
+  min-width: 240px;
+}
+
+/* ---- Save error bar ---- */
+.errorBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  border-radius: var(--radius-sm);
+}
+
+.errorDismiss {
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.errorDismiss:hover {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
 }
 
 .emptyCell {
@@ -555,16 +726,20 @@
   color: var(--text-muted);
 }
 
-/* Full-width note field shown beneath a row while editing. */
-.noteEditInner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.noteEditInner input {
-  flex: 1;
-  min-width: 240px;
+/* Narrow screens: fall back to a horizontally scrollable table (the header
+   stops sticking to the viewport — accepted tradeoff) and keep permanent
+   input borders since there's no hover. */
+@media (max-width: 1100px) {
+  .tableWrap {
+    overflow-x: auto;
+  }
+  .ghostInput {
+    border-color: var(--border);
+    background: var(--bg-secondary);
+  }
+  .selectCell::after {
+    opacity: 1;
+  }
 }
 
 @media (max-width: 600px) {
