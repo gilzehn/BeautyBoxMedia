@@ -33,12 +33,13 @@ Follow these steps once to go live.
 
 The `brands` table has: **Brand**, **Account** (`account_name`), **Brand
 Registry**, **Reseller Type**, **# ASINs** (`num_asins`), **Owned By**,
-**Urgency**, **Priority** (a unique 1–30 ranking; blank = unranked), **Status**,
-**Est. SOW** (`est_sow`), and **Note**.
+**Urgency**, **Priority**, **Status**, **Est. SOW** (`est_sow`), and **Note**.
+The note isn't shown as a table column — it appears as a full-width field
+while a row is being edited (and is still covered by search).
 
-The **Account, Brand Registry, Reseller Type, Owned By, Urgency, Status, and
-Est. SOW** fields are chosen from dropdowns. **Priority** is picked from a 1–30
-rank list that greys out ranks already taken by another brand. To add a new
+The **Account, Brand Registry, Reseller Type, Owned By, Urgency, Priority,
+Status, and Est. SOW** fields are chosen from dropdowns (Urgency, Priority,
+and Est. SOW share the High/Medium/Low levels). To add a new
 dropdown value, pick **＋ Add new…** inside any dropdown while editing a row —
 it's saved to **`dropdown_options`** automatically. You can also edit that table
 directly (insert a row with the `field` + `value`, or set `active = false` to

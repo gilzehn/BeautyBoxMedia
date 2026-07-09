@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, FormEvent } from 'react';
+import { Fragment, useState, useEffect, useMemo, useCallback, FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import styles from './bizmanage.module.css';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
@@ -20,15 +20,16 @@ import { AdminUserRow, getUsers, createUser } from '@/lib/adminUsers';
 // inputs, and the toolbar filters. `select` columns pull their allowed values
 // from the `dropdown_options` table (keyed by `dropdownField`).
 type ColKey = keyof Omit<BrandRow, 'id'>;
-type ColKind = 'text' | 'number' | 'select';
+type ColKind = 'text' | 'select';
 interface Column {
   key: ColKey;
   label: string;
   kind: ColKind;
   dropdownField?: string; // dropdown_options.field for select columns
   numericAlign?: boolean; // right-align numeric-ish values
-  truncate?: boolean; // ellipsize long values (title tooltip shows the rest)
 }
+// The `note` field is intentionally not a column: it stays in the data (and in
+// search) but is only shown/edited via the full-width row in edit mode.
 const COLUMNS: Column[] = [
   { key: 'brand', label: 'Brand', kind: 'text' },
   { key: 'accountName', label: 'Account', kind: 'select', dropdownField: 'account_name' },
@@ -37,13 +38,13 @@ const COLUMNS: Column[] = [
   { key: 'numAsins', label: '# ASINs', kind: 'text', numericAlign: true },
   { key: 'ownedBy', label: 'Owned By', kind: 'select', dropdownField: 'owned_by' },
   { key: 'urgency', label: 'Urgency', kind: 'select', dropdownField: 'urgency' },
-  { key: 'priority', label: 'Priority', kind: 'number', numericAlign: true },
+  { key: 'priority', label: 'Priority', kind: 'select', dropdownField: 'priority' },
   { key: 'status', label: 'Status', kind: 'select', dropdownField: 'status' },
   { key: 'estSow', label: 'Est. SOW', kind: 'select', dropdownField: 'est_sow' },
-  { key: 'note', label: 'Note', kind: 'text', truncate: true },
 ];
 
 const FILTER_COLUMNS = COLUMNS.filter((c) => c.kind === 'select');
+const SEARCH_KEYS: ColKey[] = [...COLUMNS.map((c) => c.key), 'note'];
 
 // Value -> pill styling per column. Level pills (High/Medium/Low) are shared
 // by Urgency and Est. SOW; unmapped values (e.g. added via "+ Add new…") fall
@@ -54,7 +55,7 @@ const LEVEL_CLASS: Record<string, string> = {
   Low: 'levelLow',
 };
 const LEVEL_RANK: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
-const LEVEL_SORT_KEYS: ColKey[] = ['urgency', 'estSow'];
+const LEVEL_SORT_KEYS: ColKey[] = ['urgency', 'estSow', 'priority'];
 const ACCOUNT_CLASS: Record<string, string> = {
   NRG: 'accountNRG',
   TBB: 'accountTBB',
@@ -62,6 +63,7 @@ const ACCOUNT_CLASS: Record<string, string> = {
 const PILL_CLASS: Partial<Record<ColKey, (v: string) => string | undefined>> = {
   urgency: (v) => LEVEL_CLASS[v],
   estSow: (v) => LEVEL_CLASS[v],
+  priority: (v) => LEVEL_CLASS[v],
   status: (v) =>
     v === 'Active' ? 'levelLow' : v === 'Closing Out' ? 'levelMedium' : 'badgeNeutral',
   accountName: (v) => ACCOUNT_CLASS[v] ?? 'badgeNeutral',
@@ -71,7 +73,6 @@ const PILL_CLASS: Partial<Record<ColKey, (v: string) => string | undefined>> = {
 
 // Sentinel option in edit dropdowns that prompts for a brand-new value.
 const ADD_NEW = '__add_new__';
-const PRIORITY_RANKS = Array.from({ length: 30 }, (_, i) => i + 1);
 
 // The editable draft keeps every field as a string for smooth typing; it is
 // converted to a BrandInput on save.
@@ -91,23 +92,11 @@ const EMPTY_DRAFT: Draft = {
 };
 
 function rowToDraft(row: BrandRow): Draft {
-  return {
-    brand: row.brand,
-    accountName: row.accountName,
-    brandRegistry: row.brandRegistry,
-    resellerType: row.resellerType,
-    numAsins: row.numAsins,
-    ownedBy: row.ownedBy,
-    urgency: row.urgency,
-    priority: row.priority === null ? '' : String(row.priority),
-    status: row.status,
-    estSow: row.estSow,
-    note: row.note,
-  };
+  const { id: _id, ...fields } = row;
+  return { ...fields };
 }
 
 function draftToInput(draft: Draft): BrandInput {
-  const p = parseInt(draft.priority, 10);
   return {
     brand: draft.brand.trim(),
     accountName: draft.accountName.trim(),
@@ -116,7 +105,7 @@ function draftToInput(draft: Draft): BrandInput {
     numAsins: draft.numAsins.trim(),
     ownedBy: draft.ownedBy.trim(),
     urgency: draft.urgency.trim(),
-    priority: draft.priority.trim() === '' || Number.isNaN(p) ? null : p,
+    priority: draft.priority.trim(),
     status: draft.status.trim(),
     estSow: draft.estSow.trim(),
     note: draft.note.trim(),
@@ -351,32 +340,32 @@ export default function BizManagePage() {
         if (active && String(row[col.key] ?? '') !== active) return false;
       }
       if (!term) return true;
-      return COLUMNS.some((col) =>
-        String(row[col.key] ?? '').toLowerCase().includes(term)
+      return SEARCH_KEYS.some((key) =>
+        String(row[key] ?? '').toLowerCase().includes(term)
       );
     });
     out.sort((a, b) => {
-      const av = a[sortKey];
-      const bv = b[sortKey];
+      const av = String(a[sortKey] ?? '');
+      const bv = String(b[sortKey] ?? '');
       let cmp: number;
-      if (typeof av === 'number' || typeof bv === 'number' || av === null || bv === null) {
-        // Numeric column (priority): nulls always sort last regardless of dir.
-        const an = typeof av === 'number' ? av : null;
-        const bn = typeof bv === 'number' ? bv : null;
+      if (sortKey === 'numAsins') {
+        // Numeric-ish text column: non-numbers/empties always sort last.
+        const an = av.trim() === '' || Number.isNaN(Number(av)) ? null : Number(av);
+        const bn = bv.trim() === '' || Number.isNaN(Number(bv)) ? null : Number(bv);
         if (an === null && bn === null) cmp = 0;
         else if (an === null) return 1;
         else if (bn === null) return -1;
         else cmp = an - bn;
       } else if (LEVEL_SORT_KEYS.includes(sortKey)) {
         // Level columns: High -> Medium -> Low; unknown/empty always last.
-        const ar = LEVEL_RANK[String(av)] ?? null;
-        const br = LEVEL_RANK[String(bv)] ?? null;
+        const ar = LEVEL_RANK[av] ?? null;
+        const br = LEVEL_RANK[bv] ?? null;
         if (ar === null && br === null) cmp = 0;
         else if (ar === null) return 1;
         else if (br === null) return -1;
         else cmp = ar - br;
       } else {
-        cmp = String(av).localeCompare(String(bv));
+        cmp = av.localeCompare(bv);
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
@@ -435,16 +424,6 @@ export default function BizManagePage() {
   const setField = (key: ColKey, value: string) =>
     setDraft((d) => ({ ...d, [key]: value }));
 
-  // Ranks held by rows other than the one being edited; those options are
-  // disabled in the priority select (the DB enforces uniqueness).
-  const takenPriorities = useMemo(() => {
-    const taken = new Set<number>();
-    for (const r of rows) {
-      if (String(r.id) !== editingId && r.priority !== null) taken.add(r.priority);
-    }
-    return taken;
-  }, [rows, editingId]);
-
   // Select change for dropdown-backed cells. Picking the sentinel prompts for
   // a brand-new value and persists it to dropdown_options for next time.
   const handleSelectChange = async (col: Column, raw: string) => {
@@ -491,13 +470,7 @@ export default function BizManagePage() {
       }
       setEditingId(null);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to save.';
-      // Unique-constraint race: another editor grabbed the rank after we loaded.
-      if (msg.includes('brands_priority_key') || msg.includes('23505')) {
-        setRowError('That priority rank was just taken by another row — refresh and pick a different rank.');
-      } else {
-        setRowError(msg);
-      }
+      setRowError(err instanceof Error ? err.message : 'Failed to save.');
     } finally {
       setSaving(false);
     }
@@ -517,26 +490,6 @@ export default function BizManagePage() {
   // --- Cell renderers -----------------------------------------------------
   const renderEditCell = (col: Column) => {
     const alignClass = col.numericAlign ? styles.numCol : undefined;
-    if (col.key === 'priority') {
-      // Rank picker: taken ranks stay visible but disabled, so the whole
-      // 1–30 landscape is scannable and unique violations can't happen here.
-      return (
-        <td key={col.key} className={alignClass}>
-          <select
-            className={styles.cellSelect}
-            value={draft.priority}
-            onChange={(e) => setField('priority', e.target.value)}
-          >
-            <option value="">Unranked</option>
-            {PRIORITY_RANKS.map((rank) => (
-              <option key={rank} value={String(rank)} disabled={takenPriorities.has(rank)}>
-                {takenPriorities.has(rank) ? `${rank} — taken` : rank}
-              </option>
-            ))}
-          </select>
-        </td>
-      );
-    }
     if (col.kind === 'select') {
       const opts = uniq([...valuesFor(col), draft[col.key]].filter(Boolean));
       return (
@@ -604,21 +557,31 @@ export default function BizManagePage() {
         </td>
       );
     }
-    if (col.truncate) {
-      return (
-        <td key={col.key} className={alignClass}>
-          <span className={styles.truncate} title={text}>
-            {text}
-          </span>
-        </td>
-      );
-    }
     return (
       <td key={col.key} className={alignClass}>
         {text}
       </td>
     );
   };
+
+  // Full-width companion row shown beneath an editing row: the note lives
+  // here instead of occupying a table column.
+  const renderNoteEditRow = () => (
+    <tr className={styles.editingRow}>
+      <td colSpan={COLUMNS.length + 1}>
+        <label className={styles.noteEditInner}>
+          <span className={styles.label}>Note</span>
+          <input
+            className={styles.cellInput}
+            type="text"
+            value={draft.note}
+            onChange={(e) => setField('note', e.target.value)}
+            placeholder="Optional note"
+          />
+        </label>
+      </td>
+    </tr>
+  );
 
   // --- Not-configured guard ----------------------------------------------
   if (!isSupabaseConfigured) {
@@ -801,17 +764,20 @@ export default function BizManagePage() {
             <tbody>
               {/* Inline add row */}
               {editingNew && (
-                <tr className={styles.editingRow}>
-                  {COLUMNS.map((col) => renderEditCell(col))}
-                  <td className={styles.actionsCell}>
-                    <button className={styles.rowBtnPrimary} onClick={saveEdit} disabled={saving} type="button">
-                      {saving ? '…' : 'Save'}
-                    </button>
-                    <button className={styles.rowBtn} onClick={cancelEdit} type="button">
-                      Cancel
-                    </button>
-                  </td>
-                </tr>
+                <>
+                  <tr className={styles.editingRow}>
+                    {COLUMNS.map((col) => renderEditCell(col))}
+                    <td className={styles.actionsCell}>
+                      <button className={styles.rowBtnPrimary} onClick={saveEdit} disabled={saving} type="button">
+                        {saving ? '…' : 'Save'}
+                      </button>
+                      <button className={styles.rowBtn} onClick={cancelEdit} type="button">
+                        Cancel
+                      </button>
+                    </td>
+                  </tr>
+                  {renderNoteEditRow()}
+                </>
               )}
 
               {dataLoading && rows.length === 0 ? (
@@ -829,17 +795,20 @@ export default function BizManagePage() {
               ) : (
                 visibleRows.map((row) =>
                   editingId === String(row.id) ? (
-                    <tr key={row.id} className={styles.editingRow}>
-                      {COLUMNS.map((col) => renderEditCell(col))}
-                      <td className={styles.actionsCell}>
-                        <button className={styles.rowBtnPrimary} onClick={saveEdit} disabled={saving} type="button">
-                          {saving ? '…' : 'Save'}
-                        </button>
-                        <button className={styles.rowBtn} onClick={cancelEdit} type="button">
-                          Cancel
-                        </button>
-                      </td>
-                    </tr>
+                    <Fragment key={row.id}>
+                      <tr className={styles.editingRow}>
+                        {COLUMNS.map((col) => renderEditCell(col))}
+                        <td className={styles.actionsCell}>
+                          <button className={styles.rowBtnPrimary} onClick={saveEdit} disabled={saving} type="button">
+                            {saving ? '…' : 'Save'}
+                          </button>
+                          <button className={styles.rowBtn} onClick={cancelEdit} type="button">
+                            Cancel
+                          </button>
+                        </td>
+                      </tr>
+                      {renderNoteEditRow()}
+                    </Fragment>
                   ) : (
                     <tr key={row.id}>
                       {COLUMNS.map((col) => renderReadCell(col, row))}

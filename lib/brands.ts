@@ -2,9 +2,9 @@ import { supabase } from './supabaseClient';
 
 // --- Types ---------------------------------------------------------------
 // Mirrors the live `public.brands` table. `id` is a bigint identity (number).
-// Text-ish fields are kept as strings; `priority` is a sparse 1–30 ranking
-// (unique, most rows unranked -> null). Select values come from the
-// `dropdown_options` table (see getDropdownOptions).
+// All other fields are text; select values (including the High/Medium/Low
+// levels for urgency, priority, and est_sow) come from the `dropdown_options`
+// table (see getDropdownOptions).
 export interface BrandRow {
   id: number;
   brand: string;
@@ -14,7 +14,7 @@ export interface BrandRow {
   numAsins: string;
   ownedBy: string;
   urgency: string;
-  priority: number | null;
+  priority: string;
   status: string;
   estSow: string;
   note: string;
@@ -33,7 +33,7 @@ interface BrandRecord {
   num_asins: string | null;
   owned_by: string | null;
   urgency: string | null;
-  priority: number | null;
+  priority: string | null;
   status: string | null;
   est_sow: string | null;
   note: string | null;
@@ -53,7 +53,7 @@ function fromRecord(r: BrandRecord): BrandRow {
     numAsins: r.num_asins ?? '',
     ownedBy: r.owned_by ?? '',
     urgency: r.urgency ?? '',
-    priority: r.priority ?? null,
+    priority: r.priority ?? '',
     status: r.status ?? '',
     estSow: r.est_sow ?? '',
     note: r.note ?? '',
@@ -69,7 +69,7 @@ function toRecord(input: BrandInput): Omit<BrandRecord, 'id'> {
     num_asins: input.numAsins,
     owned_by: input.ownedBy,
     urgency: input.urgency,
-    priority: input.priority, // null = unranked
+    priority: input.priority,
     status: input.status,
     est_sow: input.estSow,
     note: input.note,

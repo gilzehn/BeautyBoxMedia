@@ -555,14 +555,16 @@
   color: var(--text-muted);
 }
 
-/* Inner span is the reliable way to ellipsize inside an auto-layout table. */
-.truncate {
-  display: inline-block;
-  max-width: 260px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  vertical-align: bottom;
+/* Full-width note field shown beneath a row while editing. */
+.noteEditInner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.noteEditInner input {
+  flex: 1;
+  min-width: 240px;
 }
 
 @media (max-width: 600px) {
