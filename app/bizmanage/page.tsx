@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, FormEvent } from 'react';
+import { Fragment, useState, useEffect, useMemo, useCallback, FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import styles from './bizmanage.module.css';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
@@ -12,13 +12,15 @@ import {
   updateBrand,
   deleteBrand,
   getDropdownOptions,
+  addDropdownOption,
 } from '@/lib/brands';
+import { AdminUserRow, getUsers, createUser } from '@/lib/adminUsers';
 
 // Column definitions drive the header (sorting), the read cells, the edit
 // inputs, and the toolbar filters. `select` columns pull their allowed values
 // from the `dropdown_options` table (keyed by `dropdownField`).
 type ColKey = keyof Omit<BrandRow, 'id'>;
-type ColKind = 'text' | 'number' | 'select';
+type ColKind = 'text' | 'select';
 interface Column {
   key: ColKey;
   label: string;
@@ -26,6 +28,8 @@ interface Column {
   dropdownField?: string; // dropdown_options.field for select columns
   numericAlign?: boolean; // right-align numeric-ish values
 }
+// The `note` field is intentionally not a column: it stays in the data (and in
+// search) but is only shown/edited via the full-width row in edit mode.
 const COLUMNS: Column[] = [
   { key: 'brand', label: 'Brand', kind: 'text' },
   { key: 'accountName', label: 'Account', kind: 'select', dropdownField: 'account_name' },
@@ -34,14 +38,41 @@ const COLUMNS: Column[] = [
   { key: 'numAsins', label: '# ASINs', kind: 'text', numericAlign: true },
   { key: 'ownedBy', label: 'Owned By', kind: 'select', dropdownField: 'owned_by' },
   { key: 'urgency', label: 'Urgency', kind: 'select', dropdownField: 'urgency' },
-  { key: 'priority', label: 'Priority', kind: 'number', numericAlign: true },
+  { key: 'priority', label: 'Priority', kind: 'select', dropdownField: 'priority' },
   { key: 'status', label: 'Status', kind: 'select', dropdownField: 'status' },
-  { key: 'estSow', label: 'Est. SOW', kind: 'text' },
-  { key: 'note', label: 'Note', kind: 'text' },
+  { key: 'estSow', label: 'Est. SOW', kind: 'select', dropdownField: 'est_sow' },
 ];
 
 const FILTER_COLUMNS = COLUMNS.filter((c) => c.kind === 'select');
-const PILL_LEVELS = ['High', 'Medium', 'Low'];
+const SEARCH_KEYS: ColKey[] = [...COLUMNS.map((c) => c.key), 'note'];
+
+// Value -> pill styling per column. Level pills (High/Medium/Low) are shared
+// by Urgency and Est. SOW; unmapped values (e.g. added via "+ Add new…") fall
+// back to a neutral badge or plain text.
+const LEVEL_CLASS: Record<string, string> = {
+  High: 'levelHigh',
+  Medium: 'levelMedium',
+  Low: 'levelLow',
+};
+const LEVEL_RANK: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
+const LEVEL_SORT_KEYS: ColKey[] = ['urgency', 'estSow', 'priority'];
+const ACCOUNT_CLASS: Record<string, string> = {
+  NRG: 'accountNRG',
+  TBB: 'accountTBB',
+};
+const PILL_CLASS: Partial<Record<ColKey, (v: string) => string | undefined>> = {
+  urgency: (v) => LEVEL_CLASS[v],
+  estSow: (v) => LEVEL_CLASS[v],
+  priority: (v) => LEVEL_CLASS[v],
+  status: (v) =>
+    v === 'Active' ? 'levelLow' : v === 'Closing Out' ? 'levelMedium' : 'badgeNeutral',
+  accountName: (v) => ACCOUNT_CLASS[v] ?? 'badgeNeutral',
+  brandRegistry: (v) => (v === 'Yes' ? 'levelLow' : undefined),
+  resellerType: () => 'badgeNeutral',
+};
+
+// Sentinel option in edit dropdowns that prompts for a brand-new value.
+const ADD_NEW = '__add_new__';
 
 // The editable draft keeps every field as a string for smooth typing; it is
 // converted to a BrandInput on save.
@@ -61,23 +92,11 @@ const EMPTY_DRAFT: Draft = {
 };
 
 function rowToDraft(row: BrandRow): Draft {
-  return {
-    brand: row.brand,
-    accountName: row.accountName,
-    brandRegistry: row.brandRegistry,
-    resellerType: row.resellerType,
-    numAsins: row.numAsins,
-    ownedBy: row.ownedBy,
-    urgency: row.urgency,
-    priority: row.priority === null ? '' : String(row.priority),
-    status: row.status,
-    estSow: row.estSow,
-    note: row.note,
-  };
+  const { id: _id, ...fields } = row;
+  return { ...fields };
 }
 
 function draftToInput(draft: Draft): BrandInput {
-  const p = parseInt(draft.priority, 10);
   return {
     brand: draft.brand.trim(),
     accountName: draft.accountName.trim(),
@@ -86,7 +105,7 @@ function draftToInput(draft: Draft): BrandInput {
     numAsins: draft.numAsins.trim(),
     ownedBy: draft.ownedBy.trim(),
     urgency: draft.urgency.trim(),
-    priority: draft.priority.trim() === '' || Number.isNaN(p) ? null : p,
+    priority: draft.priority.trim(),
     status: draft.status.trim(),
     estSow: draft.estSow.trim(),
     note: draft.note.trim(),
@@ -96,6 +115,127 @@ function draftToInput(draft: Draft): BrandInput {
 // Preserve-order de-dupe.
 function uniq(values: string[]): string[] {
   return Array.from(new Set(values));
+}
+
+// Admin-only user management modal. Visibility is gated client-side on the
+// session's app_metadata.role, but authorization is enforced server-side by
+// the admin-users edge function.
+function UsersPanel({ onClose }: { onClose: () => void }) {
+  const [users, setUsers] = useState<AdminUserRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [listError, setListError] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  useEffect(() => {
+    getUsers()
+      .then(setUsers)
+      .catch((err) =>
+        setListError(err instanceof Error ? err.message : 'Failed to load users.')
+      )
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleCreate = async (e: FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    setFormError('');
+    try {
+      const created = await createUser({ email: email.trim(), password, isAdmin });
+      setUsers((prev) => [...prev, created]);
+      setEmail('');
+      setPassword('');
+      setIsAdmin(false);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to create user.');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHead}>
+          <h3 className={styles.modalTitle}>Users</h3>
+          <button className={styles.rowBtn} onClick={onClose} type="button">
+            Close
+          </button>
+        </div>
+
+        {loading ? (
+          <p className={styles.pageMeta}>Loading users…</p>
+        ) : listError ? (
+          <p className={styles.error}>{listError}</p>
+        ) : (
+          <ul className={styles.userList}>
+            {users.map((u) => (
+              <li key={u.id} className={styles.userRow}>
+                <div>
+                  <div className={styles.userEmail}>{u.email}</div>
+                  <div className={styles.userMeta}>
+                    Created {new Date(u.createdAt).toLocaleDateString()}
+                    {u.lastSignInAt
+                      ? ` · last sign-in ${new Date(u.lastSignInAt).toLocaleDateString()}`
+                      : ' · never signed in'}
+                  </div>
+                </div>
+                <span
+                  className={`${styles.pill} ${
+                    u.role === 'admin' ? styles.accountTBB : styles.badgeNeutral
+                  }`}
+                >
+                  {u.role}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <form className={styles.addUserForm} onSubmit={handleCreate}>
+          <h4 className={styles.addUserTitle}>Add user</h4>
+          <label className={styles.field}>
+            <span className={styles.label}>Email</span>
+            <input
+              type="email"
+              className={styles.input}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="teammate@thebeautyboxmedia.com"
+              required
+            />
+          </label>
+          <label className={styles.field}>
+            <span className={styles.label}>Password</span>
+            <input
+              type="password"
+              className={styles.input}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              minLength={8}
+              placeholder="At least 8 characters"
+              required
+            />
+          </label>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={isAdmin}
+              onChange={(e) => setIsAdmin(e.target.checked)}
+            />
+            <span>Administrator (can manage users)</span>
+          </label>
+          {formError && <p className={styles.error}>{formError}</p>}
+          <button type="submit" className="btn btn-primary" disabled={creating}>
+            {creating ? 'Creating…' : 'Create user'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 export default function BizManagePage() {
@@ -144,7 +284,12 @@ export default function BizManagePage() {
     setSession(null);
     setEmail('');
     setPassword('');
+    setUsersOpen(false);
   };
+
+  // Admin-only affordances (enforced for real by the admin-users edge function).
+  const isAdmin = session?.user?.app_metadata?.role === 'admin';
+  const [usersOpen, setUsersOpen] = useState(false);
 
   // --- Data state ---------------------------------------------------------
   const [rows, setRows] = useState<BrandRow[]>([]);
@@ -195,24 +340,32 @@ export default function BizManagePage() {
         if (active && String(row[col.key] ?? '') !== active) return false;
       }
       if (!term) return true;
-      return COLUMNS.some((col) =>
-        String(row[col.key] ?? '').toLowerCase().includes(term)
+      return SEARCH_KEYS.some((key) =>
+        String(row[key] ?? '').toLowerCase().includes(term)
       );
     });
     out.sort((a, b) => {
-      const av = a[sortKey];
-      const bv = b[sortKey];
+      const av = String(a[sortKey] ?? '');
+      const bv = String(b[sortKey] ?? '');
       let cmp: number;
-      if (typeof av === 'number' || typeof bv === 'number' || av === null || bv === null) {
-        // Numeric column (priority): nulls always sort last regardless of dir.
-        const an = typeof av === 'number' ? av : null;
-        const bn = typeof bv === 'number' ? bv : null;
+      if (sortKey === 'numAsins') {
+        // Numeric-ish text column: non-numbers/empties always sort last.
+        const an = av.trim() === '' || Number.isNaN(Number(av)) ? null : Number(av);
+        const bn = bv.trim() === '' || Number.isNaN(Number(bv)) ? null : Number(bv);
         if (an === null && bn === null) cmp = 0;
         else if (an === null) return 1;
         else if (bn === null) return -1;
         else cmp = an - bn;
+      } else if (LEVEL_SORT_KEYS.includes(sortKey)) {
+        // Level columns: High -> Medium -> Low; unknown/empty always last.
+        const ar = LEVEL_RANK[av] ?? null;
+        const br = LEVEL_RANK[bv] ?? null;
+        if (ar === null && br === null) cmp = 0;
+        else if (ar === null) return 1;
+        else if (br === null) return -1;
+        else cmp = ar - br;
       } else {
-        cmp = String(av).localeCompare(String(bv));
+        cmp = av.localeCompare(bv);
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
@@ -232,6 +385,20 @@ export default function BizManagePage() {
     setSearch('');
     setFilters({});
   };
+
+  // Per-column value counts shown in the filter dropdown labels.
+  const filterCounts = useMemo(() => {
+    const counts: Partial<Record<ColKey, Map<string, number>>> = {};
+    for (const col of FILTER_COLUMNS) {
+      const m = new Map<string, number>();
+      for (const r of rows) {
+        const v = String(r[col.key] ?? '');
+        if (v) m.set(v, (m.get(v) ?? 0) + 1);
+      }
+      counts[col.key] = m;
+    }
+    return counts;
+  }, [rows]);
 
   // --- Editing ------------------------------------------------------------
   // editingId is a stringified row id, 'new' for the add-row, or null.
@@ -256,6 +423,34 @@ export default function BizManagePage() {
   };
   const setField = (key: ColKey, value: string) =>
     setDraft((d) => ({ ...d, [key]: value }));
+
+  // Select change for dropdown-backed cells. Picking the sentinel prompts for
+  // a brand-new value and persists it to dropdown_options for next time.
+  const handleSelectChange = async (col: Column, raw: string) => {
+    if (raw !== ADD_NEW) {
+      setField(col.key, raw);
+      return;
+    }
+    const entered = window.prompt(`Add a new ${col.label} option:`);
+    const value = entered?.trim();
+    if (!value || value === ADD_NEW) return; // cancel/empty: draft untouched
+    const existing = valuesFor(col).find((v) => v.toLowerCase() === value.toLowerCase());
+    if (existing) {
+      setField(col.key, existing); // reuse canonical casing
+      return;
+    }
+    setField(col.key, value);
+    const field = col.dropdownField;
+    if (!field) return;
+    try {
+      await addDropdownOption(field, value);
+      setOptions((prev) => ({ ...prev, [field]: [...(prev[field] ?? []), value] }));
+    } catch {
+      setRowError(
+        `"${value}" is set on this row, but saving it as a reusable ${col.label} option failed.`
+      );
+    }
+  };
 
   const saveEdit = async () => {
     const input = draftToInput(draft);
@@ -302,7 +497,7 @@ export default function BizManagePage() {
           <select
             className={styles.cellSelect}
             value={draft[col.key]}
-            onChange={(e) => setField(col.key, e.target.value)}
+            onChange={(e) => handleSelectChange(col, e.target.value)}
           >
             <option value="">—</option>
             {opts.map((v) => (
@@ -310,6 +505,7 @@ export default function BizManagePage() {
                 {v}
               </option>
             ))}
+            <option value={ADD_NEW}>＋ Add new…</option>
           </select>
         </td>
       );
@@ -318,12 +514,10 @@ export default function BizManagePage() {
       <td key={col.key} className={alignClass}>
         <input
           className={styles.cellInput}
-          type={col.kind === 'number' ? 'number' : 'text'}
-          min={col.kind === 'number' ? 1 : undefined}
-          max={col.kind === 'number' ? 30 : undefined}
+          type="text"
+          inputMode={col.key === 'numAsins' ? 'numeric' : undefined}
           value={draft[col.key]}
           onChange={(e) => setField(col.key, e.target.value)}
-          placeholder={col.key === 'priority' ? '1–30' : undefined}
         />
       </td>
     );
@@ -338,25 +532,56 @@ export default function BizManagePage() {
         </td>
       );
     }
-    if (col.key === 'urgency') {
-      const val = row.urgency;
+    const value = row[col.key];
+    const text = value === null ? '' : String(value);
+    if (text === '') {
       return (
-        <td key={col.key}>
-          {PILL_LEVELS.includes(val) ? (
-            <span className={`${styles.pill} ${styles[`level${val}`]}`}>{val}</span>
-          ) : (
-            val
-          )}
+        <td key={col.key} className={alignClass}>
+          <span className={styles.muted}>—</span>
         </td>
       );
     }
-    const value = row[col.key];
+    const pillClass = PILL_CLASS[col.key]?.(text);
+    if (pillClass && styles[pillClass]) {
+      return (
+        <td key={col.key}>
+          <span className={`${styles.pill} ${styles[pillClass]}`}>{text}</span>
+        </td>
+      );
+    }
+    if (col.key === 'brandRegistry') {
+      // Only "Yes" earns a pill; No / N/A stay quiet.
+      return (
+        <td key={col.key}>
+          <span className={styles.muted}>{text}</span>
+        </td>
+      );
+    }
     return (
       <td key={col.key} className={alignClass}>
-        {value === null || value === '' ? <span className={styles.muted}>—</span> : String(value)}
+        {text}
       </td>
     );
   };
+
+  // Full-width companion row shown beneath an editing row: the note lives
+  // here instead of occupying a table column.
+  const renderNoteEditRow = () => (
+    <tr className={styles.editingRow}>
+      <td colSpan={COLUMNS.length + 1}>
+        <label className={styles.noteEditInner}>
+          <span className={styles.label}>Note</span>
+          <input
+            className={styles.cellInput}
+            type="text"
+            value={draft.note}
+            onChange={(e) => setField('note', e.target.value)}
+            placeholder="Optional note"
+          />
+        </label>
+      </td>
+    </tr>
+  );
 
   // --- Not-configured guard ----------------------------------------------
   if (!isSupabaseConfigured) {
@@ -442,10 +667,23 @@ export default function BizManagePage() {
         <div className={styles.brandMark}>
           Biz<span className={styles.accent}>Manage</span>
         </div>
-        <button className={`btn btn-outline ${styles.signOut}`} onClick={handleSignOut}>
-          Sign out
-        </button>
+        <div className={styles.topbarActions}>
+          {isAdmin && (
+            <button
+              className={`btn btn-outline ${styles.signOut}`}
+              onClick={() => setUsersOpen(true)}
+              type="button"
+            >
+              Users
+            </button>
+          )}
+          <button className={`btn btn-outline ${styles.signOut}`} onClick={handleSignOut}>
+            Sign out
+          </button>
+        </div>
       </header>
+
+      {isAdmin && usersOpen && <UsersPanel onClose={() => setUsersOpen(false)} />}
 
       <main className={styles.content}>
         <div className={styles.pageHead}>
@@ -469,7 +707,9 @@ export default function BizManagePage() {
             {FILTER_COLUMNS.map((col) => (
               <select
                 key={col.key}
-                className={styles.filterSelect}
+                className={`${styles.filterSelect} ${
+                  filters[col.key] ? styles.filterSelectActive : ''
+                }`}
                 value={filters[col.key] ?? ''}
                 onChange={(e) =>
                   setFilters((f) => ({ ...f, [col.key]: e.target.value || undefined }))
@@ -478,7 +718,7 @@ export default function BizManagePage() {
                 <option value="">All {col.label}</option>
                 {valuesFor(col).map((v) => (
                   <option key={v} value={v}>
-                    {v}
+                    {v} ({filterCounts[col.key]?.get(v) ?? 0})
                   </option>
                 ))}
               </select>
@@ -524,17 +764,20 @@ export default function BizManagePage() {
             <tbody>
               {/* Inline add row */}
               {editingNew && (
-                <tr className={styles.editingRow}>
-                  {COLUMNS.map((col) => renderEditCell(col))}
-                  <td className={styles.actionsCell}>
-                    <button className={styles.rowBtnPrimary} onClick={saveEdit} disabled={saving} type="button">
-                      {saving ? '…' : 'Save'}
-                    </button>
-                    <button className={styles.rowBtn} onClick={cancelEdit} type="button">
-                      Cancel
-                    </button>
-                  </td>
-                </tr>
+                <>
+                  <tr className={styles.editingRow}>
+                    {COLUMNS.map((col) => renderEditCell(col))}
+                    <td className={styles.actionsCell}>
+                      <button className={styles.rowBtnPrimary} onClick={saveEdit} disabled={saving} type="button">
+                        {saving ? '…' : 'Save'}
+                      </button>
+                      <button className={styles.rowBtn} onClick={cancelEdit} type="button">
+                        Cancel
+                      </button>
+                    </td>
+                  </tr>
+                  {renderNoteEditRow()}
+                </>
               )}
 
               {dataLoading && rows.length === 0 ? (
@@ -552,17 +795,20 @@ export default function BizManagePage() {
               ) : (
                 visibleRows.map((row) =>
                   editingId === String(row.id) ? (
-                    <tr key={row.id} className={styles.editingRow}>
-                      {COLUMNS.map((col) => renderEditCell(col))}
-                      <td className={styles.actionsCell}>
-                        <button className={styles.rowBtnPrimary} onClick={saveEdit} disabled={saving} type="button">
-                          {saving ? '…' : 'Save'}
-                        </button>
-                        <button className={styles.rowBtn} onClick={cancelEdit} type="button">
-                          Cancel
-                        </button>
-                      </td>
-                    </tr>
+                    <Fragment key={row.id}>
+                      <tr className={styles.editingRow}>
+                        {COLUMNS.map((col) => renderEditCell(col))}
+                        <td className={styles.actionsCell}>
+                          <button className={styles.rowBtnPrimary} onClick={saveEdit} disabled={saving} type="button">
+                            {saving ? '…' : 'Save'}
+                          </button>
+                          <button className={styles.rowBtn} onClick={cancelEdit} type="button">
+                            Cancel
+                          </button>
+                        </td>
+                      </tr>
+                      {renderNoteEditRow()}
+                    </Fragment>
                   ) : (
                     <tr key={row.id}>
                       {COLUMNS.map((col) => renderReadCell(col, row))}

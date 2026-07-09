@@ -33,24 +33,51 @@ Follow these steps once to go live.
 
 The `brands` table has: **Brand**, **Account** (`account_name`), **Brand
 Registry**, **Reseller Type**, **# ASINs** (`num_asins`), **Owned By**,
-**Urgency**, **Priority** (a unique 1–30 ranking; blank = unranked), **Status**,
-**Est. SOW** (`est_sow`), and **Note**.
+**Urgency**, **Priority**, **Status**, **Est. SOW** (`est_sow`), and **Note**.
+The note isn't shown as a table column — it appears as a full-width field
+while a row is being edited (and is still covered by search).
 
-The **Account, Brand Registry, Reseller Type, Owned By, Urgency, and Status**
-fields are chosen from dropdowns. To add, rename, or hide an allowed value, edit
-the **`dropdown_options`** table (insert a row with the `field` + `value`, or set
-`active = false` to hide one) — no code change or redeploy needed.
+The **Account, Brand Registry, Reseller Type, Owned By, Urgency, Priority,
+Status, and Est. SOW** fields are chosen from dropdowns (Urgency, Priority,
+and Est. SOW share the High/Medium/Low levels). To add a new
+dropdown value, pick **＋ Add new…** inside any dropdown while editing a row —
+it's saved to **`dropdown_options`** automatically. You can also edit that table
+directly (insert a row with the `field` + `value`, or set `active = false` to
+hide one) — no code change or redeploy needed.
 
-## 3. Create your admin login
+## 3. Admin login and managing users
 
-The console uses real Supabase accounts. Create one for yourself:
+The console uses real Supabase accounts. An **administrator** account is any
+user whose `app_metadata` contains `"role": "admin"` — admins see a **Users**
+button in the console's top bar that opens the user management panel, where
+they can view every account and create new ones (optionally as admins). New
+users can sign in immediately with the password the admin typed.
 
-1. **Authentication → Users → Add user**.
-2. Enter an email and password.
-3. Check **Auto Confirm User** (so you can log in immediately without a
-   confirmation email). If you don't see that option, you can instead go to
-   **Authentication → Providers → Email** and turn **Confirm email** off.
-4. Repeat for anyone else who needs access.
+User management is powered by the `admin-users` edge function
+(`supabase/functions/admin-users/index.ts`), which runs with the project's
+service-role key (available only inside the edge environment — it is never
+shipped to the browser) and rejects any caller who isn't an admin.
+
+If you ever need to create the *first* admin without the app (e.g. a fresh
+project), use the dashboard: **Authentication → Users → Add user** (check
+**Auto Confirm User**), then set the role via SQL Editor:
+
+```sql
+update auth.users
+set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb)
+                        || '{"role": "admin"}'::jsonb
+where email = 'you@example.com';
+```
+
+(The role lands in the login token at sign-in, so sign out and back in after
+changing it.)
+
+> **Security note — disable public signups.** The RLS policies give *every*
+> signed-in user full read/write access to the data, and the anon key ships in
+> the static site. Leave signups open and anyone could self-provision an
+> account. In the dashboard go to **Authentication → Sign In / Up** and turn
+> **Allow new users to sign up** off — admin-created accounts are unaffected.
+> (This toggle only exists in the dashboard; it can't be set from SQL.)
 
 ## 4. Copy your API keys
 

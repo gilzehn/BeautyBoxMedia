@@ -18,8 +18,8 @@ create table if not exists public.brands (
   num_asins      text not null default '',
   owned_by       text not null default '',
   urgency        text not null default '',
-  -- Sparse 1–30 ranking. Nullable = unranked. Unique so no two brands share a rank.
-  priority       integer unique check (priority is null or (priority >= 1 and priority <= 30)),
+  -- High / Medium / Low level, same vocabulary as urgency (see dropdown_options).
+  priority       text not null default '',
   status         text not null default 'Active',
   est_sow        text not null default '',
   note           text not null default '',
@@ -44,7 +44,11 @@ create table if not exists public.dropdown_options (
 );
 
 comment on table public.dropdown_options is
-  'Allowed values for every BizManage dropdown (account_name, brand_registry, reseller_type, owned_by, urgency, status).';
+  'Allowed values for every BizManage dropdown (account_name, brand_registry, reseller_type, owned_by, urgency, priority, status, est_sow).';
+
+-- Prevents duplicate options (e.g. two sessions using "+ Add new…" at once).
+create unique index if not exists dropdown_options_field_value_uniq
+  on public.dropdown_options (field, lower(value));
 
 -- 3. Row-Level Security ------------------------------------------------------
 -- Only signed-in (authenticated) users may read or write. This is what makes it
@@ -95,3 +99,22 @@ select * from (values
   ('status',         'Closing Out', 2)
 ) as seed(field, value, sort_order)
 where not exists (select 1 from public.dropdown_options);
+
+-- 4b. est_sow seed — idempotent independently of the block above, because that
+-- block only runs when the table is empty and live databases already have rows.
+insert into public.dropdown_options (field, value, sort_order)
+select * from (values
+  ('est_sow', 'High',   1),
+  ('est_sow', 'Medium', 2),
+  ('est_sow', 'Low',    3)
+) as seed(field, value, sort_order)
+where not exists (select 1 from public.dropdown_options where field = 'est_sow');
+
+-- 4c. priority seed — idempotent for the same reason as 4b.
+insert into public.dropdown_options (field, value, sort_order)
+select * from (values
+  ('priority', 'High',   1),
+  ('priority', 'Medium', 2),
+  ('priority', 'Low',    3)
+) as seed(field, value, sort_order)
+where not exists (select 1 from public.dropdown_options where field = 'priority');
