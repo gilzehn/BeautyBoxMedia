@@ -236,6 +236,103 @@ function UsersPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
+// Pop-up card for creating a brand. Only the essentials are asked here —
+// every other field is edited directly on the table afterwards.
+function AddBrandModal({
+  accounts,
+  onClose,
+  onCreated,
+}: {
+  accounts: string[];
+  onClose: () => void;
+  onCreated: (row: BrandRow) => void;
+}) {
+  const [brand, setBrand] = useState('');
+  const [account, setAccount] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    const name = brand.trim();
+    if (!name) return;
+    setCreating(true);
+    setError('');
+    try {
+      const created = await addBrand({ ...EMPTY_INPUT, brand: name, accountName: account });
+      onCreated(created);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add brand.');
+      setCreating(false);
+    }
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <form
+        className={`${styles.modalCard} ${styles.modalCardSm}`}
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={handleSubmit}
+      >
+        <div className={styles.modalHead}>
+          <h3 className={styles.modalTitle}>Add brand</h3>
+          <button className={styles.rowBtn} onClick={onClose} type="button">
+            Cancel
+          </button>
+        </div>
+
+        <label className={styles.field}>
+          <span className={styles.label}>Brand name</span>
+          <input
+            className={styles.input}
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            placeholder="e.g. Glow Theory"
+            autoFocus
+            required
+          />
+        </label>
+
+        <label className={styles.field}>
+          <span className={styles.label}>Account (optional)</span>
+          <select
+            className={styles.input}
+            value={account}
+            onChange={(e) => setAccount(e.target.value)}
+          >
+            <option value="">—</option>
+            {accounts.map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <p className={styles.modalHint}>
+          The brand starts as Active. Everything else — registry, urgency, priority, notes —
+          is filled in right on the table.
+        </p>
+
+        {error && <p className={styles.error}>{error}</p>}
+
+        <button type="submit" className="btn btn-primary" disabled={creating || !brand.trim()}>
+          {creating ? 'Adding…' : 'Add brand'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default function BizManagePage() {
   // --- Auth state ---------------------------------------------------------
   const [session, setSession] = useState<Session | null>(null);
@@ -408,7 +505,7 @@ export default function BizManagePage() {
   const [savingIds, setSavingIds] = useState<Set<number>>(new Set());
   const [saveError, setSaveError] = useState('');
   const [openNoteId, setOpenNoteId] = useState<number | null>(null);
-  const [adding, setAdding] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
   const rowsRef = useRef<BrandRow[]>([]);
   rowsRef.current = rows;
   const saveChains = useRef(new Map<number, Promise<void>>());
@@ -495,20 +592,9 @@ export default function BizManagePage() {
     }
   };
 
-  const handleAddBrand = async () => {
-    const brand = window.prompt('Brand name:')?.trim();
-    if (!brand) return;
-    setAdding(true);
-    setSaveError('');
-    try {
-      const created = await addBrand({ ...EMPTY_INPUT, brand });
-      setRows((prev) => [...prev, created]);
-      clearFilters(); // make sure the new row isn't hidden by an active filter
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to add brand.');
-    } finally {
-      setAdding(false);
-    }
+  const handleBrandCreated = (created: BrandRow) => {
+    setRows((prev) => [...prev, created]);
+    clearFilters(); // make sure the new row isn't hidden by an active filter
   };
 
   const removeRow = async (row: BrandRow) => {
@@ -786,13 +872,20 @@ export default function BizManagePage() {
           </div>
           <button
             className={`btn btn-primary ${styles.addBtn}`}
-            onClick={handleAddBrand}
-            disabled={adding}
+            onClick={() => setAddOpen(true)}
             type="button"
           >
-            {adding ? 'Adding…' : '+ Add brand'}
+            + Add brand
           </button>
         </div>
+
+        {addOpen && (
+          <AddBrandModal
+            accounts={options['account_name'] ?? []}
+            onClose={() => setAddOpen(false)}
+            onCreated={handleBrandCreated}
+          />
+        )}
 
         {dataError && <p className={styles.error}>{dataError}</p>}
         {saveError && (
