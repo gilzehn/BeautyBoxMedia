@@ -15,9 +15,17 @@
     var(--bg-primary);
 }
 
-.authCard {
+.authWrap {
   width: 100%;
   max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.authCard {
+  width: 100%;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -28,7 +36,7 @@
 }
 
 .authTitle {
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
@@ -104,9 +112,22 @@
 }
 
 .brandMark {
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 1.05rem;
   font-weight: 800;
   letter-spacing: -0.02em;
+}
+
+.brandDivider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+}
+
+.brandName {
+  white-space: nowrap;
 }
 
 .topbarActions {
@@ -299,12 +320,57 @@
 }
 
 /* Round the table's own corners since the wrapper no longer clips. */
-.table thead th:first-child {
+.table thead tr:first-child th:first-child {
   border-top-left-radius: calc(var(--radius-lg) - 1px);
 }
 
-.table thead th:last-child {
+.table thead tr:first-child th:last-child {
   border-top-right-radius: calc(var(--radius-lg) - 1px);
+}
+
+/* Two sticky header rows: the sort row gets a fixed height so the filter
+   row can pin at a deterministic offset right below it. */
+.table thead tr:first-child th {
+  height: 42px;
+}
+
+.table .filterRow th {
+  top: calc(var(--nav-height) + 42px);
+  padding: 0 6px 10px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.columnFilter {
+  width: 100%;
+  min-width: 72px;
+  padding: 5px 8px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+select.columnFilter {
+  cursor: pointer;
+}
+
+.columnFilter:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.columnFilter::placeholder {
+  color: var(--text-muted);
+}
+
+.columnFilterActive {
+  border-color: var(--accent);
 }
 
 .table tbody tr:last-child td:first-child {
@@ -774,6 +840,11 @@
 @media (max-width: 600px) {
   .authCard {
     padding: 32px 24px;
+  }
+  /* Logo only in the top bar: the console name doesn't fit next to it. */
+  .brandDivider,
+  .brandName {
+    display: none;
   }
   .content {
     padding: 24px 16px;

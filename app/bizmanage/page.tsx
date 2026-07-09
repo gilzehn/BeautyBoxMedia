@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, useState, useEffect, useMemo, useCallback, useRef, FormEvent } from 'react';
+import Image from 'next/image';
 import type { Session } from '@supabase/supabase-js';
 import styles from './bizmanage.module.css';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
@@ -17,8 +18,8 @@ import {
 import { AdminUserRow, getUsers, createUser } from '@/lib/adminUsers';
 
 // Column definitions drive the header (sorting), the always-editable cells,
-// and the toolbar filters. `select` columns pull their allowed values from
-// the `dropdown_options` table (keyed by `dropdownField`).
+// and the per-column header filters. `select` columns pull their allowed
+// values from the `dropdown_options` table (keyed by `dropdownField`).
 type ColKey = keyof Omit<BrandRow, 'id'>;
 type ColKind = 'text' | 'select';
 interface Column {
@@ -430,9 +431,16 @@ export default function BizManagePage() {
   const visibleRows = useMemo(() => {
     const term = search.trim().toLowerCase();
     const out = rows.filter((row) => {
-      for (const col of FILTER_COLUMNS) {
+      for (const col of COLUMNS) {
         const active = filters[col.key];
-        if (active && String(row[col.key] ?? '') !== active) return false;
+        if (!active) continue;
+        const value = String(row[col.key] ?? '');
+        // Select columns filter by exact value; text columns by contains.
+        if (col.kind === 'select') {
+          if (value !== active) return false;
+        } else if (!value.toLowerCase().includes(active.trim().toLowerCase())) {
+          return false;
+        }
       }
       if (!term) return true;
       return SEARCH_KEYS.some((key) =>
@@ -729,16 +737,19 @@ export default function BizManagePage() {
   if (!isSupabaseConfigured) {
     return (
       <div className={styles.authScreen}>
-        <div className={styles.authCard}>
-          <h1 className={styles.authTitle}>
-            Biz<span className={styles.accent}>Manage</span>
-          </h1>
-          <p className={styles.authSubtitle}>Supabase isn&apos;t configured yet.</p>
-          <p className={styles.notice}>
-            Add <code>NEXT_PUBLIC_SUPABASE_URL</code> and{' '}
-            <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to your environment, then reload.
-            See <code>SUPABASE_SETUP.md</code> for the step-by-step guide.
-          </p>
+        <div className={styles.authWrap}>
+          <Image src="/logo.svg" alt="Beauty Box Media" width={216} height={52} priority />
+          <div className={styles.authCard}>
+            <h1 className={styles.authTitle}>
+              Management <span className={styles.accent}>Console</span>
+            </h1>
+            <p className={styles.authSubtitle}>Supabase isn&apos;t configured yet.</p>
+            <p className={styles.notice}>
+              Add <code>NEXT_PUBLIC_SUPABASE_URL</code> and{' '}
+              <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to your environment, then reload.
+              See <code>SUPABASE_SETUP.md</code> for the step-by-step guide.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -757,44 +768,47 @@ export default function BizManagePage() {
   if (!session) {
     return (
       <div className={styles.authScreen}>
-        <form className={styles.authCard} onSubmit={handleSignIn}>
-          <h1 className={styles.authTitle}>
-            Biz<span className={styles.accent}>Manage</span>
-          </h1>
-          <p className={styles.authSubtitle}>Sign in to the management console.</p>
+        <div className={styles.authWrap}>
+          <Image src="/logo.svg" alt="Beauty Box Media" width={216} height={52} priority />
+          <form className={styles.authCard} onSubmit={handleSignIn}>
+            <h1 className={styles.authTitle}>
+              Management <span className={styles.accent}>Console</span>
+            </h1>
+            <p className={styles.authSubtitle}>Sign in to continue.</p>
 
-          <label className={styles.field}>
-            <span className={styles.label}>Email</span>
-            <input
-              type="email"
-              className={styles.input}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@thebeautyboxmedia.com"
-              autoComplete="username"
-              required
-            />
-          </label>
+            <label className={styles.field}>
+              <span className={styles.label}>Email</span>
+              <input
+                type="email"
+                className={styles.input}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@thebeautyboxmedia.com"
+                autoComplete="username"
+                required
+              />
+            </label>
 
-          <label className={styles.field}>
-            <span className={styles.label}>Password</span>
-            <input
-              type="password"
-              className={styles.input}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              autoComplete="current-password"
-              required
-            />
-          </label>
+            <label className={styles.field}>
+              <span className={styles.label}>Password</span>
+              <input
+                type="password"
+                className={styles.input}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                required
+              />
+            </label>
 
-          {authError && <p className={styles.error}>{authError}</p>}
+            {authError && <p className={styles.error}>{authError}</p>}
 
-          <button type="submit" className={`btn btn-primary ${styles.submit}`} disabled={signingIn}>
-            {signingIn ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
+            <button type="submit" className={`btn btn-primary ${styles.submit}`} disabled={signingIn}>
+              {signingIn ? 'Signing in…' : 'Sign in'}
+            </button>
+          </form>
+        </div>
       </div>
     );
   }
@@ -806,7 +820,11 @@ export default function BizManagePage() {
     <div className={styles.console}>
       <header className={styles.topbar}>
         <div className={styles.brandMark}>
-          Biz<span className={styles.accent}>Manage</span>
+          <Image src="/logo.svg" alt="Beauty Box Media" width={148} height={36} priority />
+          <span className={styles.brandDivider} aria-hidden="true" />
+          <span className={styles.brandName}>
+            Management <span className={styles.accent}>Console</span>
+          </span>
         </div>
         <div className={styles.topbarActions}>
           {isAdmin && (
@@ -828,7 +846,7 @@ export default function BizManagePage() {
 
       <main className={styles.content}>
         <div className={styles.pageHead}>
-          <h2 className={styles.pageTitle}>Brand Accounts</h2>
+          <h2 className={styles.pageTitle}>Brand List</h2>
           <p className={styles.pageMeta}>
             {visibleRows.length}
             {visibleRows.length !== rows.length ? ` of ${rows.length}` : ''} brands
@@ -845,25 +863,6 @@ export default function BizManagePage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search…"
             />
-            {FILTER_COLUMNS.map((col) => (
-              <select
-                key={col.key}
-                className={`${styles.filterSelect} ${
-                  filters[col.key] ? styles.filterSelectActive : ''
-                }`}
-                value={filters[col.key] ?? ''}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, [col.key]: e.target.value || undefined }))
-                }
-              >
-                <option value="">All {col.label}</option>
-                {valuesFor(col).map((v) => (
-                  <option key={v} value={v}>
-                    {v} ({filterCounts[col.key]?.get(v) ?? 0})
-                  </option>
-                ))}
-              </select>
-            ))}
             {anyFilterActive && (
               <button className={styles.clearBtn} onClick={clearFilters} type="button">
                 Clear
@@ -914,6 +913,47 @@ export default function BizManagePage() {
                   </th>
                 ))}
                 <th className={styles.actionsHead} aria-label="Actions" />
+              </tr>
+              <tr className={styles.filterRow}>
+                {COLUMNS.map((col) =>
+                  col.kind === 'select' ? (
+                    <th key={col.key}>
+                      <select
+                        className={`${styles.columnFilter} ${
+                          filters[col.key] ? styles.columnFilterActive : ''
+                        }`}
+                        value={filters[col.key] ?? ''}
+                        onChange={(e) =>
+                          setFilters((f) => ({ ...f, [col.key]: e.target.value || undefined }))
+                        }
+                        aria-label={`Filter ${col.label}`}
+                      >
+                        <option value="">All</option>
+                        {valuesFor(col).map((v) => (
+                          <option key={v} value={v}>
+                            {v} ({filterCounts[col.key]?.get(v) ?? 0})
+                          </option>
+                        ))}
+                      </select>
+                    </th>
+                  ) : (
+                    <th key={col.key}>
+                      <input
+                        type="search"
+                        className={`${styles.columnFilter} ${
+                          filters[col.key] ? styles.columnFilterActive : ''
+                        }`}
+                        value={filters[col.key] ?? ''}
+                        onChange={(e) =>
+                          setFilters((f) => ({ ...f, [col.key]: e.target.value || undefined }))
+                        }
+                        placeholder="Filter…"
+                        aria-label={`Filter ${col.label}`}
+                      />
+                    </th>
+                  )
+                )}
+                <th aria-hidden="true" />
               </tr>
             </thead>
             <tbody>
