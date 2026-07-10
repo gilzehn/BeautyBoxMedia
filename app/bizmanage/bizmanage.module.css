@@ -96,9 +96,9 @@
 .console {
   --sb-rail: 64px;
   --sb-expanded: 240px;
-  --sb-bg: #15081d;
-  --sb-hover: #2b1338;
-  --sb-flyout: #1c0b27;
+  --sb-bg: #181818;
+  --sb-hover: #2a2a2a;
+  --sb-flyout: #202020;
   --sb-line: rgba(255, 255, 255, 0.08);
   min-height: 100vh;
   background: var(--bg-primary);
