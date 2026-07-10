@@ -330,8 +330,9 @@
 .railToggle {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   height: 48px;
+  padding: 0 23px;
   background: none;
   border: none;
   border-bottom: 1px solid var(--sb-line);
@@ -1078,7 +1079,8 @@ select.columnFilter {
   .console {
     --sb-rail: 52px;
   }
-  .railItem {
+  .railItem,
+  .railToggle {
     padding: 0 17px;
   }
   .content {
