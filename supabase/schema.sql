@@ -35,6 +35,12 @@ comment on table public.brands is
 -- create-table above only applies to fresh installs.
 alter table public.brands add column if not exists assignee text not null default '';
 
+-- Priority is a shared 1-30 ranking picked in the app: each number belongs to
+-- at most one brand. Legacy High/Medium/Low values are exempt until re-ranked.
+create unique index if not exists brands_priority_number_uniq
+  on public.brands (priority)
+  where priority ~ '^[0-9]+$';
+
 -- 2. dropdown_options --------------------------------------------------------
 -- Allowed values for each BizManage select field. Add a value by inserting a
 -- row — no code/migration change needed.
@@ -49,7 +55,7 @@ create table if not exists public.dropdown_options (
 );
 
 comment on table public.dropdown_options is
-  'Allowed values for every BizManage dropdown (account_name, brand_registry, reseller_type, owned_by, assignee, urgency, priority, status, est_sow).';
+  'Allowed values for every BizManage dropdown (account_name, brand_registry, reseller_type, owned_by, assignee, urgency, status, est_sow). Priority is a computed 1-30 ranking, not served from here.';
 
 -- Prevents duplicate options (e.g. two sessions using "+ Add new…" at once).
 create unique index if not exists dropdown_options_field_value_uniq
@@ -121,14 +127,9 @@ select * from (values
 ) as seed(field, value, sort_order)
 where not exists (select 1 from public.dropdown_options where field = 'est_sow');
 
--- 4c. priority seed — idempotent for the same reason as 4b.
-insert into public.dropdown_options (field, value, sort_order)
-select * from (values
-  ('priority', 'High',   1),
-  ('priority', 'Medium', 2),
-  ('priority', 'Low',    3)
-) as seed(field, value, sort_order)
-where not exists (select 1 from public.dropdown_options where field = 'priority');
+-- 4c. priority options are computed in the app (1-30 ranking) since the
+-- 2026-07 rework; retire any seeded rows left over from older installs.
+update public.dropdown_options set active = false where field = 'priority' and active;
 
 -- 4d. assignee seed — idempotent for the same reason as 4b.
 insert into public.dropdown_options (field, value, sort_order)

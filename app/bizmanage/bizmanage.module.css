@@ -143,6 +143,9 @@
   line-height: 1;
   letter-spacing: 0.02em;
   color: var(--accent);
+  /* The logo's "B" glyph starts ~29/701 into the SVG viewBox — about 6px at
+     the rendered 148px width — so indent the text to sit right under it. */
+  margin-left: 6px;
 }
 
 .topbarActions {
@@ -644,6 +647,105 @@ select.columnFilter {
 
 .columnFilterActive {
   border-color: var(--accent);
+}
+
+/* Multi-select column filter: a button that opens a checkbox popover. */
+.filterMulti {
+  position: relative;
+}
+
+.filterMultiBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.filterMultiText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filterMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 5; /* above tbody within the sticky header's stacking context */
+  min-width: 190px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
+}
+
+.filterMenuRight {
+  left: auto;
+  right: 0;
+}
+
+.filterMenuClear {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.filterMenuClear:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.filterMenuClear:not(:disabled):hover {
+  color: var(--text-primary);
+}
+
+.filterMenuRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.filterMenuRow:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.filterMenuRow input {
+  accent-color: var(--accent);
+}
+
+.filterMenuValue {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filterMenuCount {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .table tbody tr:last-child td:first-child {

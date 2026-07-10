@@ -34,14 +34,16 @@ interface Column {
 // search) and is edited via the expandable note row under each brand.
 const COLUMNS: Column[] = [
   { key: 'brand', label: 'Brand', kind: 'text' },
+  { key: 'urgency', label: 'Urgency', kind: 'select', dropdownField: 'urgency' },
+  // Priority is a shared 1-30 ranking with computed options (each number is
+  // usable by only one brand), so it has no dropdownField.
+  { key: 'priority', label: 'Priority', kind: 'select' },
   { key: 'accountName', label: 'Account', kind: 'select', dropdownField: 'account_name' },
   { key: 'brandRegistry', label: 'Brand Registry', kind: 'select', dropdownField: 'brand_registry' },
   { key: 'resellerType', label: 'Reseller Type', kind: 'select', dropdownField: 'reseller_type' },
   { key: 'numAsins', label: '# ASINs', kind: 'text', numericAlign: true },
   { key: 'ownedBy', label: 'Owned By', kind: 'select', dropdownField: 'owned_by' },
   { key: 'assignee', label: 'Assignee', kind: 'select', dropdownField: 'assignee' },
-  { key: 'urgency', label: 'Urgency', kind: 'select', dropdownField: 'urgency' },
-  { key: 'priority', label: 'Priority', kind: 'select', dropdownField: 'priority' },
   { key: 'status', label: 'Status', kind: 'select', dropdownField: 'status' },
   { key: 'estSow', label: 'Est. SOW', kind: 'select', dropdownField: 'est_sow' },
 ];
@@ -58,7 +60,17 @@ const LEVEL_CLASS: Record<string, string> = {
   Low: 'levelLow',
 };
 const LEVEL_RANK: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
-const LEVEL_SORT_KEYS: ColKey[] = ['urgency', 'estSow', 'priority'];
+const LEVEL_SORT_KEYS: ColKey[] = ['urgency', 'estSow'];
+
+// Priority ranking: numbers 1-30, each assignable to only one brand. Rows
+// still holding a legacy High/Medium/Low value rank after all numbers until
+// they're re-ranked.
+const PRIORITY_MAX = 30;
+const PRIORITY_NUMBERS = Array.from({ length: PRIORITY_MAX }, (_, i) => String(i + 1));
+function priorityRank(v: string): number {
+  if (/^\d+$/.test(v)) return Number(v);
+  return PRIORITY_MAX + 1 + (LEVEL_RANK[v] ?? Object.keys(LEVEL_RANK).length);
+}
 const ACCOUNT_CLASS: Record<string, string> = {
   NRG: 'accountNRG',
   TBB: 'accountTBB',
@@ -122,6 +134,95 @@ function TrashIcon() {
 // Admin-only user management modal. Visibility is gated client-side on the
 // session's app_metadata.role, but authorization is enforced server-side by
 // the admin-users edge function.
+// Checkbox popover for select-column filters, so several values can be
+// active at once. An empty selection means "All".
+function FilterMulti({
+  label,
+  values,
+  counts,
+  selected,
+  onChange,
+  alignRight = false,
+}: {
+  label: string;
+  values: string[];
+  counts?: Map<string, number>;
+  selected: string[];
+  onChange: (next: string[]) => void;
+  alignRight?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
+
+  const summary =
+    selected.length === 0 ? 'All' : selected.length === 1 ? selected[0] : `${selected.length} selected`;
+
+  return (
+    <div className={styles.filterMulti} ref={wrapRef}>
+      <button
+        type="button"
+        className={`${styles.columnFilter} ${styles.filterMultiBtn} ${
+          selected.length > 0 ? styles.columnFilterActive : ''
+        }`}
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-label={`Filter ${label}`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className={styles.filterMultiText}>{summary}</span>
+        <span aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div
+          className={`${styles.filterMenu} ${alignRight ? styles.filterMenuRight : ''}`}
+          aria-label={`${label} options`}
+        >
+          <button
+            type="button"
+            className={styles.filterMenuClear}
+            disabled={selected.length === 0}
+            onClick={() => onChange([])}
+          >
+            Clear — show all
+          </button>
+          {values.map((v) => {
+            const checked = selected.includes(v);
+            return (
+              <label key={v} className={styles.filterMenuRow}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() =>
+                    onChange(checked ? selected.filter((s) => s !== v) : [...selected, v])
+                  }
+                />
+                <span className={styles.filterMenuValue}>{v}</span>
+                <span className={styles.filterMenuCount}>{counts?.get(v) ?? 0}</span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function UsersPanel({ onClose }: { onClose: () => void }) {
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -481,18 +582,23 @@ export default function BizManagePage() {
 
   // Allowed values for a select column: dropdown_options first, then any extra
   // values present in the data (so nothing is un-selectable / un-filterable).
+  // Priority has no dropdown field — its list is whatever the rows hold, in
+  // rank order.
   const valuesFor = useCallback(
     (col: Column): string[] => {
       const base = col.dropdownField ? options[col.dropdownField] ?? [] : [];
       const present = rows.map((r) => String(r[col.key] ?? '')).filter(Boolean);
-      return uniq([...base, ...present]);
+      const all = uniq([...base, ...present]);
+      return col.key === 'priority' ? all.sort((a, b) => priorityRank(a) - priorityRank(b)) : all;
     },
     [options, rows]
   );
 
   // --- Filter / search / sort --------------------------------------------
+  // Select columns hold a value list (multi-select filter); text columns a
+  // contains-term string.
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<Partial<Record<ColKey, string>>>({});
+  const [filters, setFilters] = useState<Partial<Record<ColKey, string | string[]>>>({});
   const [sortKey, setSortKey] = useState<ColKey>('brand');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
@@ -501,12 +607,12 @@ export default function BizManagePage() {
     const out = rows.filter((row) => {
       for (const col of COLUMNS) {
         const active = filters[col.key];
-        if (!active) continue;
+        if (active === undefined) continue;
         const value = String(row[col.key] ?? '');
-        // Select columns filter by exact value; text columns by contains.
-        if (col.kind === 'select') {
-          if (value !== active) return false;
-        } else if (!value.toLowerCase().includes(active.trim().toLowerCase())) {
+        // Select columns match any of the chosen values; text columns contain.
+        if (Array.isArray(active)) {
+          if (active.length > 0 && !active.includes(value)) return false;
+        } else if (active && !value.toLowerCase().includes(active.trim().toLowerCase())) {
           return false;
         }
       }
@@ -527,6 +633,12 @@ export default function BizManagePage() {
         else if (an === null) return 1;
         else if (bn === null) return -1;
         else cmp = an - bn;
+      } else if (sortKey === 'priority') {
+        // Ranking column: 1-30 first, legacy levels after, empty always last.
+        if (av === '' && bv === '') cmp = 0;
+        else if (av === '') return 1;
+        else if (bv === '') return -1;
+        else cmp = priorityRank(av) - priorityRank(bv) || av.localeCompare(bv);
       } else if (LEVEL_SORT_KEYS.includes(sortKey)) {
         // Level columns: High -> Medium -> Low; unknown/empty always last.
         const ar = LEVEL_RANK[av] ?? null;
@@ -551,7 +663,9 @@ export default function BizManagePage() {
     }
   };
 
-  const anyFilterActive = search.trim() !== '' || Object.values(filters).some(Boolean);
+  const anyFilterActive =
+    search.trim() !== '' ||
+    Object.values(filters).some((v) => (Array.isArray(v) ? v.length > 0 : Boolean(v)));
   const clearFilters = () => {
     setSearch('');
     setFilters({});
@@ -705,7 +819,22 @@ export default function BizManagePage() {
     const text = String(row[col.key] ?? '');
     const alignClass = col.numericAlign ? styles.numCol : undefined;
     if (col.kind === 'select') {
-      const opts = uniq([...valuesFor(col), text].filter(Boolean));
+      const isPriority = col.key === 'priority';
+      // Priority offers 1-30 minus the numbers other brands already hold
+      // (each rank is unique); its legacy level value stays selectable so
+      // the picker shows the current state. No "+ Add new…" for rankings.
+      const opts = isPriority
+        ? (() => {
+            const used = new Set(
+              rows
+                .filter((r) => r.id !== row.id)
+                .map((r) => r.priority)
+                .filter((v) => /^\d+$/.test(v))
+            );
+            const free = PRIORITY_NUMBERS.filter((n) => !used.has(n));
+            return text && !free.includes(text) ? [...free, text] : free;
+          })()
+        : uniq([...valuesFor(col), text].filter(Boolean));
       return (
         <td key={col.key} className={alignClass}>
           <div className={styles.selectCell}>
@@ -724,7 +853,7 @@ export default function BizManagePage() {
                   {v}
                 </option>
               ))}
-              <option value={ADD_NEW}>＋ Add new…</option>
+              {!isPriority && <option value={ADD_NEW}>＋ Add new…</option>}
             </select>
           </div>
         </td>
@@ -996,26 +1125,23 @@ export default function BizManagePage() {
                       <th className={styles.actionsHead} aria-label="Actions" />
                     </tr>
                     <tr className={styles.filterRow}>
-                      {COLUMNS.map((col) =>
+                      {COLUMNS.map((col, colIdx) =>
                         col.kind === 'select' ? (
                           <th key={col.key}>
-                            <select
-                              className={`${styles.columnFilter} ${
-                                filters[col.key] ? styles.columnFilterActive : ''
-                              }`}
-                              value={filters[col.key] ?? ''}
-                              onChange={(e) =>
-                                setFilters((f) => ({ ...f, [col.key]: e.target.value || undefined }))
+                            <FilterMulti
+                              label={col.label}
+                              values={valuesFor(col)}
+                              counts={filterCounts[col.key]}
+                              selected={(filters[col.key] as string[] | undefined) ?? []}
+                              onChange={(next) =>
+                                setFilters((f) => ({
+                                  ...f,
+                                  [col.key]: next.length > 0 ? next : undefined,
+                                }))
                               }
-                              aria-label={`Filter ${col.label}`}
-                            >
-                              <option value="">All</option>
-                              {valuesFor(col).map((v) => (
-                                <option key={v} value={v}>
-                                  {v} ({filterCounts[col.key]?.get(v) ?? 0})
-                                </option>
-                              ))}
-                            </select>
+                              // Keep the popover on-screen for the right-most columns.
+                              alignRight={colIdx >= COLUMNS.length - 2}
+                            />
                           </th>
                         ) : (
                           <th key={col.key}>
@@ -1024,7 +1150,7 @@ export default function BizManagePage() {
                               className={`${styles.columnFilter} ${
                                 filters[col.key] ? styles.columnFilterActive : ''
                               }`}
-                              value={filters[col.key] ?? ''}
+                              value={(filters[col.key] as string | undefined) ?? ''}
                               onChange={(e) =>
                                 setFilters((f) => ({ ...f, [col.key]: e.target.value || undefined }))
                               }
