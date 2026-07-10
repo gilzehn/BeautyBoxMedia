@@ -232,6 +232,15 @@ export default function Sidebar({ view, onNavigate }: SidebarProps) {
       aria-label="Console menu"
       className={`${styles.sidebar} ${expanded ? styles.sidebarExpanded : ''}`}
     >
+      <button
+        className={`${styles.railToggle} ${expanded ? styles.railToggleOpen : ''}`}
+        type="button"
+        aria-label={expanded ? 'Collapse menu' : 'Expand menu'}
+        onClick={toggleExpanded}
+      >
+        <ChevronsRightIcon />
+      </button>
+
       <ul className={styles.sidebarNav}>
         {MENU.map((section) => {
           const active = sectionOwnsView(section);
@@ -307,15 +316,6 @@ export default function Sidebar({ view, onNavigate }: SidebarProps) {
           );
         })}
       </ul>
-
-      <button
-        className={`${styles.railToggle} ${expanded ? styles.railToggleOpen : ''}`}
-        type="button"
-        aria-label={expanded ? 'Collapse menu' : 'Expand menu'}
-        onClick={toggleExpanded}
-      >
-        <ChevronsRightIcon />
-      </button>
     </nav>
   );
 }

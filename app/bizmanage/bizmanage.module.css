@@ -332,10 +332,9 @@
   align-items: center;
   justify-content: center;
   height: 48px;
-  margin-top: auto;
   background: none;
   border: none;
-  border-top: 1px solid var(--sb-line);
+  border-bottom: 1px solid var(--sb-line);
   color: #fff;
   cursor: pointer;
   transition: background var(--transition);
