@@ -4,6 +4,7 @@ import { Fragment, useState, useEffect, useMemo, useCallback, useRef, FormEvent 
 import Image from 'next/image';
 import type { Session } from '@supabase/supabase-js';
 import styles from './bizmanage.module.css';
+import Sidebar, { ViewId, VIEW_TITLES } from './Sidebar';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import {
   BrandRow,
@@ -386,6 +387,19 @@ export default function BizManagePage() {
   // Admin-only affordances (enforced for real by the admin-users edge function).
   const isAdmin = session?.user?.app_metadata?.role === 'admin';
   const [usersOpen, setUsersOpen] = useState(false);
+
+  // --- View switching -------------------------------------------------------
+  // The sidebar swaps what <main> renders; the hash keeps the view across
+  // refreshes (static export, so hash is the only shareable URL mechanism).
+  const [view, setView] = useState<ViewId>('brands');
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (hash && hash in VIEW_TITLES) setView(hash as ViewId);
+  }, []);
+  const handleNavigate = (next: ViewId) => {
+    setView(next);
+    history.replaceState(null, '', `#${next}`);
+  };
 
   // --- Data state ---------------------------------------------------------
   const [rows, setRows] = useState<BrandRow[]>([]);
@@ -844,173 +858,189 @@ export default function BizManagePage() {
 
       {isAdmin && usersOpen && <UsersPanel onClose={() => setUsersOpen(false)} />}
 
-      <main className={styles.content}>
-        <div className={styles.pageHead}>
-          <h2 className={styles.pageTitle}>Brand List</h2>
-          <p className={styles.pageMeta}>
-            {visibleRows.length}
-            {visibleRows.length !== rows.length ? ` of ${rows.length}` : ''} brands
-          </p>
-        </div>
+      <div className={styles.shell}>
+        <Sidebar view={view} onNavigate={handleNavigate} />
+        <main className={styles.content}>
+          {view !== 'brands' ? (
+            <>
+              <div className={styles.pageHead}>
+                <h2 className={styles.pageTitle}>{VIEW_TITLES[view]}</h2>
+              </div>
+              <div className={styles.comingSoonCard}>
+                <p>Coming soon</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={styles.pageHead}>
+                <h2 className={styles.pageTitle}>Brand List</h2>
+                <p className={styles.pageMeta}>
+                  {visibleRows.length}
+                  {visibleRows.length !== rows.length ? ` of ${rows.length}` : ''} brands
+                </p>
+              </div>
 
-        {/* Toolbar: search + filters + add */}
-        <div className={styles.toolbar}>
-          <div className={styles.toolbarFilters}>
-            <input
-              className={styles.searchInput}
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search…"
-            />
-            {anyFilterActive && (
-              <button className={styles.clearBtn} onClick={clearFilters} type="button">
-                Clear
-              </button>
-            )}
-          </div>
-          <button
-            className={`btn btn-primary ${styles.addBtn}`}
-            onClick={() => setAddOpen(true)}
-            type="button"
-          >
-            + Add brand
-          </button>
-        </div>
+              {/* Toolbar: search + filters + add */}
+              <div className={styles.toolbar}>
+                <div className={styles.toolbarFilters}>
+                  <input
+                    className={styles.searchInput}
+                    type="search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search…"
+                  />
+                  {anyFilterActive && (
+                    <button className={styles.clearBtn} onClick={clearFilters} type="button">
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <button
+                  className={`btn btn-primary ${styles.addBtn}`}
+                  onClick={() => setAddOpen(true)}
+                  type="button"
+                >
+                  + Add brand
+                </button>
+              </div>
 
-        {addOpen && (
-          <AddBrandModal
-            accounts={options['account_name'] ?? []}
-            onClose={() => setAddOpen(false)}
-            onCreated={handleBrandCreated}
-          />
-        )}
-
-        {dataError && <p className={styles.error}>{dataError}</p>}
-        {saveError && (
-          <div className={styles.errorBar} role="alert">
-            <span>{saveError}</span>
-            <button className={styles.errorDismiss} onClick={() => setSaveError('')} type="button">
-              Dismiss
-            </button>
-          </div>
-        )}
-
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                {COLUMNS.map((col) => (
-                  <th
-                    key={col.key}
-                    className={`${styles.sortable} ${col.numericAlign ? styles.numCol : ''}`}
-                    onClick={() => toggleSort(col.key)}
-                  >
-                    {col.label}
-                    <span className={styles.sortArrow}>
-                      {sortKey === col.key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
-                    </span>
-                  </th>
-                ))}
-                <th className={styles.actionsHead} aria-label="Actions" />
-              </tr>
-              <tr className={styles.filterRow}>
-                {COLUMNS.map((col) =>
-                  col.kind === 'select' ? (
-                    <th key={col.key}>
-                      <select
-                        className={`${styles.columnFilter} ${
-                          filters[col.key] ? styles.columnFilterActive : ''
-                        }`}
-                        value={filters[col.key] ?? ''}
-                        onChange={(e) =>
-                          setFilters((f) => ({ ...f, [col.key]: e.target.value || undefined }))
-                        }
-                        aria-label={`Filter ${col.label}`}
-                      >
-                        <option value="">All</option>
-                        {valuesFor(col).map((v) => (
-                          <option key={v} value={v}>
-                            {v} ({filterCounts[col.key]?.get(v) ?? 0})
-                          </option>
-                        ))}
-                      </select>
-                    </th>
-                  ) : (
-                    <th key={col.key}>
-                      <input
-                        type="search"
-                        className={`${styles.columnFilter} ${
-                          filters[col.key] ? styles.columnFilterActive : ''
-                        }`}
-                        value={filters[col.key] ?? ''}
-                        onChange={(e) =>
-                          setFilters((f) => ({ ...f, [col.key]: e.target.value || undefined }))
-                        }
-                        placeholder="Filter…"
-                        aria-label={`Filter ${col.label}`}
-                      />
-                    </th>
-                  )
-                )}
-                <th aria-hidden="true" />
-              </tr>
-            </thead>
-            <tbody>
-              {dataLoading && rows.length === 0 ? (
-                <tr>
-                  <td colSpan={colSpan} className={styles.emptyCell}>
-                    Loading…
-                  </td>
-                </tr>
-              ) : visibleRows.length === 0 ? (
-                <tr>
-                  <td colSpan={colSpan} className={styles.emptyCell}>
-                    {rows.length === 0 ? 'No brands yet. Add your first one.' : 'No matches.'}
-                  </td>
-                </tr>
-              ) : (
-                // An edit that changes the sorted column repositions the row,
-                // and one excluded by an active filter hides it — accepted,
-                // spreadsheet-style.
-                visibleRows.map((row, i) => (
-                  <Fragment key={row.id}>
-                    <tr className={i % 2 === 1 ? styles.rowEven : undefined}>
-                      {COLUMNS.map((col) => renderCell(col, row))}
-                      <td className={styles.actionsCell}>
-                        {savingIds.has(row.id) && (
-                          <span className={styles.savingSpinner} aria-label="Saving" />
-                        )}
-                        <button
-                          className={`${styles.iconBtn} ${row.note ? styles.iconBtnAccent : ''} ${
-                            openNoteId === row.id ? styles.iconBtnActive : ''
-                          }`}
-                          onClick={() => setOpenNoteId((v) => (v === row.id ? null : row.id))}
-                          aria-expanded={openNoteId === row.id}
-                          title={row.note ? `Note: ${row.note}` : 'Add note'}
-                          type="button"
-                        >
-                          <NoteIcon />
-                        </button>
-                        <button
-                          className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
-                          onClick={() => removeRow(row)}
-                          disabled={savingIds.has(row.id)}
-                          title={`Delete ${row.brand}`}
-                          type="button"
-                        >
-                          <TrashIcon />
-                        </button>
-                      </td>
-                    </tr>
-                    {openNoteId === row.id && renderNoteRow(row)}
-                  </Fragment>
-                ))
+              {addOpen && (
+                <AddBrandModal
+                  accounts={options['account_name'] ?? []}
+                  onClose={() => setAddOpen(false)}
+                  onCreated={handleBrandCreated}
+                />
               )}
-            </tbody>
-          </table>
-        </div>
-      </main>
+
+              {dataError && <p className={styles.error}>{dataError}</p>}
+              {saveError && (
+                <div className={styles.errorBar} role="alert">
+                  <span>{saveError}</span>
+                  <button className={styles.errorDismiss} onClick={() => setSaveError('')} type="button">
+                    Dismiss
+                  </button>
+                </div>
+              )}
+
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      {COLUMNS.map((col) => (
+                        <th
+                          key={col.key}
+                          className={`${styles.sortable} ${col.numericAlign ? styles.numCol : ''}`}
+                          onClick={() => toggleSort(col.key)}
+                        >
+                          {col.label}
+                          <span className={styles.sortArrow}>
+                            {sortKey === col.key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
+                          </span>
+                        </th>
+                      ))}
+                      <th className={styles.actionsHead} aria-label="Actions" />
+                    </tr>
+                    <tr className={styles.filterRow}>
+                      {COLUMNS.map((col) =>
+                        col.kind === 'select' ? (
+                          <th key={col.key}>
+                            <select
+                              className={`${styles.columnFilter} ${
+                                filters[col.key] ? styles.columnFilterActive : ''
+                              }`}
+                              value={filters[col.key] ?? ''}
+                              onChange={(e) =>
+                                setFilters((f) => ({ ...f, [col.key]: e.target.value || undefined }))
+                              }
+                              aria-label={`Filter ${col.label}`}
+                            >
+                              <option value="">All</option>
+                              {valuesFor(col).map((v) => (
+                                <option key={v} value={v}>
+                                  {v} ({filterCounts[col.key]?.get(v) ?? 0})
+                                </option>
+                              ))}
+                            </select>
+                          </th>
+                        ) : (
+                          <th key={col.key}>
+                            <input
+                              type="search"
+                              className={`${styles.columnFilter} ${
+                                filters[col.key] ? styles.columnFilterActive : ''
+                              }`}
+                              value={filters[col.key] ?? ''}
+                              onChange={(e) =>
+                                setFilters((f) => ({ ...f, [col.key]: e.target.value || undefined }))
+                              }
+                              placeholder="Filter…"
+                              aria-label={`Filter ${col.label}`}
+                            />
+                          </th>
+                        )
+                      )}
+                      <th aria-hidden="true" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dataLoading && rows.length === 0 ? (
+                      <tr>
+                        <td colSpan={colSpan} className={styles.emptyCell}>
+                          Loading…
+                        </td>
+                      </tr>
+                    ) : visibleRows.length === 0 ? (
+                      <tr>
+                        <td colSpan={colSpan} className={styles.emptyCell}>
+                          {rows.length === 0 ? 'No brands yet. Add your first one.' : 'No matches.'}
+                        </td>
+                      </tr>
+                    ) : (
+                      // An edit that changes the sorted column repositions the row,
+                      // and one excluded by an active filter hides it — accepted,
+                      // spreadsheet-style.
+                      visibleRows.map((row, i) => (
+                        <Fragment key={row.id}>
+                          <tr className={i % 2 === 1 ? styles.rowEven : undefined}>
+                            {COLUMNS.map((col) => renderCell(col, row))}
+                            <td className={styles.actionsCell}>
+                              {savingIds.has(row.id) && (
+                                <span className={styles.savingSpinner} aria-label="Saving" />
+                              )}
+                              <button
+                                className={`${styles.iconBtn} ${row.note ? styles.iconBtnAccent : ''} ${
+                                  openNoteId === row.id ? styles.iconBtnActive : ''
+                                }`}
+                                onClick={() => setOpenNoteId((v) => (v === row.id ? null : row.id))}
+                                aria-expanded={openNoteId === row.id}
+                                title={row.note ? `Note: ${row.note}` : 'Add note'}
+                                type="button"
+                              >
+                                <NoteIcon />
+                              </button>
+                              <button
+                                className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+                                onClick={() => removeRow(row)}
+                                disabled={savingIds.has(row.id)}
+                                title={`Delete ${row.brand}`}
+                                type="button"
+                              >
+                                <TrashIcon />
+                              </button>
+                            </td>
+                          </tr>
+                          {openNoteId === row.id && renderNoteRow(row)}
+                        </Fragment>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
