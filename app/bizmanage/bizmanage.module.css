@@ -15,9 +15,17 @@
     var(--bg-primary);
 }
 
-.authCard {
+.authWrap {
   width: 100%;
   max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.authCard {
+  width: 100%;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -28,7 +36,7 @@
 }
 
 .authTitle {
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
@@ -86,8 +94,20 @@
 
 /* ---- Console ---- */
 .console {
+  --sb-rail: 64px;
+  --sb-expanded: 240px;
+  --sb-bg: #181818;
+  --sb-hover: #2a2a2a;
+  --sb-flyout: #202020;
+  --sb-line: rgba(255, 255, 255, 0.08);
   min-height: 100vh;
   background: var(--bg-primary);
+}
+
+/* Sidebar + main live in the shell; the rail reserves space via padding so
+   the expanded sidebar can overlay without reflowing the table. */
+.shell {
+  padding-left: var(--sb-rail);
 }
 
 .topbar {
@@ -104,9 +124,22 @@
 }
 
 .brandMark {
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 1.05rem;
   font-weight: 800;
   letter-spacing: -0.02em;
+}
+
+.brandDivider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+}
+
+.brandName {
+  white-space: nowrap;
 }
 
 .topbarActions {
@@ -118,6 +151,216 @@
 .signOut {
   padding: 10px 22px;
   font-size: 0.9rem;
+}
+
+/* ---- Sidebar ---- */
+.sidebar {
+  position: fixed;
+  top: var(--nav-height);
+  left: 0;
+  bottom: 0;
+  width: var(--sb-rail);
+  z-index: 9; /* under topbar (10) and modal (20), over sticky th (2) */
+  display: flex;
+  flex-direction: column;
+  background: var(--sb-bg);
+  border-right: 1px solid var(--sb-line);
+  transition: width 0.18s ease;
+  /* Flyouts poke out past the rail: never add overflow-y here. */
+  overflow: visible;
+}
+
+.sidebarExpanded {
+  width: var(--sb-expanded);
+  box-shadow: 12px 0 32px rgba(0, 0, 0, 0.4);
+}
+
+.sidebarNav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 0;
+  margin: 0;
+  list-style: none;
+}
+
+.sectionWrap {
+  position: relative;
+}
+
+.railItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 44px;
+  padding: 0 23px; /* (rail - 18px icon) / 2, so icons stay put on expand */
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background var(--transition);
+}
+
+.railItem:hover,
+.railItemOpen,
+.railItemActive {
+  background: var(--sb-hover);
+}
+
+.railItemActive::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent);
+}
+
+.railLabel {
+  display: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebarExpanded .railLabel {
+  display: inline;
+}
+
+/* Detached panel floating next to the rail. The ::before strip invisibly
+   bridges the gap so the pointer can travel from the rail button into the
+   panel without triggering the wrapper's mouseleave. */
+.flyout {
+  position: absolute;
+  top: 2px;
+  left: calc(100% + 12px);
+  min-width: 224px;
+  padding: 8px;
+  z-index: 1;
+  background: var(--sb-flyout);
+  border: 1px solid var(--sb-line);
+  border-radius: var(--radius-md);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
+}
+
+.flyout::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -14px;
+  width: 14px;
+  height: 100%;
+}
+
+.flyoutTitle {
+  padding: 6px 10px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.flyoutRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+}
+
+.flyoutRow:hover {
+  background: var(--sb-hover);
+}
+
+.flyoutRowActive::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.flyoutBtn {
+  flex: 1;
+  padding: 9px 10px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.86rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.starBtn {
+  display: flex;
+  padding: 6px 8px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.starBtn:hover,
+.starBtnActive {
+  color: #fff;
+}
+
+.flyoutEmpty {
+  padding: 10px;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: normal;
+  max-width: 220px;
+}
+
+.railToggle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 48px;
+  padding: 0 23px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--sb-line);
+  color: #fff;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.railToggle:hover {
+  background: var(--sb-hover);
+}
+
+.railToggle svg {
+  transition: transform 0.18s ease;
+}
+
+.railToggleOpen svg {
+  transform: rotate(180deg);
+}
+
+/* Placeholder for sections that aren't built yet. */
+.comingSoonCard {
+  padding: 48px 32px;
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
 }
 
 /* ---- Users modal ---- */
@@ -299,12 +542,57 @@
 }
 
 /* Round the table's own corners since the wrapper no longer clips. */
-.table thead th:first-child {
+.table thead tr:first-child th:first-child {
   border-top-left-radius: calc(var(--radius-lg) - 1px);
 }
 
-.table thead th:last-child {
+.table thead tr:first-child th:last-child {
   border-top-right-radius: calc(var(--radius-lg) - 1px);
+}
+
+/* Two sticky header rows: the sort row gets a fixed height so the filter
+   row can pin at a deterministic offset right below it. */
+.table thead tr:first-child th {
+  height: 42px;
+}
+
+.table .filterRow th {
+  top: calc(var(--nav-height) + 42px);
+  padding: 0 6px 10px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.columnFilter {
+  width: 100%;
+  min-width: 72px;
+  padding: 5px 8px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+select.columnFilter {
+  cursor: pointer;
+}
+
+.columnFilter:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.columnFilter::placeholder {
+  color: var(--text-muted);
+}
+
+.columnFilterActive {
+  border-color: var(--accent);
 }
 
 .table tbody tr:last-child td:first-child {
@@ -762,6 +1050,14 @@
   .tableWrap {
     overflow-x: auto;
   }
+  /* Inside the scroll container the viewport offset would just push the
+     header rows down; stick to the container's own top instead. */
+  .table thead th {
+    top: 0;
+  }
+  .table .filterRow th {
+    top: 42px;
+  }
   .ghostInput {
     border-color: var(--border);
     background: var(--bg-secondary);
@@ -774,6 +1070,18 @@
 @media (max-width: 600px) {
   .authCard {
     padding: 32px 24px;
+  }
+  /* Logo only in the top bar: the console name doesn't fit next to it. */
+  .brandDivider,
+  .brandName {
+    display: none;
+  }
+  .console {
+    --sb-rail: 52px;
+  }
+  .railItem,
+  .railToggle {
+    padding: 0 17px;
   }
   .content {
     padding: 24px 16px;
