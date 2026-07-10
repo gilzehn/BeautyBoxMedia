@@ -96,9 +96,9 @@
 .console {
   --sb-rail: 64px;
   --sb-expanded: 240px;
-  --sb-bg: #2a1230;
-  --sb-hover: #3f1c4a;
-  --sb-flyout: #341740;
+  --sb-bg: #15081d;
+  --sb-hover: #2b1338;
+  --sb-flyout: #1c0b27;
   --sb-line: rgba(255, 255, 255, 0.08);
   min-height: 100vh;
   background: var(--bg-primary);
@@ -235,19 +235,29 @@
   display: inline;
 }
 
-/* Flush against the rail (no gap) so the pointer can travel from the rail
-   button into the panel without triggering the wrapper's mouseleave. */
+/* Detached panel floating next to the rail. The ::before strip invisibly
+   bridges the gap so the pointer can travel from the rail button into the
+   panel without triggering the wrapper's mouseleave. */
 .flyout {
   position: absolute;
-  top: 0;
-  left: 100%;
+  top: 2px;
+  left: calc(100% + 12px);
   min-width: 224px;
   padding: 8px;
   z-index: 1;
   background: var(--sb-flyout);
   border: 1px solid var(--sb-line);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  box-shadow: 10px 12px 28px rgba(0, 0, 0, 0.45);
+  border-radius: var(--radius-md);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
+}
+
+.flyout::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -14px;
+  width: 14px;
+  height: 100%;
 }
 
 .flyoutTitle {
