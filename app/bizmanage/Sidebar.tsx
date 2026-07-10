@@ -227,7 +227,7 @@ const MENU: SidebarSection[] = [
   },
 ];
 
-// Admin-only utility section pinned at the bottom of the sidebar.
+// Admin-only utility section, listed right after Analysis.
 const SETTINGS_SECTION: SidebarSection = {
   key: 'settings',
   label: 'Settings',
@@ -537,9 +537,10 @@ export default function Sidebar({
         )}
       </div>
 
-      <ul className={styles.sidebarNav}>{visibleMenu.map(renderSection)}</ul>
-
-      {isAdmin && <ul className={styles.sidebarBottom}>{renderSection(SETTINGS_SECTION)}</ul>}
+      <ul className={styles.sidebarNav}>
+        {visibleMenu.map(renderSection)}
+        {isAdmin && renderSection(SETTINGS_SECTION)}
+      </ul>
     </nav>
   );
 }

@@ -249,7 +249,7 @@ export default function FinanceScreen({
       )}
 
       <div className={styles.tableWrap}>
-        <table className={styles.table}>
+        <table className={`${styles.table} ${styles.tableFlexSecond}`}>
           <thead>
             <tr>
               <th>Date</th>
@@ -351,7 +351,7 @@ export default function FinanceScreen({
                     </td>
                     <td>
                       <input
-                        className={styles.ghostInput}
+                        className={`${styles.ghostInput} ${styles.cellMinS}`}
                         type="text"
                         defaultValue={row.account}
                         aria-label="Account"
