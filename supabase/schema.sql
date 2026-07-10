@@ -17,6 +17,7 @@ create table if not exists public.brands (
   reseller_type  text not null default '',
   num_asins      text not null default '',
   owned_by       text not null default '',
+  assignee       text not null default '',
   urgency        text not null default '',
   -- High / Medium / Low level, same vocabulary as urgency (see dropdown_options).
   priority       text not null default '',
@@ -29,6 +30,10 @@ create table if not exists public.brands (
 
 comment on table public.brands is
   'iCommerceteam multi-brand Amazon portfolio (NRG/RMR + The Beauty Box).';
+
+-- Migration for live databases created before the column existed; the
+-- create-table above only applies to fresh installs.
+alter table public.brands add column if not exists assignee text not null default '';
 
 -- 2. dropdown_options --------------------------------------------------------
 -- Allowed values for each BizManage select field. Add a value by inserting a
@@ -44,7 +49,7 @@ create table if not exists public.dropdown_options (
 );
 
 comment on table public.dropdown_options is
-  'Allowed values for every BizManage dropdown (account_name, brand_registry, reseller_type, owned_by, urgency, priority, status, est_sow).';
+  'Allowed values for every BizManage dropdown (account_name, brand_registry, reseller_type, owned_by, assignee, urgency, priority, status, est_sow).';
 
 -- Prevents duplicate options (e.g. two sessions using "+ Add new…" at once).
 create unique index if not exists dropdown_options_field_value_uniq
@@ -92,6 +97,12 @@ select * from (values
   ('owned_by',       'BBMEDIA', 1),
   ('owned_by',       'Regina',  2),
   ('owned_by',       'Mariann', 3),
+  ('assignee',       'iCommteam', 1),
+  ('assignee',       'Umar',      2),
+  ('assignee',       'Ahmad',     3),
+  ('assignee',       'Basit',     4),
+  ('assignee',       'Azmat',     5),
+  ('assignee',       'Kiran',     6),
   ('urgency',        'High',   1),
   ('urgency',        'Medium', 2),
   ('urgency',        'Low',    3),
@@ -118,3 +129,15 @@ select * from (values
   ('priority', 'Low',    3)
 ) as seed(field, value, sort_order)
 where not exists (select 1 from public.dropdown_options where field = 'priority');
+
+-- 4d. assignee seed — idempotent for the same reason as 4b.
+insert into public.dropdown_options (field, value, sort_order)
+select * from (values
+  ('assignee', 'iCommteam', 1),
+  ('assignee', 'Umar',      2),
+  ('assignee', 'Ahmad',     3),
+  ('assignee', 'Basit',     4),
+  ('assignee', 'Azmat',     5),
+  ('assignee', 'Kiran',     6)
+) as seed(field, value, sort_order)
+where not exists (select 1 from public.dropdown_options where field = 'assignee');

@@ -13,6 +13,7 @@ export interface BrandRow {
   resellerType: string;
   numAsins: string;
   ownedBy: string;
+  assignee: string;
   urgency: string;
   priority: string;
   status: string;
@@ -32,6 +33,7 @@ interface BrandRecord {
   reseller_type: string | null;
   num_asins: string | null;
   owned_by: string | null;
+  assignee: string | null;
   urgency: string | null;
   priority: string | null;
   status: string | null;
@@ -52,6 +54,7 @@ function fromRecord(r: BrandRecord): BrandRow {
     resellerType: r.reseller_type ?? '',
     numAsins: r.num_asins ?? '',
     ownedBy: r.owned_by ?? '',
+    assignee: r.assignee ?? '',
     urgency: r.urgency ?? '',
     priority: r.priority ?? '',
     status: r.status ?? '',
@@ -68,6 +71,7 @@ function toRecord(input: BrandInput): Omit<BrandRecord, 'id'> {
     reseller_type: input.resellerType,
     num_asins: input.numAsins,
     owned_by: input.ownedBy,
+    assignee: input.assignee,
     urgency: input.urgency,
     priority: input.priority,
     status: input.status,
