@@ -755,7 +755,7 @@ export default function BizManagePage() {
           <Image src="/logo.svg" alt="Beauty Box Media" width={216} height={52} priority />
           <div className={styles.authCard}>
             <h1 className={styles.authTitle}>
-              Management <span className={styles.accent}>Console</span>
+              Business <span className={styles.accent}>Console</span>
             </h1>
             <p className={styles.authSubtitle}>Supabase isn&apos;t configured yet.</p>
             <p className={styles.notice}>
@@ -786,7 +786,7 @@ export default function BizManagePage() {
           <Image src="/logo.svg" alt="Beauty Box Media" width={216} height={52} priority />
           <form className={styles.authCard} onSubmit={handleSignIn}>
             <h1 className={styles.authTitle}>
-              Management <span className={styles.accent}>Console</span>
+              Business <span className={styles.accent}>Console</span>
             </h1>
             <p className={styles.authSubtitle}>Sign in to continue.</p>
 
@@ -837,7 +837,7 @@ export default function BizManagePage() {
           <Image src="/logo.svg" alt="Beauty Box Media" width={148} height={36} priority />
           <span className={styles.brandDivider} aria-hidden="true" />
           <span className={styles.brandName}>
-            Management <span className={styles.accent}>Console</span>
+            Business <span className={styles.accent}>Console</span>
           </span>
         </div>
         <div className={styles.topbarActions}>
