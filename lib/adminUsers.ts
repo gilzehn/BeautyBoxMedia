@@ -10,6 +10,8 @@ export interface AdminUserRow {
   firstName: string;
   email: string;
   role: 'admin' | 'member';
+  // Sidebar sections visible to this user; null = default (all sections).
+  sections: string[] | null;
   createdAt: string;
   lastSignInAt: string | null;
 }
@@ -19,6 +21,13 @@ export interface NewUserInput {
   email: string;
   password: string;
   isAdmin: boolean;
+}
+
+export interface UpdateUserInput {
+  userId: string;
+  role?: 'admin' | 'member';
+  sections?: string[] | null;
+  firstName?: string;
 }
 
 const FUNCTION = 'admin-users';
@@ -51,5 +60,10 @@ export async function getUsers(): Promise<AdminUserRow[]> {
 
 export async function createUser(input: NewUserInput): Promise<AdminUserRow> {
   const { user } = await invoke<{ user: AdminUserRow }>({ action: 'create', ...input });
+  return user;
+}
+
+export async function updateUser(input: UpdateUserInput): Promise<AdminUserRow> {
+  const { user } = await invoke<{ user: AdminUserRow }>({ action: 'update', ...input });
   return user;
 }

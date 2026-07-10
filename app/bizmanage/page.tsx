@@ -4,7 +4,15 @@ import { Fragment, useState, useEffect, useMemo, useCallback, useRef, FormEvent 
 import Image from 'next/image';
 import type { Session } from '@supabase/supabase-js';
 import styles from './bizmanage.module.css';
-import Sidebar, { ViewId, VIEW_TITLES } from './Sidebar';
+import Sidebar, {
+  ViewId,
+  VIEW_TITLES,
+  VIEW_SECTION,
+  SectionKey,
+  ALL_SECTIONS,
+  SidebarProfile,
+  sectionsFromSession,
+} from './Sidebar';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import {
   BrandRow,
@@ -16,7 +24,19 @@ import {
   getDropdownOptions,
   addDropdownOption,
 } from '@/lib/brands';
-import { AdminUserRow, getUsers, createUser } from '@/lib/adminUsers';
+import { FilterMulti, NoteIcon, TrashIcon, uniq } from './screens/shared';
+import ProfileSettingsModal from './ProfileSettingsModal';
+import SettingsUsersScreen from './screens/SettingsUsersScreen';
+import TasksScreen from './screens/TasksScreen';
+import LeadsScreen from './screens/LeadsScreen';
+import FinanceScreen from './screens/FinanceScreen';
+import CashflowScreen from './screens/CashflowScreen';
+import ProfitLossScreen from './screens/ProfitLossScreen';
+import DeckCreatorScreen from './screens/DeckCreatorScreen';
+import ProposalBuilderScreen from './screens/ProposalBuilderScreen';
+import RoadmapBuilderScreen from './screens/RoadmapBuilderScreen';
+import EmailDrafterScreen from './screens/EmailDrafterScreen';
+import ProfitabilityEstimatorScreen from './screens/ProfitabilityEstimatorScreen';
 
 // Column definitions drive the header (sorting), the always-editable cells,
 // and the per-column header filters. `select` columns pull their allowed
@@ -104,262 +124,6 @@ const EMPTY_INPUT: BrandInput = {
   estSow: '',
   note: '',
 };
-
-// Preserve-order de-dupe.
-function uniq(values: string[]): string[] {
-  return Array.from(new Set(values));
-}
-
-function NoteIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <path d="M14 2v6h6" />
-      <path d="M8 13h8M8 17h5" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 6h18" />
-      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-      <path d="M10 11v6M14 11v6" />
-    </svg>
-  );
-}
-
-// Admin-only user management modal. Visibility is gated client-side on the
-// session's app_metadata.role, but authorization is enforced server-side by
-// the admin-users edge function.
-// Checkbox popover for select-column filters, so several values can be
-// active at once. An empty selection means "All".
-function FilterMulti({
-  label,
-  values,
-  counts,
-  selected,
-  onChange,
-  alignRight = false,
-}: {
-  label: string;
-  values: string[];
-  counts?: Map<string, number>;
-  selected: string[];
-  onChange: (next: string[]) => void;
-  alignRight?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (e: PointerEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open]);
-
-  const summary =
-    selected.length === 0 ? 'All' : selected.length === 1 ? selected[0] : `${selected.length} selected`;
-
-  return (
-    <div className={styles.filterMulti} ref={wrapRef}>
-      <button
-        type="button"
-        className={`${styles.columnFilter} ${styles.filterMultiBtn} ${
-          selected.length > 0 ? styles.columnFilterActive : ''
-        }`}
-        aria-haspopup="true"
-        aria-expanded={open}
-        aria-label={`Filter ${label}`}
-        onClick={() => setOpen((o) => !o)}
-      >
-        <span className={styles.filterMultiText}>{summary}</span>
-        <span aria-hidden="true">▾</span>
-      </button>
-      {open && (
-        <div
-          className={`${styles.filterMenu} ${alignRight ? styles.filterMenuRight : ''}`}
-          aria-label={`${label} options`}
-        >
-          <button
-            type="button"
-            className={styles.filterMenuClear}
-            disabled={selected.length === 0}
-            onClick={() => onChange([])}
-          >
-            Clear — show all
-          </button>
-          {values.map((v) => {
-            const checked = selected.includes(v);
-            return (
-              <label key={v} className={styles.filterMenuRow}>
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() =>
-                    onChange(checked ? selected.filter((s) => s !== v) : [...selected, v])
-                  }
-                />
-                <span className={styles.filterMenuValue}>{v}</span>
-                <span className={styles.filterMenuCount}>{counts?.get(v) ?? 0}</span>
-              </label>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function UsersPanel({ onClose }: { onClose: () => void }) {
-  const [users, setUsers] = useState<AdminUserRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [listError, setListError] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [formError, setFormError] = useState('');
-
-  useEffect(() => {
-    getUsers()
-      .then(setUsers)
-      .catch((err) =>
-        setListError(err instanceof Error ? err.message : 'Failed to load users.')
-      )
-      .finally(() => setLoading(false));
-  }, []);
-
-  const handleCreate = async (e: FormEvent) => {
-    e.preventDefault();
-    setCreating(true);
-    setFormError('');
-    try {
-      const created = await createUser({
-        firstName: firstName.trim(),
-        email: email.trim(),
-        password,
-        isAdmin,
-      });
-      setUsers((prev) => [...prev, created]);
-      setFirstName('');
-      setEmail('');
-      setPassword('');
-      setIsAdmin(false);
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Failed to create user.');
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHead}>
-          <h3 className={styles.modalTitle}>Users</h3>
-          <button className={styles.rowBtn} onClick={onClose} type="button">
-            Close
-          </button>
-        </div>
-
-        {loading ? (
-          <p className={styles.pageMeta}>Loading users…</p>
-        ) : listError ? (
-          <p className={styles.error}>{listError}</p>
-        ) : (
-          <ul className={styles.userList}>
-            {users.map((u) => (
-              <li key={u.id} className={styles.userRow}>
-                <div>
-                  <div className={styles.userEmail}>
-                    {u.firstName ? `${u.firstName} · ${u.email}` : u.email}
-                  </div>
-                  <div className={styles.userMeta}>
-                    Created {new Date(u.createdAt).toLocaleDateString()}
-                    {u.lastSignInAt
-                      ? ` · last sign-in ${new Date(u.lastSignInAt).toLocaleDateString()}`
-                      : ' · never signed in'}
-                  </div>
-                </div>
-                <span
-                  className={`${styles.pill} ${
-                    u.role === 'admin' ? styles.accountTBB : styles.badgeNeutral
-                  }`}
-                >
-                  {u.role}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <form className={styles.addUserForm} onSubmit={handleCreate}>
-          <h4 className={styles.addUserTitle}>Add user</h4>
-          <label className={styles.field}>
-            <span className={styles.label}>First name</span>
-            <input
-              type="text"
-              className={styles.input}
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              placeholder="Teammate's first name"
-              required
-            />
-          </label>
-          <label className={styles.field}>
-            <span className={styles.label}>Email</span>
-            <input
-              type="email"
-              className={styles.input}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="teammate@thebeautyboxmedia.com"
-              required
-            />
-          </label>
-          <label className={styles.field}>
-            <span className={styles.label}>Password</span>
-            <input
-              type="password"
-              className={styles.input}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              minLength={8}
-              placeholder="At least 8 characters"
-              required
-            />
-          </label>
-          <label className={styles.checkboxRow}>
-            <input
-              type="checkbox"
-              checked={isAdmin}
-              onChange={(e) => setIsAdmin(e.target.checked)}
-            />
-            <span>Administrator (can manage users)</span>
-          </label>
-          {formError && <p className={styles.error}>{formError}</p>}
-          <button type="submit" className="btn btn-primary" disabled={creating}>
-            {creating ? 'Creating…' : 'Create user'}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
 
 // Pop-up card for creating a brand. Only the essentials are asked here —
 // every other field is edited directly on the table afterwards.
@@ -460,19 +224,22 @@ function AddBrandModal({
 
 const SIDEBAR_KEY = 'bizmanage.sidebar';
 
-// Single source of truth for the display name shown in the sidebar profile.
-// Prefers the stored first name (set when an admin creates the user); older
-// accounts without one fall back to the capitalized email prefix.
-function firstNameFromSession(session: Session): string {
+// Single source of truth for the identity shown in the sidebar profile area.
+// Prefers self-set profile fields (user_metadata via Profile settings), then
+// the admin-entered first name, then the capitalized email prefix.
+function profileFromSession(session: Session): SidebarProfile {
   const meta = (session.user.user_metadata ?? {}) as Record<string, unknown>;
-  if (typeof meta.first_name === 'string' && meta.first_name.trim()) {
-    return meta.first_name.trim().split(/\s+/)[0];
-  }
-  if (typeof meta.full_name === 'string' && meta.full_name.trim()) {
-    return meta.full_name.trim().split(/\s+/)[0];
-  }
-  const prefix = session.user.email?.split('@')[0] ?? '';
-  return prefix ? prefix[0].toUpperCase() + prefix.slice(1) : 'User';
+  const fullName = typeof meta.full_name === 'string' ? meta.full_name.trim() : '';
+  const firstName = typeof meta.first_name === 'string' ? meta.first_name.trim() : '';
+  const email = session.user.email ?? '';
+  const prefix = email.split('@')[0] ?? '';
+  return {
+    displayName:
+      fullName || firstName || (prefix ? prefix[0].toUpperCase() + prefix.slice(1) : 'User'),
+    email,
+    username: typeof meta.username === 'string' ? meta.username.trim() : '',
+    avatarUrl: typeof meta.avatar_url === 'string' ? meta.avatar_url : '',
+  };
 }
 
 export default function BizManagePage() {
@@ -521,12 +288,26 @@ export default function BizManagePage() {
     setSession(null);
     setEmail('');
     setPassword('');
-    setUsersOpen(false);
+    setProfileOpen(false);
   };
 
   // Admin-only affordances (enforced for real by the admin-users edge function).
   const isAdmin = session?.user?.app_metadata?.role === 'admin';
-  const [usersOpen, setUsersOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  // --- Permissions ----------------------------------------------------------
+  // Which top-level sections this user may see; settings views are admin-only.
+  const allowedSections = useMemo<SectionKey[]>(
+    () => (session ? sectionsFromSession(session) : ALL_SECTIONS),
+    [session]
+  );
+  const viewAllowed = useCallback(
+    (v: ViewId): boolean => {
+      const section = VIEW_SECTION[v];
+      return section === 'settings' ? isAdmin : allowedSections.includes(section);
+    },
+    [allowedSections, isAdmin]
+  );
 
   // --- View switching -------------------------------------------------------
   // The sidebar swaps what <main> renders; the hash keeps the view across
@@ -537,9 +318,22 @@ export default function BizManagePage() {
     if (hash && hash in VIEW_TITLES) setView(hash as ViewId);
   }, []);
   const handleNavigate = (next: ViewId) => {
+    if (!viewAllowed(next)) return;
     setView(next);
     history.replaceState(null, '', `#${next}`);
   };
+
+  // A disallowed view (stale hash, revoked permission) falls back to the
+  // first view this user may see. Runs only once auth has resolved; when NO
+  // sections are granted the render below shows an explanatory card instead.
+  useEffect(() => {
+    if (!session || allowedSections.length === 0 || viewAllowed(view)) return;
+    const fallback = (Object.keys(VIEW_TITLES) as ViewId[]).find(viewAllowed);
+    if (fallback) {
+      setView(fallback);
+      history.replaceState(null, '', `#${fallback}`);
+    }
+  }, [session, view, allowedSections, viewAllowed]);
 
   // --- Sidebar expansion ----------------------------------------------------
   // Lives here (not in Sidebar) so the content shell can reflow with it.
@@ -579,6 +373,13 @@ export default function BizManagePage() {
   useEffect(() => {
     if (session) loadData();
   }, [session, loadData]);
+
+  // Shared "+ Add new…" handler for the screens: persist the option and keep
+  // the page-level copy (used by every select) in sync.
+  const registerOption = useCallback(async (field: string, value: string) => {
+    await addDropdownOption(field, value);
+    setOptions((prev) => ({ ...prev, [field]: [...(prev[field] ?? []), value] }));
+  }, []);
 
   // Allowed values for a select column: dropdown_options first, then any extra
   // values present in the data (so nothing is un-selectable / un-filterable).
@@ -1008,7 +809,7 @@ export default function BizManagePage() {
 
   // --- Console ------------------------------------------------------------
   const colSpan = COLUMNS.length + 1;
-  const firstName = firstNameFromSession(session);
+  const profile = profileFromSession(session);
 
   return (
     <div className={styles.console}>
@@ -1017,23 +818,11 @@ export default function BizManagePage() {
           <Image src="/logo.svg" alt="Beauty Box Media" width={148} height={36} priority />
           <span className={styles.brandName}>Business Console</span>
         </div>
-        <div className={styles.topbarActions}>
-          {isAdmin && (
-            <button
-              className={`btn btn-outline ${styles.signOut}`}
-              onClick={() => setUsersOpen(true)}
-              type="button"
-            >
-              Users
-            </button>
-          )}
-          <button className={`btn btn-outline ${styles.signOut}`} onClick={handleSignOut}>
-            Sign out
-          </button>
-        </div>
       </header>
 
-      {isAdmin && usersOpen && <UsersPanel onClose={() => setUsersOpen(false)} />}
+      {profileOpen && (
+        <ProfileSettingsModal session={session} onClose={() => setProfileOpen(false)} />
+      )}
 
       <div className={`${styles.shell} ${sidebarExpanded ? styles.shellExpanded : ''}`}>
         <Sidebar
@@ -1041,10 +830,42 @@ export default function BizManagePage() {
           onNavigate={handleNavigate}
           expanded={sidebarExpanded}
           onToggleExpanded={toggleSidebar}
-          firstName={firstName}
+          profile={profile}
+          isAdmin={isAdmin}
+          allowedSections={allowedSections}
+          onSignOut={handleSignOut}
+          onOpenProfile={() => setProfileOpen(true)}
         />
         <main className={styles.content}>
-          {view !== 'brands' ? (
+          {allowedSections.length === 0 && !isAdmin ? (
+            <div className={styles.comingSoonCard}>
+              <p>No sections are enabled for your account yet — ask an administrator.</p>
+            </div>
+          ) : view === 'tasks' ? (
+            <TasksScreen options={options} onAddOption={registerOption} />
+          ) : view === 'leads' ? (
+            <LeadsScreen options={options} onAddOption={registerOption} />
+          ) : view === 'income' ? (
+            <FinanceScreen key="income" kind="income" options={options} onAddOption={registerOption} />
+          ) : view === 'expenses' ? (
+            <FinanceScreen key="expense" kind="expense" options={options} onAddOption={registerOption} />
+          ) : view === 'cashflow' ? (
+            <CashflowScreen />
+          ) : view === 'profit-loss' ? (
+            <ProfitLossScreen />
+          ) : view === 'deck-creator' ? (
+            <DeckCreatorScreen />
+          ) : view === 'proposal-builder' ? (
+            <ProposalBuilderScreen />
+          ) : view === 'roadmap-builder' ? (
+            <RoadmapBuilderScreen />
+          ) : view === 'email-drafter' ? (
+            <EmailDrafterScreen />
+          ) : view === 'profitability-estimator' ? (
+            <ProfitabilityEstimatorScreen />
+          ) : view === 'settings-users' && isAdmin ? (
+            <SettingsUsersScreen currentUserId={session.user.id} />
+          ) : view !== 'brands' ? (
             <>
               <div className={styles.pageHead}>
                 <h2 className={styles.pageTitle}>{VIEW_TITLES[view]}</h2>

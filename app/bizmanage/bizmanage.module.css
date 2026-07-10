@@ -335,16 +335,22 @@
   max-width: 220px;
 }
 
-/* Profile row sits where the collapse toggle used to live. Collapsed: only
-   the avatar circle shows, centered in the rail; clicking it expands. */
+/* Profile area sits where the collapse toggle used to live. The avatar opens
+   the account menu; expansion has its own chevrons (in the row when expanded,
+   below the circle when collapsed). */
+.profileArea {
+  position: relative; /* anchors the account dropdown */
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--sb-line);
+  padding-bottom: 6px;
+}
+
 .profileRow {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-shrink: 0;
   height: 56px;
   padding: 0 14px; /* (rail 64 - avatar 36) / 2 keeps the circle centered */
-  border-bottom: 1px solid var(--sb-line);
 }
 
 .avatarBtn {
@@ -1255,4 +1261,434 @@ select.columnFilter {
   .addBtn {
     width: 100%;
   }
+}
+
+/* ---- Sidebar: account menu, expand arrow, avatar photo, settings ---- */
+.avatarImg {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Collapsed rail: expansion arrow right below the profile circle. */
+.railExpandBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 6px 0;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.railExpandBtn:hover {
+  background: var(--sb-hover);
+  color: #fff;
+}
+
+.sidebarExpanded .railExpandBtn {
+  display: none;
+}
+
+.profileMenu {
+  position: absolute;
+  top: 8px;
+  left: calc(100% + 12px);
+  z-index: 2;
+  min-width: 240px;
+  padding: 8px;
+  background: var(--sb-flyout);
+  border: 1px solid var(--sb-line);
+  border-radius: var(--radius-md);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
+}
+
+.profileMenuHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 12px;
+  border-bottom: 1px solid var(--sb-line);
+  margin-bottom: 6px;
+}
+
+.profileMenuId {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.profileMenuName {
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileMenuMeta {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileMenuItem {
+  display: block;
+  width: 100%;
+  padding: 9px 10px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.profileMenuItem:hover {
+  background: var(--sb-hover);
+}
+
+/* Settings list pinned at the bottom (sidebarNav above it is flex: 1). */
+.sidebarBottom {
+  margin: 0;
+  padding: 10px 0;
+  list-style: none;
+  border-top: 1px solid var(--sb-line);
+}
+
+/* ---- Profile settings modal ---- */
+.profileEditAvatar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.profileEditAvatarImg {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profileEditAvatarFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.photoPickBtn {
+  padding: 8px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
+  transition: border-color var(--transition);
+}
+
+.photoPickBtn:hover {
+  border-color: var(--accent);
+}
+
+.photoPickInput {
+  display: none;
+}
+
+/* ---- Settings → Users ---- */
+.permGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(130px, max-content));
+  gap: 4px 16px;
+}
+
+.permItem {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.permItem input {
+  accent-color: var(--accent);
+}
+
+.settingsNote {
+  margin: 12px 2px 24px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+/* ---- Screens: shared bits ---- */
+.rowSaving {
+  opacity: 0.6;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.totalsRow td {
+  padding: 12px 14px;
+  font-weight: 700;
+  background: var(--bg-secondary);
+  box-shadow: inset 0 1px 0 var(--border);
+}
+
+.moneyPositive {
+  color: #7ddf9a;
+}
+
+.moneyNegative {
+  color: #ff7a7a;
+}
+
+.statementSection td {
+  padding: 14px 14px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.netRow td {
+  font-size: 1rem;
+}
+
+.dateInput {
+  color-scheme: dark; /* native picker icon matches the theme */
+  min-width: 130px;
+}
+
+.dateOverdue {
+  color: #ff7a7a;
+}
+
+.numInput {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  max-width: 110px;
+}
+
+/* Inline add-row form under the toolbar. */
+.inlineAdd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px;
+  margin-bottom: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.inlineAdd .input {
+  flex: 1 1 150px;
+  min-width: 130px;
+  padding: 9px 12px;
+  font-size: 0.9rem;
+}
+
+/* ---- AI generator screens ---- */
+.pageTitleBadge {
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+.aiBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 45, 123, 0.12);
+  color: var(--accent-hover);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.aiBadgeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.draftNote {
+  margin: 0 0 14px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.formCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  max-width: 760px;
+}
+
+.formCard > button {
+  align-self: flex-start;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.formGrid3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.outputWrap {
+  margin-bottom: 32px;
+}
+
+.outputHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.outputTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.outputGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.outputStack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 760px;
+}
+
+.outputCard {
+  padding: 18px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.outputCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.slideNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(255, 45, 123, 0.14);
+  color: var(--accent-hover);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.outputList {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.outputBody {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.emailBody {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.88rem;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.statRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.statRow:last-child {
+  border-bottom: none;
+}
+
+.statRowStrong {
+  font-weight: 700;
+}
+
+.copied {
+  color: #7ddf9a;
 }
