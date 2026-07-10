@@ -6,7 +6,13 @@
 // POST JSON body:
 //   { "action": "list" }
 //   { "action": "create", "firstName": "...", "email": "...", "password": "...", "isAdmin": false }
+//   { "action": "update", "userId": "...", "role"?: "admin"|"member",
+//     "sections"?: string[]|null, "firstName"?: "..." }
 import { createClient } from 'npm:@supabase/supabase-js@2';
+
+// Sidebar sections a member can be granted. `sections: null` (or absent)
+// means the default: every section visible.
+const SECTION_KEYS = ['brands', 'agency-clients', 'tasks', 'sales', 'finance', 'analysis'];
 
 const CORS = {
   'Access-Control-Allow-Origin': '*', // token-gated; no cookies involved
@@ -26,17 +32,22 @@ interface UserRow {
   firstName: string;
   email: string;
   role: 'admin' | 'member';
+  sections: string[] | null;
   createdAt: string;
   lastSignInAt: string | null;
 }
 
 // deno-lint-ignore no-explicit-any
 function toRow(u: any): UserRow {
+  const rawSections = u.app_metadata?.sections;
   return {
     id: u.id,
     firstName: u.user_metadata?.first_name ?? '',
     email: u.email ?? '',
     role: u.app_metadata?.role === 'admin' ? 'admin' : 'member',
+    sections: Array.isArray(rawSections)
+      ? rawSections.filter((s: unknown) => typeof s === 'string' && SECTION_KEYS.includes(s))
+      : null,
     createdAt: u.created_at,
     lastSignInAt: u.last_sign_in_at ?? null,
   };
@@ -67,6 +78,9 @@ Deno.serve(async (req) => {
     email?: string;
     password?: string;
     isAdmin?: boolean;
+    userId?: string;
+    role?: string;
+    sections?: unknown;
   };
   try {
     body = await req.json();
@@ -95,6 +109,40 @@ Deno.serve(async (req) => {
       app_metadata: body.isAdmin ? { role: 'admin' } : {},
       user_metadata: firstName ? { first_name: firstName } : {},
     });
+    if (error) return json(error.status ?? 500, { error: error.message });
+    return json(200, { user: toRow(data.user) });
+  }
+
+  if (body.action === 'update') {
+    const userId = String(body.userId ?? '');
+    if (!userId) return json(400, { error: 'userId is required.' });
+
+    const app: Record<string, unknown> = {};
+    const meta: Record<string, unknown> = {};
+    if (body.role !== undefined) {
+      // Blocking self role-changes guarantees at least one admin remains.
+      if (userId === caller.user.id) {
+        return json(400, { error: "You can't change your own role." });
+      }
+      if (body.role !== 'admin' && body.role !== 'member') {
+        return json(400, { error: 'Invalid role.' });
+      }
+      app.role = body.role;
+    }
+    if (body.sections !== undefined) {
+      app.sections = Array.isArray(body.sections)
+        ? body.sections.filter((s: unknown) => typeof s === 'string' && SECTION_KEYS.includes(s))
+        : null; // null resets to the default (all sections visible)
+    }
+    if (body.firstName !== undefined) meta.first_name = String(body.firstName).trim();
+
+    // GoTrue shallow-merges *_metadata, so only send the keys being changed.
+    const attrs: Record<string, unknown> = {};
+    if (Object.keys(app).length > 0) attrs.app_metadata = app;
+    if (Object.keys(meta).length > 0) attrs.user_metadata = meta;
+    if (Object.keys(attrs).length === 0) return json(400, { error: 'Nothing to update.' });
+
+    const { data, error } = await admin.auth.admin.updateUserById(userId, attrs);
     if (error) return json(error.status ?? 500, { error: error.message });
     return json(200, { user: toRow(data.user) });
   }
