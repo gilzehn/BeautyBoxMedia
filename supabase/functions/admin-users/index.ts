@@ -5,7 +5,7 @@
 //
 // POST JSON body:
 //   { "action": "list" }
-//   { "action": "create", "email": "...", "password": "...", "isAdmin": false }
+//   { "action": "create", "firstName": "...", "email": "...", "password": "...", "isAdmin": false }
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const CORS = {
@@ -23,6 +23,7 @@ function json(status: number, body: unknown): Response {
 
 interface UserRow {
   id: string;
+  firstName: string;
   email: string;
   role: 'admin' | 'member';
   createdAt: string;
@@ -33,6 +34,7 @@ interface UserRow {
 function toRow(u: any): UserRow {
   return {
     id: u.id,
+    firstName: u.user_metadata?.first_name ?? '',
     email: u.email ?? '',
     role: u.app_metadata?.role === 'admin' ? 'admin' : 'member',
     createdAt: u.created_at,
@@ -59,7 +61,13 @@ Deno.serve(async (req) => {
     return json(403, { error: 'Admin access required.' });
   }
 
-  let body: { action?: string; email?: string; password?: string; isAdmin?: boolean };
+  let body: {
+    action?: string;
+    firstName?: string;
+    email?: string;
+    password?: string;
+    isAdmin?: boolean;
+  };
   try {
     body = await req.json();
   } catch {
@@ -74,6 +82,7 @@ Deno.serve(async (req) => {
   }
 
   if (body.action === 'create') {
+    const firstName = String(body.firstName ?? '').trim();
     const email = String(body.email ?? '').trim();
     const password = String(body.password ?? '');
     if (!email || password.length < 8) {
@@ -84,6 +93,7 @@ Deno.serve(async (req) => {
       password,
       email_confirm: true, // usable immediately with the password the admin typed
       app_metadata: body.isAdmin ? { role: 'admin' } : {},
+      user_metadata: firstName ? { first_name: firstName } : {},
     });
     if (error) return json(error.status ?? 500, { error: error.message });
     return json(200, { user: toRow(data.user) });

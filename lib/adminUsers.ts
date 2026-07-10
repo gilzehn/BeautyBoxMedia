@@ -7,6 +7,7 @@ import { supabase } from './supabaseClient';
 
 export interface AdminUserRow {
   id: string;
+  firstName: string;
   email: string;
   role: 'admin' | 'member';
   createdAt: string;
@@ -14,6 +15,7 @@ export interface AdminUserRow {
 }
 
 export interface NewUserInput {
+  firstName: string;
   email: string;
   password: string;
   isAdmin: boolean;

@@ -7,6 +7,7 @@ import styles from './bizmanage.module.css';
 // the rest render placeholder views until their sections are built out.
 export type ViewId =
   | 'brands'
+  | 'agency-clients'
   | 'tasks'
   | 'leads'
   | 'deck-creator'
@@ -15,10 +16,13 @@ export type ViewId =
   | 'expenses'
   | 'cashflow'
   | 'profit-loss'
-  | 'brand-analysis';
+  | 'profitability-estimator'
+  | 'roadmap-builder'
+  | 'email-drafter';
 
 export const VIEW_TITLES: Record<ViewId, string> = {
   brands: 'Brand List',
+  'agency-clients': 'Agency Clients',
   tasks: 'Tasks',
   leads: 'Leads',
   'deck-creator': 'Deck Creator',
@@ -27,7 +31,9 @@ export const VIEW_TITLES: Record<ViewId, string> = {
   expenses: 'Expenses',
   cashflow: 'Cashflow',
   'profit-loss': 'Profit and Loss',
-  'brand-analysis': 'Brand Analysis',
+  'profitability-estimator': 'Profitability Estimator',
+  'roadmap-builder': 'Roadmap Builder',
+  'email-drafter': 'Email Drafter',
 };
 
 interface SidebarLeaf {
@@ -59,6 +65,17 @@ function GridIcon() {
       <rect x="14" y="3" width="7" height="7" rx="1" />
       <rect x="3" y="14" width="7" height="7" rx="1" />
       <rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
+  );
+}
+
+function UsersIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   );
 }
@@ -113,6 +130,7 @@ function ChevronsRightIcon() {
 const MENU: SidebarSection[] = [
   { key: 'favorites', label: 'Favorites', icon: () => <StarIcon />, favorites: true },
   { key: 'brands', label: 'Brand List', icon: GridIcon, view: 'brands' },
+  { key: 'agency-clients', label: 'Agency Clients', icon: UsersIcon, view: 'agency-clients' },
   { key: 'tasks', label: 'Tasks', icon: ChecklistIcon, view: 'tasks' },
   {
     key: 'sales',
@@ -135,11 +153,19 @@ const MENU: SidebarSection[] = [
       { id: 'profit-loss', label: 'Profit and Loss' },
     ],
   },
-  { key: 'analysis', label: 'Brand Analysis', icon: BarChartIcon, view: 'brand-analysis' },
+  {
+    key: 'analysis',
+    label: 'Analysis',
+    icon: BarChartIcon,
+    items: [
+      { id: 'profitability-estimator', label: 'Profitability Estimator' },
+      { id: 'roadmap-builder', label: 'Roadmap Builder' },
+      { id: 'email-drafter', label: 'Email Drafter' },
+    ],
+  },
 ];
 
 const FAVORITES_KEY = 'bizmanage.favorites';
-const EXPANDED_KEY = 'bizmanage.sidebar';
 
 function isViewId(value: string): value is ViewId {
   return value in VIEW_TITLES;
@@ -148,19 +174,21 @@ function isViewId(value: string): value is ViewId {
 interface SidebarProps {
   view: ViewId;
   onNavigate: (view: ViewId) => void;
+  // Expansion lives in the page so the content shell can reflow with it.
+  expanded: boolean;
+  onToggleExpanded: () => void;
+  firstName: string;
 }
 
-export default function Sidebar({ view, onNavigate }: SidebarProps) {
+export default function Sidebar({ view, onNavigate, expanded, onToggleExpanded, firstName }: SidebarProps) {
   const [openKey, setOpenKey] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(false);
   const [favorites, setFavorites] = useState<ViewId[]>([]);
   const navRef = useRef<HTMLElement>(null);
   const railBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   // localStorage is read after mount only, so the static-export prerender
-  // (collapsed, no favorites) always matches the first client render.
+  // (no favorites) always matches the first client render.
   useEffect(() => {
-    setExpanded(localStorage.getItem(EXPANDED_KEY) === 'expanded');
     try {
       const raw = JSON.parse(localStorage.getItem(FAVORITES_KEY) ?? '[]');
       if (Array.isArray(raw)) setFavorites(raw.filter((v) => typeof v === 'string' && isViewId(v)));
@@ -187,13 +215,6 @@ export default function Sidebar({ view, onNavigate }: SidebarProps) {
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [openKey]);
-
-  const toggleExpanded = () => {
-    setExpanded((prev) => {
-      localStorage.setItem(EXPANDED_KEY, prev ? 'collapsed' : 'expanded');
-      return !prev;
-    });
-  };
 
   const toggleFavorite = (id: ViewId) => {
     setFavorites((prev) => {
@@ -232,14 +253,26 @@ export default function Sidebar({ view, onNavigate }: SidebarProps) {
       aria-label="Console menu"
       className={`${styles.sidebar} ${expanded ? styles.sidebarExpanded : ''}`}
     >
-      <button
-        className={`${styles.railToggle} ${expanded ? styles.railToggleOpen : ''}`}
-        type="button"
-        aria-label={expanded ? 'Collapse menu' : 'Expand menu'}
-        onClick={toggleExpanded}
-      >
-        <ChevronsRightIcon />
-      </button>
+      <div className={styles.profileRow}>
+        <button
+          className={styles.avatarBtn}
+          type="button"
+          title={firstName}
+          aria-label={expanded ? 'Collapse menu' : 'Expand menu'}
+          onClick={onToggleExpanded}
+        >
+          <span className={styles.avatar}>{firstName.charAt(0).toUpperCase()}</span>
+        </button>
+        <span className={styles.profileName}>{firstName}</span>
+        <button
+          className={styles.profileToggle}
+          type="button"
+          aria-label="Collapse menu"
+          onClick={onToggleExpanded}
+        >
+          <ChevronsRightIcon />
+        </button>
+      </div>
 
       <ul className={styles.sidebarNav}>
         {MENU.map((section) => {
@@ -269,7 +302,10 @@ export default function Sidebar({ view, onNavigate }: SidebarProps) {
                 aria-expanded={open}
                 aria-current={active ? 'page' : undefined}
                 onClick={() =>
-                  section.view ? navigate(section.view) : setOpenKey((k) => (k === section.key ? null : section.key))
+                  // Hover already opens the flyout, so a toggle here would
+                  // close it right under the click. Clicking always opens;
+                  // mouse-leave, outside press, and Escape close.
+                  section.view ? navigate(section.view) : setOpenKey(section.key)
                 }
               >
                 {section.icon()}

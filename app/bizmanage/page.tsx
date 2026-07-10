@@ -124,6 +124,7 @@ function UsersPanel({ onClose }: { onClose: () => void }) {
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState('');
+  const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -144,8 +145,14 @@ function UsersPanel({ onClose }: { onClose: () => void }) {
     setCreating(true);
     setFormError('');
     try {
-      const created = await createUser({ email: email.trim(), password, isAdmin });
+      const created = await createUser({
+        firstName: firstName.trim(),
+        email: email.trim(),
+        password,
+        isAdmin,
+      });
       setUsers((prev) => [...prev, created]);
+      setFirstName('');
       setEmail('');
       setPassword('');
       setIsAdmin(false);
@@ -175,7 +182,9 @@ function UsersPanel({ onClose }: { onClose: () => void }) {
             {users.map((u) => (
               <li key={u.id} className={styles.userRow}>
                 <div>
-                  <div className={styles.userEmail}>{u.email}</div>
+                  <div className={styles.userEmail}>
+                    {u.firstName ? `${u.firstName} · ${u.email}` : u.email}
+                  </div>
                   <div className={styles.userMeta}>
                     Created {new Date(u.createdAt).toLocaleDateString()}
                     {u.lastSignInAt
@@ -197,6 +206,17 @@ function UsersPanel({ onClose }: { onClose: () => void }) {
 
         <form className={styles.addUserForm} onSubmit={handleCreate}>
           <h4 className={styles.addUserTitle}>Add user</h4>
+          <label className={styles.field}>
+            <span className={styles.label}>First name</span>
+            <input
+              type="text"
+              className={styles.input}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Teammate's first name"
+              required
+            />
+          </label>
           <label className={styles.field}>
             <span className={styles.label}>Email</span>
             <input
@@ -335,6 +355,23 @@ function AddBrandModal({
   );
 }
 
+const SIDEBAR_KEY = 'bizmanage.sidebar';
+
+// Single source of truth for the display name shown in the sidebar profile.
+// Prefers the stored first name (set when an admin creates the user); older
+// accounts without one fall back to the capitalized email prefix.
+function firstNameFromSession(session: Session): string {
+  const meta = (session.user.user_metadata ?? {}) as Record<string, unknown>;
+  if (typeof meta.first_name === 'string' && meta.first_name.trim()) {
+    return meta.first_name.trim().split(/\s+/)[0];
+  }
+  if (typeof meta.full_name === 'string' && meta.full_name.trim()) {
+    return meta.full_name.trim().split(/\s+/)[0];
+  }
+  const prefix = session.user.email?.split('@')[0] ?? '';
+  return prefix ? prefix[0].toUpperCase() + prefix.slice(1) : 'User';
+}
+
 export default function BizManagePage() {
   // --- Auth state ---------------------------------------------------------
   const [session, setSession] = useState<Session | null>(null);
@@ -399,6 +436,21 @@ export default function BizManagePage() {
   const handleNavigate = (next: ViewId) => {
     setView(next);
     history.replaceState(null, '', `#${next}`);
+  };
+
+  // --- Sidebar expansion ----------------------------------------------------
+  // Lives here (not in Sidebar) so the content shell can reflow with it.
+  // localStorage is read after mount only, so the static-export prerender
+  // (collapsed) always matches the first client render.
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  useEffect(() => {
+    setSidebarExpanded(localStorage.getItem(SIDEBAR_KEY) === 'expanded');
+  }, []);
+  const toggleSidebar = () => {
+    setSidebarExpanded((prev) => {
+      localStorage.setItem(SIDEBAR_KEY, prev ? 'collapsed' : 'expanded');
+      return !prev;
+    });
   };
 
   // --- Data state ---------------------------------------------------------
@@ -754,9 +806,7 @@ export default function BizManagePage() {
         <div className={styles.authWrap}>
           <Image src="/logo.svg" alt="Beauty Box Media" width={216} height={52} priority />
           <div className={styles.authCard}>
-            <h1 className={styles.authTitle}>
-              Business <span className={styles.accent}>Console</span>
-            </h1>
+            <h1 className={`${styles.authTitle} ${styles.accent}`}>Business Console</h1>
             <p className={styles.authSubtitle}>Supabase isn&apos;t configured yet.</p>
             <p className={styles.notice}>
               Add <code>NEXT_PUBLIC_SUPABASE_URL</code> and{' '}
@@ -785,9 +835,7 @@ export default function BizManagePage() {
         <div className={styles.authWrap}>
           <Image src="/logo.svg" alt="Beauty Box Media" width={216} height={52} priority />
           <form className={styles.authCard} onSubmit={handleSignIn}>
-            <h1 className={styles.authTitle}>
-              Business <span className={styles.accent}>Console</span>
-            </h1>
+            <h1 className={`${styles.authTitle} ${styles.accent}`}>Business Console</h1>
             <p className={styles.authSubtitle}>Sign in to continue.</p>
 
             <label className={styles.field}>
@@ -829,16 +877,14 @@ export default function BizManagePage() {
 
   // --- Console ------------------------------------------------------------
   const colSpan = COLUMNS.length + 1;
+  const firstName = firstNameFromSession(session);
 
   return (
     <div className={styles.console}>
       <header className={styles.topbar}>
         <div className={styles.brandMark}>
           <Image src="/logo.svg" alt="Beauty Box Media" width={148} height={36} priority />
-          <span className={styles.brandDivider} aria-hidden="true" />
-          <span className={styles.brandName}>
-            Business <span className={styles.accent}>Console</span>
-          </span>
+          <span className={styles.brandName}>Business Console</span>
         </div>
         <div className={styles.topbarActions}>
           {isAdmin && (
@@ -858,8 +904,14 @@ export default function BizManagePage() {
 
       {isAdmin && usersOpen && <UsersPanel onClose={() => setUsersOpen(false)} />}
 
-      <div className={styles.shell}>
-        <Sidebar view={view} onNavigate={handleNavigate} />
+      <div className={`${styles.shell} ${sidebarExpanded ? styles.shellExpanded : ''}`}>
+        <Sidebar
+          view={view}
+          onNavigate={handleNavigate}
+          expanded={sidebarExpanded}
+          onToggleExpanded={toggleSidebar}
+          firstName={firstName}
+        />
         <main className={styles.content}>
           {view !== 'brands' ? (
             <>
