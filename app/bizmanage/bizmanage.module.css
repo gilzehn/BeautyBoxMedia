@@ -1434,6 +1434,24 @@ select.columnFilter {
   accent-color: var(--accent);
 }
 
+/* Per-page grants, grouped the way the sidebar groups pages. */
+.permGroups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, max-content));
+  gap: 10px 24px;
+  padding: 4px 0;
+}
+
+.permGroupHead {
+  font-weight: 600;
+}
+
+.permGroupItems {
+  display: grid;
+  gap: 3px;
+  margin: 4px 0 0 21px;
+}
+
 .settingsNote {
   margin: 12px 2px 24px;
   color: var(--text-muted);
@@ -1692,20 +1710,20 @@ select.columnFilter {
 
 /* By default the FIRST column absorbs leftover table width. These modifiers
    move the flexible column for screens where another one should stretch
-   (Users: the sections cell; Income/Expenses: the description). */
-.tableFlexLast thead th {
-  width: 1%;
-}
-
-.tableFlexLast thead th:last-child {
-  width: auto;
-}
-
+   (Users: the pages cell; Income/Expenses: the description). */
 .tableFlexSecond thead th {
   width: 1%;
 }
 
 .tableFlexSecond thead th:nth-child(2) {
+  width: auto;
+}
+
+.tableFlexPenult thead th {
+  width: 1%;
+}
+
+.tableFlexPenult thead th:nth-last-child(2) {
   width: auto;
 }
 

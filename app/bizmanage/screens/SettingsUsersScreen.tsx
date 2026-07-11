@@ -2,13 +2,14 @@
 
 import { useEffect, useState, FormEvent } from 'react';
 import styles from '../bizmanage.module.css';
-import { AdminUserRow, getUsers, createUser, updateUser } from '@/lib/adminUsers';
-import { ALL_SECTIONS, SECTION_LABELS, SectionKey } from '../Sidebar';
-import { ScreenHead } from './shared';
+import { AdminUserRow, getUsers, createUser, updateUser, deleteUser } from '@/lib/adminUsers';
+import { ALL_VIEWS, PERMISSION_GROUPS, PermissionGroup, ViewId } from '../Sidebar';
+import { ScreenHead, TrashIcon } from './shared';
 
 // Settings → Users: list every console user, edit their type (Admin/Member)
-// and which sidebar sections they can see, and create new users. All writes
-// go through the admin-users edge function (admin-gated, service role).
+// and which pages they can open, set a new password, create users, and delete
+// them. All writes go through the admin-users edge function (admin-gated,
+// service role).
 export default function SettingsUsersScreen({ currentUserId }: { currentUserId: string }) {
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,14 +61,45 @@ export default function SettingsUsersScreen({ currentUserId }: { currentUserId: 
     }
   };
 
-  const sectionChecked = (u: AdminUserRow, key: SectionKey): boolean =>
-    u.sections == null || u.sections.includes(key);
+  const viewChecked = (u: AdminUserRow, id: ViewId): boolean =>
+    u.views == null || u.views.includes(id);
 
-  const toggleSection = (u: AdminUserRow, key: SectionKey) => {
-    const next = ALL_SECTIONS.filter((k) =>
-      k === key ? !sectionChecked(u, k) : sectionChecked(u, k)
-    );
-    applyUpdate(u, { sections: next }, { userId: u.id, sections: next });
+  const saveViews = (u: AdminUserRow, next: ViewId[]) =>
+    applyUpdate(u, { views: next }, { userId: u.id, views: next });
+
+  const toggleView = (u: AdminUserRow, id: ViewId) =>
+    saveViews(u, ALL_VIEWS.filter((v) => (v === id ? !viewChecked(u, v) : viewChecked(u, v))));
+
+  // Group checkbox: everything on -> clear the group, otherwise grant it all.
+  const toggleGroup = (u: AdminUserRow, group: PermissionGroup) => {
+    const ids = group.views.map((v) => v.id);
+    const allOn = ids.every((id) => viewChecked(u, id));
+    saveViews(u, ALL_VIEWS.filter((v) => (ids.includes(v) ? !allOn : viewChecked(u, v))));
+  };
+
+  const resetPassword = (u: AdminUserRow) => {
+    const entered = window.prompt(`New password for ${u.email} (at least 8 characters):`);
+    if (entered === null) return;
+    if (entered.length < 8) {
+      setSaveError(`Couldn't set a password for ${u.email}: at least 8 characters required.`);
+      return;
+    }
+    applyUpdate(u, {}, { userId: u.id, password: entered });
+  };
+
+  const removeUser = async (u: AdminUserRow) => {
+    if (!window.confirm(`Delete ${u.email}? They will no longer be able to sign in.`)) return;
+    setSaveError('');
+    setSaving(u.id, true);
+    try {
+      await deleteUser(u.id);
+      setUsers((prev) => prev.filter((x) => x.id !== u.id));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'delete failed';
+      setSaveError(`Couldn't delete ${u.email}: ${msg}`);
+    } finally {
+      setSaving(u.id, false);
+    }
   };
 
   const handleCreate = async (e: FormEvent) => {
@@ -115,14 +147,15 @@ export default function SettingsUsersScreen({ currentUserId }: { currentUserId: 
         <p className={styles.error}>{listError}</p>
       ) : (
         <div className={styles.tableWrap}>
-          <table className={`${styles.table} ${styles.tableFlexLast}`}>
+          <table className={`${styles.table} ${styles.tableFlexPenult}`}>
             <thead>
               <tr>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Type</th>
                 <th>Activity</th>
-                <th>Visible sections</th>
+                <th>Visible pages</th>
+                <th className={styles.actionsHead} aria-label="Actions" />
               </tr>
             </thead>
             <tbody>
@@ -186,20 +219,78 @@ export default function SettingsUsersScreen({ currentUserId }: { currentUserId: 
                       {u.role === 'admin' ? (
                         <span className={styles.muted}>Always full access</span>
                       ) : (
-                        <div className={styles.permGrid}>
-                          {ALL_SECTIONS.map((key) => (
-                            <label key={key} className={styles.permItem}>
-                              <input
-                                type="checkbox"
-                                checked={sectionChecked(u, key)}
-                                disabled={saving}
-                                onChange={() => toggleSection(u, key)}
-                              />
-                              <span>{SECTION_LABELS[key]}</span>
-                            </label>
-                          ))}
+                        <div className={styles.permGroups}>
+                          {PERMISSION_GROUPS.map((group) => {
+                            const multi = group.views.length > 1;
+                            const onCount = group.views.filter((v) =>
+                              viewChecked(u, v.id)
+                            ).length;
+                            return (
+                              <div key={group.key}>
+                                <label
+                                  className={`${styles.permItem} ${
+                                    multi ? styles.permGroupHead : ''
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={onCount === group.views.length}
+                                    ref={(el) => {
+                                      // A partially-granted group shows as indeterminate.
+                                      if (el) el.indeterminate = multi && onCount > 0 && onCount < group.views.length;
+                                    }}
+                                    disabled={saving}
+                                    onChange={() =>
+                                      multi
+                                        ? toggleGroup(u, group)
+                                        : toggleView(u, group.views[0].id)
+                                    }
+                                  />
+                                  <span>{group.label}</span>
+                                </label>
+                                {multi && (
+                                  <div className={styles.permGroupItems}>
+                                    {group.views.map((v) => (
+                                      <label key={v.id} className={styles.permItem}>
+                                        <input
+                                          type="checkbox"
+                                          checked={viewChecked(u, v.id)}
+                                          disabled={saving}
+                                          onChange={() => toggleView(u, v.id)}
+                                        />
+                                        <span>{v.label}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
+                    </td>
+                    <td className={styles.actionsCell}>
+                      <div className={styles.rowActions}>
+                        <button
+                          className={styles.rowBtn}
+                          type="button"
+                          disabled={saving}
+                          onClick={() => resetPassword(u)}
+                        >
+                          Set password
+                        </button>
+                        {!self && (
+                          <button
+                            className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+                            type="button"
+                            disabled={saving}
+                            title={`Delete ${u.email}`}
+                            onClick={() => removeUser(u)}
+                          >
+                            <TrashIcon />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -210,8 +301,8 @@ export default function SettingsUsersScreen({ currentUserId }: { currentUserId: 
       )}
 
       <p className={styles.settingsNote}>
-        Role and section changes take effect on the user&apos;s next sign-in or token refresh
-        (within about an hour).
+        Role and page changes take effect the next time the user opens or reloads the console.
+        A new password applies from their next sign-in.
       </p>
 
       <form className={styles.addUserForm} onSubmit={handleCreate}>

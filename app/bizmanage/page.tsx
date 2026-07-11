@@ -2,16 +2,15 @@
 
 import { Fragment, useState, useEffect, useMemo, useCallback, useRef, FormEvent } from 'react';
 import Image from 'next/image';
-import type { Session } from '@supabase/supabase-js';
+import type { Session, User } from '@supabase/supabase-js';
 import styles from './bizmanage.module.css';
 import Sidebar, {
   ViewId,
   VIEW_TITLES,
   VIEW_SECTION,
-  SectionKey,
-  ALL_SECTIONS,
+  ALL_VIEWS,
   SidebarProfile,
-  sectionsFromSession,
+  viewsFromUser,
 } from './Sidebar';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import {
@@ -329,22 +328,40 @@ export default function BizManagePage() {
     setProfileOpen(false);
   };
 
-  // Admin-only affordances (enforced for real by the admin-users edge function).
-  const isAdmin = session?.user?.app_metadata?.role === 'admin';
   const [profileOpen, setProfileOpen] = useState(false);
 
   // --- Permissions ----------------------------------------------------------
-  // Which top-level sections this user may see; settings views are admin-only.
-  const allowedSections = useMemo<SectionKey[]>(
-    () => (session ? sectionsFromSession(session) : ALL_SECTIONS),
-    [session]
+  // Role and page grants are re-read from the auth server on every console
+  // load (the cached JWT can carry up-to-an-hour-old app_metadata), so an
+  // admin's change applies as soon as the user reloads. Until the fetch
+  // lands, the JWT's copy is used.
+  const [freshUser, setFreshUser] = useState<User | null>(null);
+  const userId = session?.user?.id ?? null;
+  useEffect(() => {
+    setFreshUser(null);
+    if (!userId || !supabase) return;
+    let cancelled = false;
+    supabase.auth.getUser().then(({ data }) => {
+      if (!cancelled && data.user) setFreshUser(data.user);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const authUser = freshUser ?? session?.user ?? null;
+  // Admin-only affordances (enforced for real by the admin-users edge function).
+  const isAdmin = authUser?.app_metadata?.role === 'admin';
+
+  // Which pages this user may open; settings views are admin-only.
+  const allowedViews = useMemo<ViewId[]>(
+    () => (authUser ? viewsFromUser(authUser) : ALL_VIEWS),
+    [authUser]
   );
   const viewAllowed = useCallback(
-    (v: ViewId): boolean => {
-      const section = VIEW_SECTION[v];
-      return section === 'settings' ? isAdmin : allowedSections.includes(section);
-    },
-    [allowedSections, isAdmin]
+    (v: ViewId): boolean =>
+      VIEW_SECTION[v] === 'settings' ? isAdmin : allowedViews.includes(v),
+    [allowedViews, isAdmin]
   );
 
   // --- View switching -------------------------------------------------------
@@ -363,15 +380,15 @@ export default function BizManagePage() {
 
   // A disallowed view (stale hash, revoked permission) falls back to the
   // first view this user may see. Runs only once auth has resolved; when NO
-  // sections are granted the render below shows an explanatory card instead.
+  // pages are granted the render below shows an explanatory card instead.
   useEffect(() => {
-    if (!session || allowedSections.length === 0 || viewAllowed(view)) return;
+    if (!session || allowedViews.length === 0 || viewAllowed(view)) return;
     const fallback = (Object.keys(VIEW_TITLES) as ViewId[]).find(viewAllowed);
     if (fallback) {
       setView(fallback);
       history.replaceState(null, '', `#${fallback}`);
     }
-  }, [session, view, allowedSections, viewAllowed]);
+  }, [session, view, allowedViews, viewAllowed]);
 
   // --- Sidebar expansion ----------------------------------------------------
   // Lives here (not in Sidebar) so the content shell can reflow with it.
@@ -914,15 +931,20 @@ export default function BizManagePage() {
           onToggleExpanded={toggleSidebar}
           profile={profile}
           isAdmin={isAdmin}
-          allowedSections={allowedSections}
+          allowedViews={allowedViews}
           onSignOut={handleSignOut}
           onOpenProfile={() => setProfileOpen(true)}
         />
         <main className={styles.content}>
-          {allowedSections.length === 0 && !isAdmin ? (
+          {allowedViews.length === 0 && !isAdmin ? (
             <div className={styles.comingSoonCard}>
-              <p>No sections are enabled for your account yet — ask an administrator.</p>
+              <p>No pages are enabled for your account yet — ask an administrator.</p>
             </div>
+          ) : !viewAllowed(view) ? (
+            // Stale hash / just-revoked permission: the fallback effect above
+            // is about to swap the view — render nothing rather than flash a
+            // page this user may not see.
+            null
           ) : view === 'tasks' ? (
             <TasksScreen options={options} onAddOption={registerOption} />
           ) : view === 'leads' ? (

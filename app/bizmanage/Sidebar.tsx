@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { Session } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
 import styles from './bizmanage.module.css';
 
 // Every navigable view in the console. Views without a built screen render
@@ -40,28 +40,12 @@ export const VIEW_TITLES: Record<ViewId, string> = {
 };
 
 // --- Permissions ------------------------------------------------------------
-// Per-user visibility is granted per top-level menu section. The allowlist
-// lives in app_metadata.sections (written only by the admin-users edge
-// function); absent/null means every section, and admins always see all.
+// Per-user visibility is granted per console page (view). The allowlist lives
+// in app_metadata.views (written only by the admin-users edge function);
+// absent/null means every page, and admins always see everything. Accounts
+// still carrying a legacy app_metadata.sections grant (the old per-section
+// model) keep working: a granted section maps to all of its pages.
 export type SectionKey = 'brands' | 'agency-clients' | 'tasks' | 'sales' | 'finance' | 'analysis';
-
-export const ALL_SECTIONS: SectionKey[] = [
-  'brands',
-  'agency-clients',
-  'tasks',
-  'sales',
-  'finance',
-  'analysis',
-];
-
-export const SECTION_LABELS: Record<SectionKey, string> = {
-  brands: 'Brand List',
-  'agency-clients': 'Agency Clients',
-  tasks: 'Tasks',
-  sales: 'Sales',
-  finance: 'Finance',
-  analysis: 'Analysis',
-};
 
 // Which section owns each view ('settings' views sit outside the grant system
 // and are admin-only).
@@ -82,11 +66,20 @@ export const VIEW_SECTION: Record<ViewId, SectionKey | 'settings'> = {
   'settings-users': 'settings',
 };
 
-export function sectionsFromSession(session: Session): SectionKey[] {
-  if (session.user.app_metadata?.role === 'admin') return ALL_SECTIONS;
-  const raw = session.user.app_metadata?.sections;
-  if (!Array.isArray(raw)) return ALL_SECTIONS;
-  return ALL_SECTIONS.filter((key) => raw.includes(key));
+// Every page an admin can grant to a member.
+export const ALL_VIEWS: ViewId[] = (Object.keys(VIEW_SECTION) as ViewId[]).filter(
+  (id) => VIEW_SECTION[id] !== 'settings'
+);
+
+export function viewsFromUser(user: User): ViewId[] {
+  if (user.app_metadata?.role === 'admin') return ALL_VIEWS;
+  const rawViews = user.app_metadata?.views;
+  if (Array.isArray(rawViews)) return ALL_VIEWS.filter((id) => rawViews.includes(id));
+  const rawSections = user.app_metadata?.sections;
+  if (Array.isArray(rawSections)) {
+    return ALL_VIEWS.filter((id) => rawSections.includes(VIEW_SECTION[id]));
+  }
+  return ALL_VIEWS;
 }
 
 interface SidebarLeaf {
@@ -235,6 +228,20 @@ const SETTINGS_SECTION: SidebarSection = {
   items: [{ id: 'settings-users', label: 'Users' }],
 };
 
+// The grantable pages in the same grouping the sidebar shows (minus Favorites
+// and Settings) — drives the permission checkboxes in Settings → Users.
+export interface PermissionGroup {
+  key: SectionKey;
+  label: string;
+  views: SidebarLeaf[];
+}
+
+export const PERMISSION_GROUPS: PermissionGroup[] = MENU.filter((s) => !s.favorites).map((s) => ({
+  key: s.key as SectionKey,
+  label: s.label,
+  views: s.items ?? [{ id: s.view as ViewId, label: s.label }],
+}));
+
 const FAVORITES_KEY = 'bizmanage.favorites';
 
 function isViewId(value: string): value is ViewId {
@@ -256,7 +263,7 @@ interface SidebarProps {
   onToggleExpanded: () => void;
   profile: SidebarProfile;
   isAdmin: boolean;
-  allowedSections: SectionKey[];
+  allowedViews: ViewId[];
   onSignOut: () => void;
   onOpenProfile: () => void;
 }
@@ -268,7 +275,7 @@ export default function Sidebar({
   onToggleExpanded,
   profile,
   isAdmin,
-  allowedSections,
+  allowedViews,
   onSignOut,
   onOpenProfile,
 }: SidebarProps) {
@@ -341,17 +348,17 @@ export default function Sidebar({
 
   // Views this user may see. Favorites are filtered at render time only —
   // the stored list is left intact in case permissions are temporary.
-  const viewAllowed = (id: ViewId): boolean => {
-    const section = VIEW_SECTION[id];
-    return section === 'settings' ? isAdmin : allowedSections.includes(section);
-  };
+  const viewAllowed = (id: ViewId): boolean =>
+    VIEW_SECTION[id] === 'settings' ? isAdmin : allowedViews.includes(id);
 
   const itemsFor = (section: SidebarSection): SidebarLeaf[] => {
     if (section.favorites) {
       return favorites.filter(viewAllowed).map((id) => ({ id, label: VIEW_TITLES[id] }));
     }
-    if (section.items) return section.items;
-    if (section.view) return [{ id: section.view, label: section.label }];
+    if (section.items) return section.items.filter((item) => viewAllowed(item.id));
+    if (section.view && viewAllowed(section.view)) {
+      return [{ id: section.view, label: section.label }];
+    }
     return [];
   };
 
@@ -366,9 +373,8 @@ export default function Sidebar({
     railBtnRefs.current[key]?.focus();
   };
 
-  const visibleMenu = MENU.filter(
-    (section) => section.favorites || allowedSections.includes(section.key as SectionKey)
-  );
+  // A group hides entirely once none of its pages are granted.
+  const visibleMenu = MENU.filter((section) => section.favorites || itemsFor(section).length > 0);
 
   const initial = (profile.displayName || profile.email || '?').charAt(0).toUpperCase();
 

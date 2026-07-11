@@ -48,10 +48,24 @@ hide one) — no code change or redeploy needed.
 ## 3. Admin login and managing users
 
 The console uses real Supabase accounts. An **administrator** account is any
-user whose `app_metadata` contains `"role": "admin"` — admins see a **Users**
-button in the console's top bar that opens the user management panel, where
-they can view every account and create new ones (optionally as admins). New
-users can sign in immediately with the password the admin typed.
+user whose `app_metadata` contains `"role": "admin"` — admins get a
+**Settings → Users** page in the sidebar where they can:
+
+- create accounts (optionally as admins) that can sign in immediately with the
+  password the admin typed;
+- switch an account between **admin** and **member**;
+- grant a member access to individual console pages (**Visible pages** — the
+  checkboxes mirror the sidebar's grouping, and a group checkbox toggles the
+  whole group). Admins always see everything;
+- set a new password for an account;
+- delete an account (you can't delete your own).
+
+Page grants are stored in the user's `app_metadata.views` (`null`/absent means
+every page). The console re-reads role and grants from the auth server each
+time it loads, so a change applies as soon as the affected user reloads —
+no waiting for their login token to refresh. Note that page grants control
+navigation in the console; every signed-in account still holds the same
+database access underneath (see the security note below).
 
 User management is powered by the `admin-users` edge function
 (`supabase/functions/admin-users/index.ts`), which runs with the project's

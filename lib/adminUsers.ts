@@ -10,8 +10,8 @@ export interface AdminUserRow {
   firstName: string;
   email: string;
   role: 'admin' | 'member';
-  // Sidebar sections visible to this user; null = default (all sections).
-  sections: string[] | null;
+  // Console pages visible to this user; null = default (all pages).
+  views: string[] | null;
   createdAt: string;
   lastSignInAt: string | null;
 }
@@ -26,8 +26,10 @@ export interface NewUserInput {
 export interface UpdateUserInput {
   userId: string;
   role?: 'admin' | 'member';
-  sections?: string[] | null;
+  views?: string[] | null;
   firstName?: string;
+  // Admin password reset; takes effect at the user's next sign-in.
+  password?: string;
 }
 
 const FUNCTION = 'admin-users';
@@ -66,4 +68,8 @@ export async function createUser(input: NewUserInput): Promise<AdminUserRow> {
 export async function updateUser(input: UpdateUserInput): Promise<AdminUserRow> {
   const { user } = await invoke<{ user: AdminUserRow }>({ action: 'update', ...input });
   return user;
+}
+
+export async function deleteUser(userId: string): Promise<void> {
+  await invoke<{ ok: boolean }>({ action: 'delete', userId });
 }
