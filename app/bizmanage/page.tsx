@@ -224,6 +224,44 @@ function AddBrandModal({
 
 const SIDEBAR_KEY = 'bizmanage.sidebar';
 
+// Brand column sizing (px): auto-fits the longest brand name by default and
+// is user-resizable between MIN and MAX via the header drag handle; a chosen
+// width is stored under BRAND_COL_KEY and wins over auto-fit.
+const BRAND_COL_KEY = 'bizmanage.brandColWidth';
+const BRAND_COL_DEFAULT = 280;
+const BRAND_COL_MIN = 140;
+const BRAND_COL_MAX = 640;
+
+// Width that shows the longest brand name in full. Measured with a hidden
+// ruler element carrying the cell input's computed font (canvas measureText
+// ignores letter-spacing and comes out short).
+function fitBrandColumn(rows: BrandRow[]): number {
+  if (rows.length === 0 || typeof document === 'undefined') return BRAND_COL_DEFAULT;
+  const ruler = document.createElement('span');
+  ruler.style.position = 'absolute';
+  ruler.style.visibility = 'hidden';
+  ruler.style.whiteSpace = 'pre';
+  const probe = document.querySelector('input[aria-label^="Brand for"]');
+  if (probe) {
+    const cs = getComputedStyle(probe);
+    ruler.style.fontFamily = cs.fontFamily;
+    ruler.style.fontSize = cs.fontSize;
+    ruler.style.fontWeight = cs.fontWeight;
+    ruler.style.letterSpacing = cs.letterSpacing;
+  } else {
+    ruler.style.font = '600 0.9rem sans-serif';
+  }
+  document.body.appendChild(ruler);
+  let widest = 0;
+  for (const row of rows) {
+    ruler.textContent = row.brand;
+    widest = Math.max(widest, ruler.offsetWidth);
+  }
+  ruler.remove();
+  // + cell padding (28px) + input border/padding (18px) + caret slack
+  return Math.min(BRAND_COL_MAX, Math.max(BRAND_COL_MIN, widest + 50));
+}
+
 // Single source of truth for the identity shown in the sidebar profile area.
 // Prefers self-set profile fields (user_metadata via Profile settings), then
 // the admin-entered first name, then the capitalized email prefix.
@@ -350,6 +388,43 @@ export default function BizManagePage() {
     });
   };
 
+  // --- Brand column width -----------------------------------------------
+  // Auto-fits the longest brand name unless the user drags a width (persisted
+  // so it survives reloads). localStorage is read after mount only.
+  const [brandColWidth, setBrandColWidth] = useState(BRAND_COL_DEFAULT);
+  const brandColCustom = useRef(false);
+  useEffect(() => {
+    const stored = Number(localStorage.getItem(BRAND_COL_KEY));
+    if (stored >= BRAND_COL_MIN && stored <= BRAND_COL_MAX) {
+      brandColCustom.current = true;
+      setBrandColWidth(stored);
+    }
+  }, []);
+
+  const startBrandColResize = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startWidth = brandColWidth;
+    const widthAt = (clientX: number) =>
+      Math.min(BRAND_COL_MAX, Math.max(BRAND_COL_MIN, startWidth + clientX - startX));
+    const onMove = (ev: PointerEvent) => setBrandColWidth(widthAt(ev.clientX));
+    const onUp = (ev: PointerEvent) => {
+      brandColCustom.current = true;
+      localStorage.setItem(BRAND_COL_KEY, String(widthAt(ev.clientX)));
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+    };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  };
+
+  const resetBrandColWidth = () => {
+    brandColCustom.current = false;
+    localStorage.removeItem(BRAND_COL_KEY);
+    setBrandColWidth(fitBrandColumn(rowsRef.current));
+  };
+
   // --- Data state ---------------------------------------------------------
   const [rows, setRows] = useState<BrandRow[]>([]);
   const [options, setOptions] = useState<Record<string, string[]>>({});
@@ -380,6 +455,13 @@ export default function BizManagePage() {
     await addDropdownOption(field, value);
     setOptions((prev) => ({ ...prev, [field]: [...(prev[field] ?? []), value] }));
   }, []);
+
+  // Keep the Brand column fitted to the longest name as data changes, unless
+  // the user has dragged a width of their own.
+  useEffect(() => {
+    if (brandColCustom.current || rows.length === 0) return;
+    setBrandColWidth(fitBrandColumn(rows));
+  }, [rows]);
 
   // Allowed values for a select column: dropdown_options first, then any extra
   // values present in the data (so nothing is un-selectable / un-filterable).
@@ -927,7 +1009,7 @@ export default function BizManagePage() {
                 </div>
               )}
 
-              <div className={styles.tableWrap}>
+              <div className={`${styles.tableWrap} ${styles.tableWrapScroll}`}>
                 <table className={styles.table}>
                   <thead>
                     <tr>
@@ -935,12 +1017,32 @@ export default function BizManagePage() {
                         <th
                           key={col.key}
                           className={`${styles.sortable} ${col.numericAlign ? styles.numCol : ''}`}
+                          style={
+                            col.key === 'brand'
+                              ? { width: brandColWidth, minWidth: brandColWidth }
+                              : undefined
+                          }
                           onClick={() => toggleSort(col.key)}
                         >
                           {col.label}
                           <span className={styles.sortArrow}>
                             {sortKey === col.key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''}
                           </span>
+                          {col.key === 'brand' && (
+                            <span
+                              className={styles.colResizer}
+                              role="separator"
+                              aria-orientation="vertical"
+                              aria-label="Resize Brand column (double-click resets)"
+                              title="Drag to resize · double-click to reset"
+                              onClick={(e) => e.stopPropagation()}
+                              onDoubleClick={(e) => {
+                                e.stopPropagation();
+                                resetBrandColWidth();
+                              }}
+                              onPointerDown={startBrandColResize}
+                            />
+                          )}
                         </th>
                       ))}
                       <th className={styles.actionsHead} aria-label="Actions" />
