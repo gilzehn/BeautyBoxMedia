@@ -295,7 +295,7 @@ export default function LeadsScreen({
                     </td>
                     <td>
                       <input
-                        className={styles.ghostInput}
+                        className={`${styles.ghostInput} ${styles.cellMinS}`}
                         type="text"
                         defaultValue={row.contactName}
                         aria-label={`Contact for ${row.company}`}
@@ -310,7 +310,7 @@ export default function LeadsScreen({
                     </td>
                     <td>
                       <input
-                        className={styles.ghostInput}
+                        className={`${styles.ghostInput} ${styles.cellMinM}`}
                         type="text"
                         defaultValue={row.email}
                         aria-label={`Email for ${row.company}`}

@@ -503,12 +503,17 @@
   font-size: 0.8rem;
 }
 
+/* Card-sized form on the Settings → Users screen: full-width inputs here
+   would stretch across the whole content area. */
 .addUserForm {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
+  max-width: 460px;
+  padding: 20px 22px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 
 .addUserTitle {
@@ -1358,14 +1363,6 @@ select.columnFilter {
   background: var(--sb-hover);
 }
 
-/* Settings list pinned at the bottom (sidebarNav above it is flex: 1). */
-.sidebarBottom {
-  margin: 0;
-  padding: 10px 0;
-  list-style: none;
-  border-top: 1px solid var(--sb-line);
-}
-
 /* ---- Profile settings modal ---- */
 .profileEditAvatar {
   display: flex;
@@ -1691,4 +1688,33 @@ select.columnFilter {
 
 .copied {
   color: #7ddf9a;
+}
+
+/* By default the FIRST column absorbs leftover table width. These modifiers
+   move the flexible column for screens where another one should stretch
+   (Users: the sections cell; Income/Expenses: the description). */
+.tableFlexLast thead th {
+  width: 1%;
+}
+
+.tableFlexLast thead th:last-child {
+  width: auto;
+}
+
+.tableFlexSecond thead th {
+  width: 1%;
+}
+
+.tableFlexSecond thead th:nth-child(2) {
+  width: auto;
+}
+
+/* Floors for ghost inputs living in content-hugging columns, so short values
+   don't collapse the field into an unusable sliver. */
+.cellMinS {
+  min-width: 150px;
+}
+
+.cellMinM {
+  min-width: 200px;
 }

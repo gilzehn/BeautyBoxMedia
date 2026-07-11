@@ -115,7 +115,7 @@ export default function SettingsUsersScreen({ currentUserId }: { currentUserId: 
         <p className={styles.error}>{listError}</p>
       ) : (
         <div className={styles.tableWrap}>
-          <table className={styles.table}>
+          <table className={`${styles.table} ${styles.tableFlexLast}`}>
             <thead>
               <tr>
                 <th>Name</th>
@@ -133,7 +133,7 @@ export default function SettingsUsersScreen({ currentUserId }: { currentUserId: 
                   <tr key={u.id} className={saving ? styles.rowSaving : undefined}>
                     <td>
                       <input
-                        className={styles.ghostInput}
+                        className={`${styles.ghostInput} ${styles.cellMinM}`}
                         type="text"
                         defaultValue={u.firstName}
                         placeholder="First name"

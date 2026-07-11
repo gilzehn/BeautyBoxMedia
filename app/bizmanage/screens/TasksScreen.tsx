@@ -340,7 +340,7 @@ export default function TasksScreen({
                       </td>
                       <td>
                         <input
-                          className={styles.ghostInput}
+                          className={`${styles.ghostInput} ${styles.cellMinS}`}
                           type="text"
                           defaultValue={row.brand}
                           aria-label={`Brand for ${row.title}`}
