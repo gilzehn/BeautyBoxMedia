@@ -27,6 +27,7 @@ import {
 import { FilterMulti, NoteIcon, TrashIcon, uniq } from './screens/shared';
 import ProfileSettingsModal from './ProfileSettingsModal';
 import SettingsUsersScreen from './screens/SettingsUsersScreen';
+import SettingsDropdownsScreen from './screens/SettingsDropdownsScreen';
 import TasksScreen from './screens/TasksScreen';
 import LeadsScreen from './screens/LeadsScreen';
 import FinanceScreen from './screens/FinanceScreen';
@@ -947,6 +948,10 @@ export default function BizManagePage() {
             <ProfitabilityEstimatorScreen />
           ) : view === 'settings-users' && isAdmin ? (
             <SettingsUsersScreen currentUserId={session.user.id} />
+          ) : view === 'settings-dropdowns' && isAdmin ? (
+            // Option edits (and cascading renames) touch brands + options,
+            // both held in page state — refresh them when the screen mutates.
+            <SettingsDropdownsScreen onChanged={loadData} />
           ) : view !== 'brands' ? (
             <>
               <div className={styles.pageHead}>

@@ -41,9 +41,10 @@ The **Account, Brand Registry, Reseller Type, Owned By, Urgency, Priority,
 Status, and Est. SOW** fields are chosen from dropdowns (Urgency, Priority,
 and Est. SOW share the High/Medium/Low levels). To add a new
 dropdown value, pick **＋ Add new…** inside any dropdown while editing a row —
-it's saved to **`dropdown_options`** automatically. You can also edit that table
-directly (insert a row with the `field` + `value`, or set `active = false` to
-hide one) — no code change or redeploy needed.
+it's saved to **`dropdown_options`** automatically. Administrators can also
+manage every list from **Settings → Dropdowns** in the console (add, rename,
+reorder, remove — renames also update the rows using the old value), or edit
+the table directly in Supabase — no code change or redeploy needed.
 
 ## 3. Admin login and managing users
 

@@ -1440,6 +1440,95 @@ select.columnFilter {
   font-size: 0.82rem;
 }
 
+/* ---- Settings → Dropdowns ---- */
+.optionCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.optionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.optionCardHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.optionCardTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.optionCardMeta {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.optionList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.optionRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* The table version of .ghostInput bleeds into cell padding; in a flex row
+   it needs to stay inside its slot. */
+.optionRow .ghostInput {
+  margin: 0;
+  flex: 1;
+}
+
+.optionRow .rowActions {
+  flex: none;
+}
+
+.optionEmpty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.optionAddRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.optionAddRow input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+}
+
+.optionAddRow .rowBtn {
+  margin-left: 0;
+  padding: 8px 14px;
+}
+
 /* ---- Screens: shared bits ---- */
 .rowSaving {
   opacity: 0.6;

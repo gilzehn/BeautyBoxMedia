@@ -20,7 +20,8 @@ export type ViewId =
   | 'profitability-estimator'
   | 'roadmap-builder'
   | 'email-drafter'
-  | 'settings-users';
+  | 'settings-users'
+  | 'settings-dropdowns';
 
 export const VIEW_TITLES: Record<ViewId, string> = {
   brands: 'Brand List',
@@ -37,6 +38,7 @@ export const VIEW_TITLES: Record<ViewId, string> = {
   'roadmap-builder': 'Roadmap Builder',
   'email-drafter': 'Email Drafter',
   'settings-users': 'Users',
+  'settings-dropdowns': 'Dropdowns',
 };
 
 // --- Permissions ------------------------------------------------------------
@@ -80,6 +82,7 @@ export const VIEW_SECTION: Record<ViewId, SectionKey | 'settings'> = {
   'roadmap-builder': 'analysis',
   'email-drafter': 'analysis',
   'settings-users': 'settings',
+  'settings-dropdowns': 'settings',
 };
 
 export function sectionsFromSession(session: Session): SectionKey[] {
@@ -232,7 +235,10 @@ const SETTINGS_SECTION: SidebarSection = {
   key: 'settings',
   label: 'Settings',
   icon: GearIcon,
-  items: [{ id: 'settings-users', label: 'Users' }],
+  items: [
+    { id: 'settings-users', label: 'Users' },
+    { id: 'settings-dropdowns', label: 'Dropdowns' },
+  ],
 };
 
 const FAVORITES_KEY = 'bizmanage.favorites';
