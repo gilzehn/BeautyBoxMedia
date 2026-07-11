@@ -456,6 +456,9 @@ export default function BizManagePage() {
     setOptions((prev) => ({ ...prev, [field]: [...(prev[field] ?? []), value] }));
   }, []);
 
+  // Brand names for the Tasks screen's Brand dropdown.
+  const brandNames = useMemo(() => uniq(rows.map((r) => r.brand).filter(Boolean)), [rows]);
+
   // Keep the Brand column fitted to the longest name as data changes, unless
   // the user has dragged a width of their own.
   useEffect(() => {
@@ -924,7 +927,7 @@ export default function BizManagePage() {
               <p>No sections are enabled for your account yet — ask an administrator.</p>
             </div>
           ) : view === 'tasks' ? (
-            <TasksScreen options={options} onAddOption={registerOption} />
+            <TasksScreen options={options} brands={brandNames} onAddOption={registerOption} />
           ) : view === 'leads' ? (
             <LeadsScreen options={options} onAddOption={registerOption} />
           ) : view === 'income' ? (

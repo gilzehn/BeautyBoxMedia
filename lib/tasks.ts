@@ -1,12 +1,13 @@
 import { supabase } from './supabaseClient';
 
-// Mirrors `public.tasks`. Status/assignee vocabularies live in
-// dropdown_options (fields `task_status`, `assignee`).
+// Mirrors `public.tasks`. Status/priority/assignee vocabularies live in
+// dropdown_options (fields `task_status`, `task_priority`, `assignee`).
 
 export interface TaskRow {
   id: number;
   title: string;
   status: string;
+  priority: string;
   assignee: string;
   dueDate: string; // ISO date or '' when unset
   brand: string;
@@ -20,6 +21,7 @@ interface TaskRecord {
   id: number;
   title: string | null;
   status: string | null;
+  priority: string | null;
   assignee: string | null;
   due_date: string | null;
   brand: string | null;
@@ -34,6 +36,7 @@ function fromRecord(r: TaskRecord): TaskRow {
     id: r.id,
     title: r.title ?? '',
     status: r.status ?? '',
+    priority: r.priority ?? '',
     assignee: r.assignee ?? '',
     dueDate: r.due_date ?? '',
     brand: r.brand ?? '',
@@ -46,6 +49,7 @@ function toRecord(input: Partial<TaskInput>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (input.title !== undefined) out.title = input.title;
   if (input.status !== undefined) out.status = input.status;
+  if (input.priority !== undefined) out.priority = input.priority;
   if (input.assignee !== undefined) out.assignee = input.assignee;
   if (input.dueDate !== undefined) out.due_date = input.dueDate || null;
   if (input.brand !== undefined) out.brand = input.brand;
