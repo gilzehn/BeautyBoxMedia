@@ -1,5 +1,5 @@
 -- ============================================================================
--- BeautyBoxMedia /bizmanage — Supabase schema (mirrors the live database)
+-- BeautyBoxMedia /bizconsole — Supabase schema (mirrors the live database)
 -- Run in your Supabase project: SQL Editor -> paste -> Run.
 -- Creates the `brands` and `dropdown_options` tables, enables Row-Level
 -- Security (authenticated users only), and seeds the dropdown values.

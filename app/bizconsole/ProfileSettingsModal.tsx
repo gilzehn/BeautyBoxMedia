@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import styles from './bizmanage.module.css';
+import styles from './bizconsole.module.css';
 import { uploadAvatar, updateProfile, AVATAR_MAX_BYTES } from '@/lib/profile';
 
 // Self-service profile editor opened from the sidebar account menu. Saving

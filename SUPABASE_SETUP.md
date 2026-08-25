@@ -1,6 +1,6 @@
 # BizManage — Supabase setup guide
 
-The `/bizmanage` console reads and writes its brand table to **Supabase**. Because
+The `/bizconsole` console reads and writes its brand table to **Supabase**. Because
 the website is a static site (GitHub Pages, no server), the browser talks to
 Supabase directly. Access is protected by **Row-Level Security (RLS)**: only a
 signed-in user can read or change data, so it is safe to ship the public "anon"
@@ -12,7 +12,7 @@ Follow these steps once to go live.
 > **BBMEDIA** Supabase project (ref `xrkwenrgohaukqvyffru`, org iCommteam,
 > region `ap-southeast-1`, URL `https://xrkwenrgohaukqvyffru.supabase.co`).
 > The schema, data, and the `admin-users` edge function are already set up
-> there; the original shared project is no longer used by `/bizmanage`.
+> there; the original shared project is no longer used by `/bizconsole`.
 
 ---
 
@@ -108,7 +108,7 @@ changing it.)
    npm install
    npm run dev
    ```
-4. Open <http://localhost:3000/bizmanage>, sign in with the account from step 3,
+4. Open <http://localhost:3000/bizconsole>, sign in with the account from step 3,
    and try filtering, editing a cell, adding, and deleting a brand. Changes show
    up in the Supabase **Table Editor**.
 
@@ -122,7 +122,7 @@ The build injects the same two values from GitHub repository secrets.
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 2. Push to `master` (or run the **Deploy to GitHub Pages** workflow manually).
    The workflow passes the secrets into `npm run build`, so the live site at
-   `thebeautyboxmedia.com/bizmanage` connects to Supabase automatically.
+   `thebeautyboxmedia.com/bizconsole` connects to Supabase automatically.
 
 ---
 
@@ -131,12 +131,12 @@ The build injects the same two values from GitHub repository secrets.
 - `lib/supabaseClient.ts` — creates the browser Supabase client from the env vars.
 - `lib/brands.ts` — the only file that talks to the database (`getBrands`,
   `addBrand`, `updateBrand`, `deleteBrand`). Swap this out to change backends.
-- `app/bizmanage/page.tsx` — the login + filterable, editable table UI.
+- `app/bizconsole/page.tsx` — the login + filterable, editable table UI.
 - `supabase/schema.sql` — the table, RLS policy, and seed rows.
 
 ## Troubleshooting
 
-- **"Supabase isn't configured yet"** on `/bizmanage` — the env vars are missing.
+- **"Supabase isn't configured yet"** on `/bizconsole` — the env vars are missing.
   Check `.env.local` locally (restart `npm run dev` after editing it) or the
   GitHub secrets for production.
 - **Sign-in fails** — confirm the user exists and is confirmed (step 3), and that

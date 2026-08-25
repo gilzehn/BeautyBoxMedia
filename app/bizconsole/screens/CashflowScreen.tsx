@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import styles from '../bizmanage.module.css';
+import styles from '../bizconsole.module.css';
 import { FinanceEntryRow, getFinanceEntries } from '@/lib/finance';
 import { ScreenHead, formatMoney, monthKey, monthLabel } from './shared';
 

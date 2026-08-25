@@ -5,7 +5,7 @@
 // and the AI-draft affordances used by the generator screens.
 
 import { useEffect, useRef, useState } from 'react';
-import styles from '../bizmanage.module.css';
+import styles from '../bizconsole.module.css';
 
 // Preserve-order de-dupe.
 export function uniq(values: string[]): string[] {

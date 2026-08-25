@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment, useEffect, useMemo, useState, FormEvent } from 'react';
-import styles from '../bizmanage.module.css';
+import styles from '../bizconsole.module.css';
 import { TaskRow, TaskInput, getTasks, addTask, updateTask, deleteTask } from '@/lib/tasks';
 import { FilterMulti, NoteIcon, TrashIcon, ScreenHead, uniq } from './shared';
 

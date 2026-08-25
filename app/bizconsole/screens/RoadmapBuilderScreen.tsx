@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import styles from '../bizmanage.module.css';
+import styles from '../bizconsole.module.css';
 import { Roadmap, generateRoadmap } from '@/lib/aiTools';
 import { AiBadge, CopyButton, DraftNote, ScreenHead } from './shared';
 
