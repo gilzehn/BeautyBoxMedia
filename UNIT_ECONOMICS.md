@@ -26,12 +26,10 @@ product means inserting its row (at minimum account, sku, purchase_cost)
 here. Identity fields are filled by the Amazon sync when the SKU exists in
 BigQuery.
 
-Initial data came from the *NRGRMR — Unit Economics* workbook: the COGS sheet
-(~27.5k account+SKU rows across TBB/TB/NRG/RMR, deduplicated), with the
-Profit-Calc sheet's `P. Cost` overriding it for its ~610 NRG/RMR rows. BCP
-started empty. About 17k of these SKUs are stale (no longer in any current
-Amazon report) — they keep their cost row here but have no
-`unit_economics` row until Amazon data reappears for them.
+Initial data came from the *NRGRMR — Unit Economics* workbook's **Profit-Calc
+sheet only** (~610 NRG/RMR rows): `P. Cost` → `purchase_cost`, and its Prep /
+Inbound values seeded the matching `unit_economics` rows. TBB and TB will be
+loaded the same way when their own spreadsheet is ready; BCP starts empty.
 
 ### `unit_economics` — Amazon data + planning inputs
 
@@ -40,9 +38,9 @@ One row per account + SKU (only where Amazon data exists):
 - **Synced from BigQuery** (`amzbi-418608.amazon_source_data`): `size_tier`,
   `storage_fee` (per-unit, trailing-12-month average), `fulfillment_fee`,
   `current_price`, `referral_fee`, `synced_at`.
-- **Manual planning inputs**: `prep_cost`, `inbound_cost` (defaults from the
-  Profit-Calc sheet where it had them), `discount_pct` (e.g. `0.20` = plan a
-  20% discount), `desired_profit_pct` (e.g. `0.25` = target a 25% margin).
+- **Manual planning inputs**: `prep_cost`, `inbound_cost` (seeded from the
+  Profit-Calc sheet), `discount_pct` (e.g. `0.20` = plan a 20% discount),
+  `desired_profit_pct` (e.g. `0.25` = target a 25% margin).
 
 ### `unit_economics_view` — the Profit-Calc formulas
 
