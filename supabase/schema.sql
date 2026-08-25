@@ -155,6 +155,8 @@ create table if not exists public.tasks (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+-- Migration for live databases created before the column existed.
+alter table public.tasks add column if not exists priority text not null default '';
 alter table public.tasks enable row level security;
 drop policy if exists "tasks_select_authenticated" on public.tasks;
 create policy "tasks_select_authenticated"
@@ -176,6 +178,10 @@ create table if not exists public.leads (
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
+-- Migration for live databases created before these columns existed.
+alter table public.leads add column if not exists phone     text not null default '';
+alter table public.leads add column if not exists source    text not null default '';
+alter table public.leads add column if not exists follow_up date;
 alter table public.leads enable row level security;
 drop policy if exists "leads_select_authenticated" on public.leads;
 create policy "leads_select_authenticated"

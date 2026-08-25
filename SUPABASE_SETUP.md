@@ -8,6 +8,12 @@ key in the site.
 
 Follow these steps once to go live.
 
+> **Current live project (2026-08):** BizManage runs on the dedicated
+> **BBMEDIA** Supabase project (ref `xrkwenrgohaukqvyffru`, org iCommteam,
+> region `ap-southeast-1`, URL `https://xrkwenrgohaukqvyffru.supabase.co`).
+> The schema, data, and the `admin-users` edge function are already set up
+> there; the original shared project is no longer used by `/bizmanage`.
+
 ---
 
 ## 1. Create a Supabase project
