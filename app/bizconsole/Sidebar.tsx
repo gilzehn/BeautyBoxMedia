@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import styles from './bizmanage.module.css';
+import styles from './bizconsole.module.css';
 
 // Every navigable view in the console. Views without a built screen render
 // placeholder views until their sections are built out.

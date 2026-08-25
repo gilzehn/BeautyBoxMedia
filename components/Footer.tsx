@@ -9,7 +9,7 @@ export default function Footer() {
   const pathname = usePathname();
 
   // The management console stands alone — no marketing chrome.
-  if (pathname?.startsWith('/bizmanage')) return null;
+  if (pathname?.startsWith('/bizconsole')) return null;
 
   return (
     <footer className={styles.footer}>

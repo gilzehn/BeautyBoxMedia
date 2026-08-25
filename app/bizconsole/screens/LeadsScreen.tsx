@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment, useEffect, useMemo, useState, FormEvent } from 'react';
-import styles from '../bizmanage.module.css';
+import styles from '../bizconsole.module.css';
 import { LeadRow, LeadInput, getLeads, addLead, updateLead, deleteLead } from '@/lib/leads';
 import { FilterMulti, NoteIcon, TrashIcon, ScreenHead, formatMoney, uniq } from './shared';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, FormEvent } from 'react';
-import styles from '../bizmanage.module.css';
+import styles from '../bizconsole.module.css';
 import { AdminUserRow, getUsers, createUser, updateUser } from '@/lib/adminUsers';
 import { ALL_SECTIONS, SECTION_LABELS, SectionKey } from '../Sidebar';
 import { ScreenHead } from './shared';

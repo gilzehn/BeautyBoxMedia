@@ -13,7 +13,7 @@ export default function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   // The management console stands alone — no marketing chrome.
-  if (pathname?.startsWith('/bizmanage')) return null;
+  if (pathname?.startsWith('/bizconsole')) return null;
 
   const closeAll = () => { setMenuOpen(false); setOpenDropdown(null); };
 
