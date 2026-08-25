@@ -26,10 +26,10 @@ product means inserting its row (at minimum account, sku, purchase_cost)
 here. Identity fields are filled by the Amazon sync when the SKU exists in
 BigQuery.
 
-Initial data came from the *NRGRMR — Unit Economics* workbook's **Profit-Calc
-sheet only** (~610 NRG/RMR rows): `P. Cost` → `purchase_cost`, and its Prep /
-Inbound values seeded the matching `unit_economics` rows. TBB and TB will be
-loaded the same way when their own spreadsheet is ready; BCP starts empty.
+Initial data came from the **Profit-Calc sheets** of the two Unit Economics
+workbooks (NRGRMR and TBBTB): `P. Cost` → `purchase_cost`, and Prep / Inbound
+seeded the matching `unit_economics` rows. Loaded 2026-08-25: NRG 350,
+RMR 260, TBB 1,398, TB 754 (zero-cost rows included); BCP starts empty.
 
 ### `unit_economics` — Amazon data + planning inputs
 
