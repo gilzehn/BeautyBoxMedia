@@ -1,0 +1,15 @@
+{
+  "account": "NRG",
+  "account_name": "National Retail Group Seller US",
+  "account_id": 2156840,
+  "date_from": "2026-05-01",
+  "date_to": "2026-07-31",
+  "_comment": "Account-level settlement lines that carry no SKU, from sellercentral_settlement_report_v2. Stated as positive costs. See analysis/account_costs.sql.",
+  "advertising": 103510.17,
+  "inbound_logistics": 33063.12,
+  "storage": 6994.84,
+  "removals_disposal": 1372.78,
+  "returns_processing": 119.34,
+  "subscription": 79.98,
+  "other_adjustments": 251.00
+}
