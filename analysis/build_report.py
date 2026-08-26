@@ -149,8 +149,14 @@ def compute(account, d_from, d_to):
         costs = acct["months"][ym]
         ad_rep = sum(g(r, "ad_spend") for r in rows)
         st_rep = sum(g(r, "storage") for r in rows)
+        # Some accounts pay Amazon Ads by card instead of having it deducted from
+        # the settlement. There is then no Cost of Advertising line to tie to, and
+        # the ad reports are the only record of the spend — use them as they are.
+        settle_ad = costs.get("advertising") or 0.0
         alloc[ym] = {
-            "adFactor": (costs["advertising"] / ad_rep) if ad_rep else 0.0,
+            "adSource": "settlement" if settle_ad else "ad reports",
+            "adPool": round(settle_ad or ad_rep, 2),
+            "adFactor": (settle_ad / ad_rep) if (ad_rep and settle_ad) else (1.0 if ad_rep else 0.0),
             "storageFactor": (costs["storage"] / st_rep) if st_rep else 0.0,
             "adReport": round(ad_rep, 2), "storageReport": round(st_rep, 2),
             "inboundPool": costs["inbound_logistics"],

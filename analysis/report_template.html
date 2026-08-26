@@ -242,7 +242,7 @@ dialog::backdrop{background:rgba(8,12,16,.55)}
 
   <section id="recos">
     <h2>Recommendations</h2>
-    <p class="lede">For the ten focus brands only, computed over the whole window
+    <p class="lede">For the <span id="recoCount">focus</span> focus brands only, computed over the whole window
       (<span id="recoWindow"></span>) so the numbers are stable — the brand-level read first, then the SKU-level
       leaks inside it. Every other brand above is data only. Categories overlap on purpose, so the totals are
       gross opportunity, not a sum of independent wins.</p>
@@ -338,6 +338,7 @@ $("#meta").innerHTML = [
   ["Built", M.generated],
 ].map(([k,v])=>`${k} <b>${esc(v)}</b>`).join("");
 $("#recoWindow").textContent = `${M.from} → ${M.to}`;
+$("#recoCount").textContent = ["no","one","two","three","four","five","six","seven","eight","nine","ten"][R.recos.length] || R.recos.length;
 
 /* ---------- period bar ---------- */
 function renderBar(){
@@ -538,7 +539,7 @@ function renderRecos(){
   // headline number counts SKU-level impacts only — adding both would double count.
   const val = r => r.skuFindings.reduce((x,f)=>x+f.impact,0);
   const total = R.recos.reduce((a,r)=>a+val(r),0);
-  const all = el("button","chip",`All ten <span class="n">${money(total)} at SKU level</span>`);
+  const all = el("button","chip",`All ${R.recos.length} <span class="n">${money(total)} at SKU level</span>`);
   all.setAttribute("aria-pressed", String(brandFilter===null));
   all.onclick = () => { brandFilter = null; renderRecos(); };
   strip.appendChild(all);
@@ -588,7 +589,9 @@ function renderRecos(){
 /* ---------- method ---------- */
 function renderMethod(){
   const camp = R.campaign.rows.reduce((a,r)=>a+r[3],0);
-  const settle = Object.values(R.accountCosts).reduce((a,m)=>a+m.advertising,0);
+  const settle = Object.values(R.accountCosts).reduce((a,m)=>a+(m.advertising||0),0);
+  const adPool = Object.values(R.alloc).reduce((a,m)=>a+(m.adPool||0),0);
+  const byCard = !settle;
   const tokens = [...new Set(R.campaign.rows.map(r=>r[1]))];
   const cov = R.coverage;
   const cards = [
@@ -609,9 +612,13 @@ function renderMethod(){
       <li><b>No — the P&amp;L attributes ad dollars by the ad's ASIN, not by campaign name.</b> Every ad id maps to its
       ASIN through the Sponsored Products / Display product-ads tables; a Sponsored Brands creative is split evenly
       across the ASINs on it, then ASIN spend is shared across that ASIN's SKUs by revenue.</li>
-      <li>The campaign names would work too — NRG names them
+      <li>The campaign names would work too — campaigns are named
       <code>iComm | Brand - line | SP | targeting</code> — and the two views agree at account level:
-      ${money(camp)} by campaign name against ${money(settle)} charged on the settlement (${pct(camp/settle)}).</li>
+      ${money(camp)} by campaign name against ${money(adPool)} in the ad reports (${pct(camp/adPool)}).</li>
+      ${byCard ? `<li><b>This account's advertising is not deducted from the settlement</b> — there is no
+      <code>Cost of Advertising</code> line in the window, so Amazon Ads is billed to a card instead. The ad
+      reports are therefore the record of the spend and are used as they stand, with no scaling. On accounts
+      where the settlement does carry the charge, the ad reports are scaled to match it.</li>` : ""}
       <li>Only ${tokens.length} brands are advertised at all: ${tokens.map(esc).join(", ")}. Every other brand on the
       account carries no ad spend, so its ads column is zero by fact, not by attribution.</li>
       <li>ASIN attribution is the one that can be charged to a SKU, which is why the profit column uses it.</li>
