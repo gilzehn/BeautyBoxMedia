@@ -1,0 +1,12 @@
+{
+  "account": "TBB",
+  "account_name": "The Beauty Box Seller US",
+  "account_id": 1614310,
+  "_comment": "Account-level settlement lines that carry no SKU, per month, stated as POSITIVE costs. This account has NO Cost of Advertising line — Amazon Ads is billed to a card, not deducted from the settlement — so advertising is 0 here and the builder falls back to the ad reports for ad spend. Source: analysis/account_costs.sql.",
+  "months": {
+    "2026-05": {"advertising":0.0,"inbound_logistics":12450.63,"storage":6731.27,"removals_disposal":705.78,"returns_processing":74.53,"subscription":0.0,"other_adjustments":487.42},
+    "2026-06": {"advertising":0.0,"inbound_logistics":20268.49,"storage":6947.63,"removals_disposal":774.16,"returns_processing":50.16,"subscription":0.0,"other_adjustments":409.23},
+    "2026-07": {"advertising":0.0,"inbound_logistics":21050.80,"storage":7027.20,"removals_disposal":564.60,"returns_processing":37.74,"subscription":0.0,"other_adjustments":2195.02},
+    "2026-08": {"advertising":0.0,"inbound_logistics":16933.98,"storage":7103.23,"removals_disposal":964.52,"returns_processing":111.63,"subscription":0.0,"other_adjustments":272.51}
+  }
+}

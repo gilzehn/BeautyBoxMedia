@@ -1,0 +1,31 @@
+{
+  "account": "TBB",
+  "_comment": "public.brands (Supabase, account_name='TBB') joined to the P&L. `aliases` maps the brand strings Amazon and Supabase use onto the Brand List name; `focus` marks the seven brands the team asked for recommendations on.",
+  "columns": ["brand","registry","resellerType","numAsins","ownedBy","assignee","status","priority","focus","aliases"],
+  "rows": [
+    ["Cosmedica Skincare","Yes","Exclusive","50","Regina","Kiran","Active","11",true,["Cosmedica Skincare","Cosmedica"]],
+    ["Glimmer Goddess","Yes","Exclusive","161","Regina","iCommteam","Active","3",true,["GLIMMER GODDESS","Glimmer Goddess"]],
+    ["Watercolors Haircare","Yes","Exclusive","76","Regina","Basit","Active","4",true,["Watercolors","Watercolors Haircare"]],
+    ["Govino","Yes","Exclusive","25","Regina","iCommteam","Active","2",true,["govino","Govino","GOVINO"]],
+    ["Le Blanc","N/A","Not specified","94","Regina","","Active","",true,["LE BLANC","Le Blanc","Leblanc","LeBlanc"]],
+    ["Redavid","Yes","Exclusive","49","Regina","iCommteam","Active","",true,["Redavid","REDAVID"]],
+    ["Kai","N/A","Not specified","36","Regina","","Active","",true,["kai","Kai","KAI"]],
+    ["Chihtsai","","Pending Exclusive","37","Regina","","Active","",false,["Chihtsai"]],
+    ["Eagle Fortress","Yes","Exclusive","34","Regina","Basit","Active","",false,["EAGLE FORTRESS","Eagle Fortress"]],
+    ["H2Pro","N/A","Not specified","20","Regina","","Active","",false,["H2PRO","H2Pro","H2Pro Beauty Life"]],
+    ["Inglot","No","Semi-Exclusive","142","Regina","","Active","",false,["Inglot"]],
+    ["Lisap Haircare","Yes","Exclusive","74","Regina","iCommteam","Active","",false,["Lisap","Lisap Haircare"]],
+    ["Mason Pearson","N/A","Not specified","81","Regina","","Active","",false,["Mason Pearson"]],
+    ["Mizon","No","Semi-Exclusive","91","Regina","","Active","",false,["MIZON","Mizon"]],
+    ["Nailplex Shield","No","Semi-Exclusive","3","Regina","","Active","",false,["Nailplex Shield","Nailplex"]],
+    ["Nailtiques","N/A","Not specified","60","Regina","","Active","",false,["Nailtiques"]],
+    ["NutriRoot","Yes","Exclusive","3","BBMEDIA","iCommteam","Active","5",false,["NutriRoot"]],
+    ["Orange Chronic","N/A","Not specified","3","Regina","","Active","",false,["Orange Chronic"]],
+    ["Restorsea","No","Semi-Exclusive","2","Regina","","Active","",false,["Restorsea","RESTØRSEA"]],
+    ["Roxanne Rizzo","Yes","Semi-Exclusive","13","Regina","","Active","",false,["Roxanne Rizzo"]],
+    ["Ruminae","","Pending Exclusive","2","Regina","","Active","",false,["Ruminae"]],
+    ["Scimera - ?","Yes","Exclusive","8","Regina","iCommteam","Active","",false,["Scimera Bioscience","Scimera"]],
+    ["The Balm Cosmetics","Yes","Semi-Exclusive","13","Regina","","Active","",false,["theBalm","The Balm Cosmetics","The Balm"]],
+    ["Toweldry","","Pending Exclusive","7","Regina","","Active","",false,["Towel Dry","Toweldry"]]
+  ]
+}
