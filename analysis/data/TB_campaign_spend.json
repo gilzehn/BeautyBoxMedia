@@ -1,0 +1,21 @@
+{
+  "account": "TB",
+  "_comment": "Advertising by the brand token in the campaign name, SP+SB+SD combined, from the campaign reports. Cross-check only: the P&L attributes the same dollars by the ad's ASIN. Source: analysis/campaign_spend.sql.",
+  "columns": ["ym","token","type","cost","sales"],
+  "tokenToBrand": {"Sonoma":"Sonoma Syrup Co","Golden Rabbit":"Golden Rabbit","Vivioptal":"Vivioptal","El Gallito":"El Gallito Coffee"},
+  "rows": [
+    ["2026-08","El Gallito","SP+SB+SD",787.38,1813.78],
+    ["2026-05","Golden Rabbit","SP+SB+SD",5268.82,21855.08],
+    ["2026-06","Golden Rabbit","SP+SB+SD",7906.06,42372.25],
+    ["2026-07","Golden Rabbit","SP+SB+SD",4751.10,21177.63],
+    ["2026-08","Golden Rabbit","SP+SB+SD",6301.77,19868.89],
+    ["2026-05","Sonoma","SP+SB+SD",10695.40,26324.46],
+    ["2026-06","Sonoma","SP+SB+SD",5400.37,24339.30],
+    ["2026-07","Sonoma","SP+SB+SD",4355.88,19284.35],
+    ["2026-08","Sonoma","SP+SB+SD",3459.42,14032.67],
+    ["2026-05","Vivioptal","SP+SB+SD",2350.95,8360.67],
+    ["2026-06","Vivioptal","SP+SB+SD",1664.37,6032.45],
+    ["2026-07","Vivioptal","SP+SB+SD",693.31,2064.67],
+    ["2026-08","Vivioptal","SP+SB+SD",204.56,462.72]
+  ]
+}

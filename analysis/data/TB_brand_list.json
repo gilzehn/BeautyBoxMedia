@@ -1,0 +1,14 @@
+{
+  "account": "TB",
+  "_comment": "public.brands (Supabase, account_name='TB') joined to the P&L. `aliases` maps the brand strings Amazon and Supabase use onto the Brand List name; `focus` marks the three brands the team asked for recommendations on.",
+  "columns": ["brand","registry","resellerType","numAsins","ownedBy","assignee","status","priority","focus","aliases"],
+  "rows": [
+    ["Sonoma Syrup Co","Yes","Exclusive","29","Regina","iCommteam","Active","6",true,["Sonoma Syrup Co","Sonoma Syrup","Sonoma"]],
+    ["Golden Rabbit","Yes","Semi-Exclusive","680","Regina","Azmat","Active","16",true,["Golden Rabbit"]],
+    ["Lifefactory","Yes","Exclusive","199","Regina","","Active","",true,["Lifefactory","Life Factory"]],
+    ["El Gallito Coffee","Yes","Exclusive","8","Regina","Azmat","Active","",false,["EL GALLITO","El Gallito","El Gallito Coffee"]],
+    ["French Farm","N/A","Not specified","1","Regina","","Active","",false,["French Farm","The French Farm"]],
+    ["Three Lollies","N/A","Not specified","10","Regina","","Active","",false,["Three Lollies"]],
+    ["Vivioptal","","Pending Exclusive","18","Regina","","Active","",false,["Vivioptal Vitamins","Vivioptal"]]
+  ]
+}

@@ -5,10 +5,18 @@ the settlement ledger rather than from Seller Central summary screens — so ref
 promotions, referral and FBA fees, storage, inbound, removals, reimbursements, credits and
 advertising all land on the SKU that caused them.
 
-**Built so far:** [`nrg-brand-profit-analysis.html`](./nrg-brand-profit-analysis.html)
-(NRG, 2026-05-01 → 2026-08-20, split into May / Jun / Jul / Aug MTD). Open it in a browser — it is
-self-contained. Brand totals expand to every SKU; filter to **Without COGS** and export the list to
-see exactly which costs to add in Supabase.
+**Built so far** — one per account, each split into May / Jun / Jul / Aug MTD:
+
+| Account | Report | Window | Focus brands |
+|---|---|---|---|
+| NRG | [`nrg-brand-profit-analysis.html`](./nrg-brand-profit-analysis.html) | 2026-05-01 → 08-20 | Ariston, Bodifresh, Brandywine, Crisan, Inglot, Kitoko, Milagros, MinaiBrow, Scimera, Sqwinchers |
+| RMR | [`rmr-brand-profit-analysis.html`](./rmr-brand-profit-analysis.html) | 2026-05-01 → 08-20 | Demeter, Skin Revolution (+ its four sub-brands), WPP |
+| TBB | [`tbb-brand-profit-analysis.html`](./tbb-brand-profit-analysis.html) | 2026-05-01 → 08-22 | Cosmedica, Glimmer Goddess, Watercolors, Govino, Le Blanc, Redavid, Kai |
+| TB | [`tb-brand-profit-analysis.html`](./tb-brand-profit-analysis.html) | 2026-05-01 → 08-18 | Sonoma Syrup Co, Golden Rabbit, Lifefactory |
+
+Each file is self-contained — open it in a browser. Brand totals expand to every SKU; filter to
+**Without COGS** and export the list to see exactly which costs to add in Supabase. BCP is the one
+account not yet built.
 
 ## Where the numbers come from
 
@@ -51,9 +59,15 @@ shared across that ASIN's SKUs by revenue, scaled so each month ties to the sett
 `Cost of Advertising`. Campaign names are the cross-check — NRG names campaigns
 `iComm | Brand - line | SP | targeting`, and that view totals $129,521 against $129,088 charged.
 
-## What NRG showed (May 1 – Aug 20, 2026)
+## What the four accounts showed
 
-$1.69M net sales and a reported $220k net profit — but 672 of 907 SKUs have no landed cost in
-Supabase. On the 235 SKUs where cost **is** known the account lost **$62k**. Filling
-`purchase_cost` is the prerequisite for trusting anything else on the page. Aug MTD margin is
-running at 5.6% against 14–16% in the full months.
+| Account | Net sales | Reported profit | Profit where COGS is known | SKUs costed |
+|---|---|---|---|---|
+| NRG | $1,688,348 | $219,821 (13.0%) | **−$61,907** | 235 / 907 |
+| RMR | $1,236,085 | $140,687 (11.4%) | **$2,176** | 210 / 629 |
+| TBB | $2,344,920 | $455,574 (19.4%) | **$317,489** | 1,041 / 1,567 |
+| TB | $1,139,111 | $332,492 (29.2%) | **−$5,846** | 616 / 2,309 |
+
+The reported column is what the ledger says; the third column restricts it to SKUs with a real
+landed cost. The gap between them is the cost-coverage problem, and closing it in
+`public.cogs` is the prerequisite for trusting any margin here.
