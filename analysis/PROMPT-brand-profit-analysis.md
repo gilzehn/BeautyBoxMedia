@@ -9,7 +9,7 @@ except the method.
 | TBB | The Beauty Box Seller US | 1614310 | `TBB-Brand-Profit-Analysis` |
 | TB | THE Boutique Seller US | 1614400 | `TB-Brand-Profit-Analysis` |
 | NRG | National Retail Group Seller US | 2156840 | `NRG-Brand-Profit-Analysis` ✅ done |
-| RMR | RM REVOLUTION GROUP Seller US | 1728680 | `RMR-Brand-Profit-Analysis` |
+| RMR | RM REVOLUTION GROUP Seller US | 1728680 | `RMR-Brand-Profit-Analysis` ✅ done |
 | BCP | Brush Clean Pro Seller US | 2839050 | `BCP-Brand-Profit-Analysis` |
 
 ---

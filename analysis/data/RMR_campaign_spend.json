@@ -1,0 +1,32 @@
+{
+  "account": "RMR",
+  "_comment": "Advertising by the brand token in the campaign name (iComm | <Brand> - <line> | <type> | <targeting>), from the SP/SB/SD campaign reports. Cross-check only: the P&L attributes the same dollars by the ad's ASIN. Source: analysis/campaign_spend.sql.",
+  "columns": ["ym","token","type","cost","sales"],
+  "tokenToBrand": {"Demeter":"Demeter","H42":"H-42","Leather Luster":"Leather Luster","Ritual Botanico":"Ritual Botanico","Wellness":"WPP","Hayashi":"Hayashi","Cabellina":"Cabellina"},
+  "rows": [
+    ["2026-05","Cabellina","SP",222.82,515.33],
+    ["2026-06","Cabellina","SP",247.22,491.36],
+    ["2026-07","Cabellina","SP",78.05,289.45],
+    ["2026-08","Cabellina","SP",989.91,387.80],
+    ["2026-05","Demeter","SP",897.35,3622.09],
+    ["2026-06","Demeter","SP",527.67,890.00],
+    ["2026-07","Demeter","SP",279.34,855.00],
+    ["2026-08","Demeter","SP",3527.12,1399.90],
+    ["2026-05","H42","SP",1704.42,6922.49],
+    ["2026-06","H42","SP",1588.41,6481.64],
+    ["2026-07","H42","SP",1926.88,7421.58],
+    ["2026-08","H42","SP",2171.49,6564.47],
+    ["2026-08","Hayashi","SP",141.25,27.95],
+    ["2026-05","Leather Luster","SP",2556.29,10202.89],
+    ["2026-06","Leather Luster","SP",1976.90,7639.71],
+    ["2026-07","Leather Luster","SP",1620.24,7434.24],
+    ["2026-08","Leather Luster","SP",3532.14,5807.07],
+    ["2026-05","Ritual Botanico","SP",15813.59,62712.24],
+    ["2026-06","Ritual Botanico","SP",24746.14,88145.52],
+    ["2026-07","Ritual Botanico","SP",7731.56,30768.03],
+    ["2026-08","Ritual Botanico","SP",7356.80,32249.74],
+    ["2026-06","Wellness","SP",744.52,95.92],
+    ["2026-07","Wellness","SP",537.34,134.88],
+    ["2026-08","Wellness","SP",193.19,0.0]
+  ]
+}

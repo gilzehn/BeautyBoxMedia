@@ -1,0 +1,12 @@
+{
+  "account": "RMR",
+  "account_name": "RM REVOLUTION GROUP Seller US",
+  "account_id": 1728680,
+  "_comment": "Account-level settlement lines that carry no SKU, per month, stated as POSITIVE costs. Source: analysis/account_costs.sql.",
+  "months": {
+    "2026-05": {"advertising":21262.25,"inbound_logistics":9742.69,"storage":910.82,"removals_disposal":1315.46,"returns_processing":7.08,"subscription":39.99,"other_adjustments":261.79},
+    "2026-06": {"advertising":30066.30,"inbound_logistics":11310.18,"storage":970.06,"removals_disposal":108.94,"returns_processing":9.44,"subscription":39.99,"other_adjustments":3.69},
+    "2026-07": {"advertising":12167.65,"inbound_logistics":8026.91,"storage":985.87,"removals_disposal":160.99,"returns_processing":9.44,"subscription":39.99,"other_adjustments":100.54},
+    "2026-08": {"advertising":17301.28,"inbound_logistics":5984.70,"storage":1059.08,"removals_disposal":110.07,"returns_processing":11.80,"subscription":0.0,"other_adjustments":0.0}
+  }
+}

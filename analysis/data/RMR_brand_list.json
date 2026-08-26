@@ -1,0 +1,14 @@
+{
+  "account": "RMR",
+  "_comment": "public.brands (Supabase, account_name='RMR') joined to the P&L. `aliases` maps the brand strings Amazon and Supabase actually use onto the Brand List name; `focus` marks the brands the team asked for recommendations on — Demeter, WPP, and Skin Revolution, which is shown both as its own Amazon brand and through the four sub-brands sold exclusively under it. Skin Revolution is live on Amazon but has no row in public.brands; its status says so.",
+  "columns": ["brand","registry","resellerType","numAsins","ownedBy","assignee","status","priority","focus","aliases"],
+  "rows": [
+    ["Demeter","Yes","Exclusive","136","Mariann","iCommteam","Active","9",true,["DEMETER","Demeter","The Library of Fragrance","Demeter Fragrance Library"]],
+    ["Skin Revolution","","Umbrella brand","","Mariann","","Not in Brand List","",true,["Skin Revolution"]],
+    ["WPP","Yes","Exclusive","30","Mariann","","Active","",true,["Wellness Premium Products","WPP"]],
+    ["H-42","Yes","Exclusive under Skin Revolution","11","Mariann","iCommteam","Active","12",true,["H-42 CLEAN CLIPPERS","H-42","H42"]],
+    ["Leather Luster","Yes","Exclusive under Skin Revolution","6","Mariann","iCommteam","Active","13",true,["Leather Luster"]],
+    ["Olé Capilar","Yes","Exclusive under Skin Revolution","16","Mariann","Azmat","Active","14",true,["Olé Capilar","Ole Capilar","OLE","Cabellina"]],
+    ["Ritual Botanico","Yes","Exclusive under Skin Revolution","33","Mariann","iCommteam","Active","15",true,["Ritual Botanico"]]
+  ]
+}

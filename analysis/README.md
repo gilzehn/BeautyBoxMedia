@@ -5,8 +5,9 @@ the settlement ledger rather than from Seller Central summary screens — so ref
 promotions, referral and FBA fees, storage, inbound, removals, reimbursements, credits and
 advertising all land on the SKU that caused them.
 
-**Built so far:** [`nrg-brand-profit-analysis.html`](./nrg-brand-profit-analysis.html)
-(NRG, 2026-05-01 → 2026-08-20, split into May / Jun / Jul / Aug MTD). Open it in a browser — it is
+**Built so far** (both 2026-05-01 → 2026-08-20, split into May / Jun / Jul / Aug MTD):
+[`nrg-brand-profit-analysis.html`](./nrg-brand-profit-analysis.html) and
+[`rmr-brand-profit-analysis.html`](./rmr-brand-profit-analysis.html). Open either in a browser — they are
 self-contained. Brand totals expand to every SKU; filter to **Without COGS** and export the list to
 see exactly which costs to add in Supabase.
 
@@ -57,3 +58,11 @@ $1.69M net sales and a reported $220k net profit — but 672 of 907 SKUs have no
 Supabase. On the 235 SKUs where cost **is** known the account lost **$62k**. Filling
 `purchase_cost` is the prerequisite for trusting anything else on the page. Aug MTD margin is
 running at 5.6% against 14–16% in the full months.
+
+## What RMR showed (May 1 – Aug 20, 2026)
+
+$1.24M net sales, $140,687 reported net profit — but $2,176 once you look only at the 210 SKUs with a
+landed cost. Skin Revolution, the account's biggest brand at $626,622 net sales, **loses $20,109**
+at 12.0% TACOS. Kiara Sky carries 386 SKUs on the account with no cost on any of them.
+Campaign names credit $55,648 to Ritual Botanico while ASIN attribution puts that spend on
+Skin Revolution ASINs — the campaigns run on ASINs branded Skin Revolution.
