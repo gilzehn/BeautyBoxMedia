@@ -41,6 +41,14 @@ re-running the brand update; new SKUs imported from Amazon are labelled with
 the sheet's spelling for their brand, resolved through aliases learned from
 SKUs already carrying that brand.
 
+**Numeric SKUs.** The first load read the workbooks with openpyxl, which
+returns numeric-looking SKUs as floats — `75` arrived as `75.0`,
+`159015302` as `159015302.0`. Those 23 rows matched nothing in Amazon (no
+title, no fees). Repaired 2026-08-26 from the CSV exports, which keep SKUs as
+text: 12 were duplicates of a correct row and were deleted, 11 were renamed to
+the real SKU and re-synced. **Export the Profit-Calc tab as CSV rather than
+reading the .xlsx** to avoid reintroducing this.
+
 **2026-08-26 brand completion.** For 37 named brands, every remaining Amazon
 SKU was imported (1,259 rows: TB 719, TBB 293, NRG 189, RMR 58) so a brand's
 catalogue is complete rather than limited to whatever the sheet listed. These
