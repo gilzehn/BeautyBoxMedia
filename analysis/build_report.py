@@ -316,8 +316,8 @@ def main():
     }
 
     tpl = (HERE / "report_template.html").read_text()
-    html = tpl.replace("/*__REPORT_JSON__*/null",
-                       json.dumps(report, separators=(",", ":")))
+    html = (tpl.replace("{{ACCOUNT}}", args.account)
+               .replace("/*__REPORT_JSON__*/null", json.dumps(report, separators=(",", ":"))))
     out = args.out or str(HERE / f"{args.account.lower()}-brand-profit-analysis.html")
     pathlib.Path(out).write_text(html)
 
