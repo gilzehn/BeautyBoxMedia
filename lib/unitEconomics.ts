@@ -117,6 +117,27 @@ export async function updateCogs(id: number, patch: Partial<CogsInput>): Promise
   return cogsFromRecord(data as CogsRecord);
 }
 
+// Applies the same patch to many rows in one request. Ids are chunked because
+// PostgREST puts the `in` list in the query string, which has a length limit.
+export async function updateCogsBulk(
+  ids: number[],
+  patch: Partial<CogsInput>
+): Promise<CogsRow[]> {
+  const CHUNK = 500;
+  const updated: CogsRow[] = [];
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    const slice = ids.slice(i, i + CHUNK);
+    const { data, error } = await client()
+      .from(COGS_TABLE)
+      .update(cogsToRecord(patch))
+      .in('id', slice)
+      .select();
+    if (error) throw error;
+    updated.push(...(data as CogsRecord[]).map(cogsFromRecord));
+  }
+  return updated;
+}
+
 export async function deleteCogs(id: number): Promise<void> {
   const { error } = await client().from(COGS_TABLE).delete().eq('id', id);
   if (error) throw error;

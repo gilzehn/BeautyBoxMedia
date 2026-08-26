@@ -9,17 +9,59 @@ import {
   getCogs,
   addCogs,
   updateCogs,
+  updateCogsBulk,
   deleteCogs,
   getUnitEconomics,
   updateUnitEconomicsPlan,
 } from '@/lib/unitEconomics';
-import { TrashIcon, ScreenHead, formatMoney, uniq } from './shared';
+import { TrashIcon, ScreenHead, formatMoney, uniq, useColumnWidths, ResizeHandle, ColGroup } from './shared';
 
 type Tab = 'cogs' | 'unit-economics';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'cogs', label: 'COGS' },
   { id: 'unit-economics', label: 'Unit Economics' },
+];
+
+const ADD_NEW = '__add_new__';
+
+// Column keys and their starting widths. Users drag from here; the chosen
+// widths are remembered per table in localStorage.
+const COGS_COLUMNS: { key: string; label: string; width: number; num?: boolean }[] = [
+  { key: 'select', label: '', width: 38 },
+  { key: 'account', label: 'Account', width: 90 },
+  { key: 'sku', label: 'SKU', width: 170 },
+  { key: 'asin', label: 'ASIN', width: 110 },
+  { key: 'title', label: 'Title', width: 300 },
+  { key: 'brand', label: 'Brand', width: 140 },
+  { key: 'productGroup', label: 'Product Type', width: 150 },
+  { key: 'channel', label: 'Channel', width: 90 },
+  { key: 'purchaseCost', label: 'Purchase Cost', width: 120, num: true },
+  { key: 'actions', label: '', width: 56 },
+];
+
+const UE_COLUMNS: { key: string; label: string; width: number; num?: boolean; plan?: boolean }[] = [
+  { key: 'sku', label: 'SKU', width: 170 },
+  { key: 'brand', label: 'Brand', width: 130 },
+  { key: 'title', label: 'Title', width: 260 },
+  { key: 'totalCost', label: 'Total Cost', width: 105, num: true },
+  { key: 'storage', label: 'Storage', width: 90, num: true },
+  { key: 'fba', label: 'FBA', width: 90, num: true },
+  { key: 'referral', label: 'Referral', width: 95, num: true },
+  { key: 'totalFee', label: 'Total Fee', width: 100, num: true },
+  { key: 'price', label: 'Price', width: 95, num: true },
+  { key: 'profit', label: 'Profit', width: 100, num: true },
+  { key: 'margin', label: 'Margin', width: 90, num: true },
+  { key: 'breakeven', label: 'Break-even', width: 110, num: true },
+  { key: 'discountPct', label: 'Discount %', width: 105, num: true, plan: true },
+  { key: 'discPrice', label: 'Disc. Price', width: 105, num: true },
+  { key: 'discProfit', label: 'Disc. Profit', width: 105, num: true },
+  { key: 'discMargin', label: 'Disc. Margin', width: 110, num: true },
+  { key: 'desiredProfitPct', label: 'Desired Profit %', width: 135, num: true, plan: true },
+  { key: 'suggestedPrice', label: 'Suggested Price', width: 135, num: true },
+  { key: 'desiredPrice', label: 'Desired Price', width: 120, num: true, plan: true },
+  { key: 'desiredProfit', label: '@ Price Profit', width: 120, num: true },
+  { key: 'desiredMargin', label: '@ Price Margin', width: 125, num: true },
 ];
 
 // Percentages live in the database as rates (0.1810) but read as percents
@@ -70,6 +112,20 @@ export default function AccountsScreen({
   const [loadError, setLoadError] = useState('');
   const [saveError, setSaveError] = useState('');
   const [savingIds, setSavingIds] = useState<Set<number>>(new Set());
+
+  const [needsCostOnly, setNeedsCostOnly] = useState(false);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkGroup, setBulkGroup] = useState('');
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  const cogsCols = useColumnWidths(
+    'accounts.cogs',
+    Object.fromEntries(COGS_COLUMNS.map((c) => [c.key, c.width]))
+  );
+  const ueCols = useColumnWidths(
+    'accounts.unitEconomics',
+    Object.fromEntries(UE_COLUMNS.map((c) => [c.key, c.width]))
+  );
 
   const [addOpen, setAddOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -139,23 +195,39 @@ export default function AccountsScreen({
   };
 
   const visibleCogs = useMemo(
-    () => cogsRows.filter(matches),
-    [cogsRows, account, brand, search] // eslint-disable-line react-hooks/exhaustive-deps
+    () => cogsRows.filter((r) => matches(r) && (!needsCostOnly || r.purchaseCost === 0)),
+    [cogsRows, account, brand, search, needsCostOnly] // eslint-disable-line react-hooks/exhaustive-deps
   );
   const visibleUe = useMemo(
     () => ueRows.filter(matches),
     [ueRows, account, brand, search] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
+  // Rows with no cost yet would report a fake 100%-ish margin, so they are
+  // counted separately instead of being averaged in.
   const stats = useMemo(() => {
-    const priced = visibleUe.filter((r) => r.currentPrice > 0);
-    const losing = priced.filter((r) => r.profit < 0).length;
+    const costed = visibleUe.filter((r) => r.currentPrice > 0 && r.purchaseCost > 0);
+    const needsCost = visibleUe.filter((r) => r.purchaseCost === 0).length;
+    const losing = costed.filter((r) => r.profit < 0).length;
     const avgMargin =
-      priced.length > 0
-        ? priced.reduce((sum, r) => sum + (r.marginPct ?? 0), 0) / priced.length
+      costed.length > 0
+        ? costed.reduce((sum, r) => sum + (r.marginPct ?? 0), 0) / costed.length
         : null;
-    return { losing, avgMargin, priced: priced.length };
+    return { losing, avgMargin, needsCost };
   }, [visibleUe]);
+
+  const cogsNeedingCost = useMemo(
+    () => cogsRows.filter((r) => matches(r) && r.purchaseCost === 0).length,
+    [cogsRows, account, brand, search] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
+  // Product types offered in the row select and the bulk control.
+  const productGroupValues = useMemo(
+    () => uniq([...(options['product_group'] ?? []), ...cogsRows.map((r) => r.productGroup)])
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b)),
+    [options, cogsRows]
+  );
 
   const setSaving = (id: number, on: boolean) =>
     setSavingIds((prev) => {
@@ -206,6 +278,74 @@ export default function AccountsScreen({
     }
   };
 
+  // Mirrors FinanceScreen's category handler: a sentinel option prompts for a
+  // brand-new value and registers it for reuse.
+  const handleProductGroup = async (row: CogsRow, raw: string) => {
+    if (raw !== ADD_NEW) {
+      patchCogs(row, { productGroup: raw });
+      return;
+    }
+    const entered = window.prompt('Add a new product type:')?.trim();
+    if (!entered) return;
+    patchCogs(row, { productGroup: entered });
+    try {
+      await onAddOption('product_group', entered);
+    } catch {
+      setSaveError(`"${entered}" is saved on this product, but adding it as a reusable type failed.`);
+    }
+  };
+
+  const toggleRow = (id: number) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const visibleIds = visibleCogs.map((r) => r.id);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
+
+  const toggleAllVisible = () =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) visibleIds.forEach((id) => next.delete(id));
+      else visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
+
+  const applyBulkProductGroup = async () => {
+    const ids = visibleCogs.filter((r) => selected.has(r.id)).map((r) => r.id);
+    if (ids.length === 0) return;
+    let value = bulkGroup;
+    if (value === ADD_NEW) {
+      const entered = window.prompt('Add a new product type:')?.trim();
+      if (!entered) return;
+      value = entered;
+    }
+    setBulkBusy(true);
+    setSaveError('');
+    const previous = cogsRows;
+    setCogsRows((prev) => prev.map((r) => (selected.has(r.id) ? { ...r, productGroup: value } : r)));
+    try {
+      await updateCogsBulk(ids, { productGroup: value });
+      if (bulkGroup === ADD_NEW) {
+        try {
+          await onAddOption('product_group', value);
+        } catch {
+          /* saved on the rows; only the reusable option failed */
+        }
+      }
+      setSelected(new Set());
+      setBulkGroup('');
+    } catch (err) {
+      setCogsRows(previous);
+      setSaveError(`Couldn't apply the product type: ${err instanceof Error ? err.message : 'update failed'}`);
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
   const removeCogs = async (row: CogsRow) => {
     if (!window.confirm(`Delete ${row.sku}? This removes its cost row.`)) return;
     setSaveError('');
@@ -252,10 +392,10 @@ export default function AccountsScreen({
   const meta = loading
     ? undefined
     : tab === 'cogs'
-      ? `${visibleCogs.length} products`
+      ? `${visibleCogs.length} products${cogsNeedingCost > 0 ? ` · ${cogsNeedingCost} need cost` : ''}`
       : `${visibleUe.length} products · ${stats.losing} below break-even${
           stats.avgMargin !== null ? ` · avg margin ${pct(stats.avgMargin)}` : ''
-        }`;
+        }${stats.needsCost > 0 ? ` · ${stats.needsCost} need cost` : ''}`;
 
   return (
     <>
@@ -309,20 +449,63 @@ export default function AccountsScreen({
         )}
       </div>
 
-      <div className={styles.chipRow} role="tablist" aria-label="Views">
-        {TABS.map((t) => (
+      <div className={styles.chipRow}>
+        <div role="tablist" aria-label="Views" style={{ display: 'flex', gap: 8 }}>
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              className={`${styles.chip} ${tab === t.id ? styles.chipActive : ''}`}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {tab === 'cogs' && (
           <button
-            key={t.id}
             type="button"
-            role="tab"
-            aria-selected={tab === t.id}
-            className={`${styles.chip} ${tab === t.id ? styles.chipActive : ''}`}
-            onClick={() => setTab(t.id)}
+            className={`${styles.chip} ${needsCostOnly ? styles.chipActive : ''}`}
+            aria-pressed={needsCostOnly}
+            onClick={() => setNeedsCostOnly((v) => !v)}
           >
-            {t.label}
+            Needs cost{cogsNeedingCost > 0 ? ` (${cogsNeedingCost})` : ''}
           </button>
-        ))}
+        )}
       </div>
+
+      {tab === 'cogs' && selected.size > 0 && (
+        <div className={styles.bulkBar}>
+          <span className={styles.bulkCount}>{selected.size} selected</span>
+          <select
+            className={styles.searchInput}
+            value={bulkGroup}
+            onChange={(e) => setBulkGroup(e.target.value)}
+            aria-label="Product type to apply"
+          >
+            <option value="">Set product type…</option>
+            {productGroupValues.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+            <option value={ADD_NEW}>＋ Add new…</option>
+          </select>
+          <button
+            className="btn btn-primary"
+            type="button"
+            disabled={!bulkGroup || bulkBusy}
+            onClick={applyBulkProductGroup}
+          >
+            {bulkBusy ? 'Applying…' : 'Apply'}
+          </button>
+          <button className="btn" type="button" onClick={() => setSelected(new Set())}>
+            Clear
+          </button>
+        </div>
+      )}
 
       {addOpen && tab === 'cogs' && (
         <form className={styles.inlineAdd} onSubmit={handleAdd}>
@@ -415,30 +598,41 @@ export default function AccountsScreen({
 
       {tab === 'cogs' ? (
         <div className={styles.tableWrapScroll}>
-          <table className={styles.table}>
+          <table className={`${styles.table} ${styles.tableFixed}`}>
+            <ColGroup columns={COGS_COLUMNS.map((c) => c.key)} widths={cogsCols.widths} />
             <thead>
               <tr>
-                <th>Account</th>
-                <th>SKU</th>
-                <th>ASIN</th>
-                <th>Title</th>
-                <th>Brand</th>
-                <th>Product Group</th>
-                <th>Channel</th>
-                <th className={styles.numCol}>Purchase Cost</th>
-                <th className={styles.actionsHead} aria-label="Actions" />
+                {COGS_COLUMNS.map((c) => (
+                  <th
+                    key={c.key}
+                    className={`${c.num ? styles.numCol : ''} ${c.key === 'select' ? styles.checkCol : ''}`}
+                    aria-label={c.label || (c.key === 'select' ? 'Select' : 'Actions')}
+                  >
+                    {c.key === 'select' ? (
+                      <input
+                        type="checkbox"
+                        checked={allVisibleSelected}
+                        onChange={toggleAllVisible}
+                        aria-label="Select all shown products"
+                      />
+                    ) : (
+                      c.label
+                    )}
+                    <ResizeHandle columnKey={c.key} onStart={cogsCols.startResize} onReset={cogsCols.resetColumn} />
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={9} className={styles.emptyCell}>
+                  <td colSpan={10} className={styles.emptyCell}>
                     Loading…
                   </td>
                 </tr>
               ) : visibleCogs.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className={styles.emptyCell}>
+                  <td colSpan={10} className={styles.emptyCell}>
                     {cogsRows.length === 0
                       ? 'No products yet — add the first one.'
                       : 'No products match the filters.'}
@@ -447,16 +641,46 @@ export default function AccountsScreen({
               ) : (
                 visibleCogs.map((row) => (
                   <tr key={row.id} className={savingIds.has(row.id) ? styles.rowSaving : undefined}>
+                    <td className={styles.checkCol}>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(row.id)}
+                        onChange={() => toggleRow(row.id)}
+                        aria-label={`Select ${row.sku}`}
+                      />
+                    </td>
                     <td>
                       <span className={`${styles.pill} ${styles.badgeNeutral}`}>{row.account}</span>
                     </td>
-                    <td>{row.sku}</td>
+                    <td title={row.sku}>{row.sku}</td>
                     <td>{row.asin || <span className={styles.muted}>—</span>}</td>
-                    <td className={styles.titleCell} title={row.title || row.itemName}>
+                    <td title={row.title || row.itemName}>
                       {row.title || row.itemName || <span className={styles.muted}>—</span>}
                     </td>
-                    <td>{row.brand || <span className={styles.muted}>—</span>}</td>
-                    <td>{row.productGroup || <span className={styles.muted}>—</span>}</td>
+                    <td title={row.brand}>{row.brand || <span className={styles.muted}>—</span>}</td>
+                    <td>
+                      <div className={styles.selectCell}>
+                        {row.productGroup ? (
+                          <span className={`${styles.pill} ${styles.badgeNeutral}`}>{row.productGroup}</span>
+                        ) : (
+                          <span className={styles.muted}>—</span>
+                        )}
+                        <select
+                          className={styles.overlaySelect}
+                          value={row.productGroup}
+                          aria-label={`Product type for ${row.sku}`}
+                          onChange={(e) => handleProductGroup(row, e.target.value)}
+                        >
+                          <option value="">—</option>
+                          {uniq([...productGroupValues, row.productGroup]).filter(Boolean).map((g) => (
+                            <option key={g} value={g}>
+                              {g}
+                            </option>
+                          ))}
+                          <option value={ADD_NEW}>＋ Add new…</option>
+                        </select>
+                      </div>
+                    </td>
                     <td>{row.fulfillmentChannel || <span className={styles.muted}>—</span>}</td>
                     <td className={styles.numCol}>
                       <input
@@ -497,30 +721,21 @@ export default function AccountsScreen({
         </div>
       ) : (
         <div className={styles.tableWrapScroll}>
-          <table className={styles.table}>
+          <table className={`${styles.table} ${styles.tableFixed}`}>
+            <ColGroup columns={UE_COLUMNS.map((c) => c.key)} widths={ueCols.widths} />
             <thead>
               <tr>
-                <th className={styles.stickyCol}>SKU</th>
-                <th>Brand</th>
-                <th>Title</th>
-                <th className={styles.numCol}>Total Cost</th>
-                <th className={styles.numCol}>Storage</th>
-                <th className={styles.numCol}>FBA</th>
-                <th className={styles.numCol}>Referral</th>
-                <th className={styles.numCol}>Total Fee</th>
-                <th className={styles.numCol}>Price</th>
-                <th className={styles.numCol}>Profit</th>
-                <th className={styles.numCol}>Margin</th>
-                <th className={styles.numCol}>Break-even</th>
-                <th className={`${styles.numCol} ${styles.planHead}`}>Discount %</th>
-                <th className={styles.numCol}>Disc. Price</th>
-                <th className={styles.numCol}>Disc. Profit</th>
-                <th className={styles.numCol}>Disc. Margin</th>
-                <th className={`${styles.numCol} ${styles.planHead}`}>Desired Profit %</th>
-                <th className={styles.numCol}>Suggested Price</th>
-                <th className={`${styles.numCol} ${styles.planHead}`}>Desired Price</th>
-                <th className={styles.numCol}>@ Price Profit</th>
-                <th className={styles.numCol}>@ Price Margin</th>
+                {UE_COLUMNS.map((c) => (
+                  <th
+                    key={c.key}
+                    className={`${c.num ? styles.numCol : ''} ${c.plan ? styles.planHead : ''} ${
+                      c.key === 'sku' ? styles.stickyCol : ''
+                    }`}
+                  >
+                    {c.label}
+                    <ResizeHandle columnKey={c.key} onStart={ueCols.startResize} onReset={ueCols.resetColumn} />
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -543,7 +758,7 @@ export default function AccountsScreen({
                   <tr key={row.id} className={savingIds.has(row.id) ? styles.rowSaving : undefined}>
                     <td className={styles.stickyCol}>{row.sku}</td>
                     <td>{row.brand || <span className={styles.muted}>—</span>}</td>
-                    <td className={styles.titleCell} title={row.title}>
+                    <td title={row.title}>
                       {row.title || <span className={styles.muted}>—</span>}
                     </td>
                     <td className={styles.numCol}>{formatMoney(row.totalCost)}</td>

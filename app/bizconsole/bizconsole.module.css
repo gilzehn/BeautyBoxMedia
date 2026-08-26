@@ -1824,13 +1824,6 @@ select.columnFilter {
   color: var(--text-primary);
 }
 
-/* Long product titles truncate rather than stretching the row. */
-.titleCell {
-  max-width: 280px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 /* The unit economics table is 20+ columns wide, so the SKU stays pinned —
    without it you lose track of which product a scrolled row belongs to. */
@@ -1848,4 +1841,64 @@ select.columnFilter {
 
 .table tbody tr:hover .stickyCol {
   background: var(--bg-secondary);
+}
+
+/* ---- Resizable columns ---- */
+/* Grip on the header's right edge. The header cell is already positioned
+   (sticky), so this anchors to it without extra wrappers. */
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+}
+
+.resizeHandle:hover,
+.resizeHandle:active {
+  background: var(--accent);
+}
+
+/* Fixed layout makes the colgroup widths authoritative — without it the
+   browser re-negotiates every column from its content. */
+.tableFixed {
+  table-layout: fixed;
+}
+
+/* Cell content clips instead of forcing a column wider than its set width. */
+.tableFixed th,
+.tableFixed td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Bulk selection ---- */
+.bulkBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 45, 123, 0.08);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.bulkCount {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.checkCol {
+  width: 38px;
+  text-align: center;
+}
+
+.checkCol input {
+  cursor: pointer;
 }

@@ -4,7 +4,8 @@
 // page.tsx): the multi-select column filter, small icons, money/date helpers,
 // and the AI-draft affordances used by the generator screens.
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type React from 'react';
 import styles from '../bizconsole.module.css';
 
 // Preserve-order de-dupe.
@@ -193,4 +194,123 @@ export function ScreenHead({ title, meta, badge }: { title: string; meta?: strin
       {meta && <p className={styles.pageMeta}>{meta}</p>}
     </div>
   );
+}
+
+// --- Resizable table columns -------------------------------------------------
+// Drag the grip on a header's right edge to resize; double-click resets that
+// column. Widths persist per table in localStorage.
+
+const COLUMN_WIDTH_PREFIX = 'bizmanage.colwidths.';
+const MIN_COLUMN_WIDTH = 60;
+
+// Module-level so its identity never changes: a component re-created on each
+// render would unmount mid-drag and drop the gesture.
+export function ResizeHandle({
+  columnKey,
+  onStart,
+  onReset,
+}: {
+  columnKey: string;
+  onStart: (key: string, clientX: number) => void;
+  onReset: (key: string) => void;
+}) {
+  return (
+    <span
+      className={styles.resizeHandle}
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize column"
+      onPointerDown={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onStart(columnKey, e.clientX);
+      }}
+      onDoubleClick={() => onReset(columnKey)}
+    />
+  );
+}
+
+export function ColGroup({ columns, widths }: { columns: string[]; widths: Record<string, number> }) {
+  return (
+    <colgroup>
+      {columns.map((key) => (
+        <col key={key} style={{ width: `${widths[key] ?? 120}px` }} />
+      ))}
+    </colgroup>
+  );
+}
+
+export function useColumnWidths(storageKey: string, defaults: Record<string, number>) {
+  const [widths, setWidths] = useState<Record<string, number>>(defaults);
+  const defaultsRef = useRef(defaults);
+  defaultsRef.current = defaults;
+  // Mirror of the state, readable synchronously: a drag needs the starting
+  // width the instant the pointer goes down, and React 18 runs state updaters
+  // asynchronously (a fast drag would otherwise start from a stale value).
+  const widthsRef = useRef(widths);
+  widthsRef.current = widths;
+
+  // Read after mount only, so the static-export prerender (defaults) always
+  // matches the first client render — same approach as the sidebar favorites.
+  useEffect(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem(COLUMN_WIDTH_PREFIX + storageKey) ?? '{}');
+      if (raw && typeof raw === 'object') {
+        const clean: Record<string, number> = {};
+        for (const [k, v] of Object.entries(raw)) {
+          if (typeof v === 'number' && Number.isFinite(v) && v >= MIN_COLUMN_WIDTH) clean[k] = v;
+        }
+        if (Object.keys(clean).length > 0) setWidths((prev) => ({ ...prev, ...clean }));
+      }
+    } catch {
+      /* corrupted key: keep defaults */
+    }
+  }, [storageKey]);
+
+  const persist = (next: Record<string, number>) => {
+    try {
+      localStorage.setItem(COLUMN_WIDTH_PREFIX + storageKey, JSON.stringify(next));
+    } catch {
+      /* storage full or blocked: the resize still applies for this session */
+    }
+  };
+
+  // Listeners live on window rather than the grip, so the drag survives the
+  // re-renders each width change causes and keeps tracking outside the 6px hit
+  // area.
+  const startResize = useCallback((key: string, clientX: number) => {
+    const startWidth = widthsRef.current[key] ?? defaultsRef.current[key] ?? 120;
+
+    const onMove = (e: PointerEvent) => {
+      const next = Math.max(MIN_COLUMN_WIDTH, startWidth + (e.clientX - clientX));
+      setWidths((prev) => (prev[key] === next ? prev : { ...prev, [key]: next }));
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      document.body.style.removeProperty('cursor');
+      document.body.style.removeProperty('user-select');
+      setWidths((current) => {
+        persist(current);
+        return current;
+      });
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    // Keep the resize cursor while dragging over other cells.
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const resetColumn = useCallback((key: string) => {
+    setWidths((prev) => {
+      const next = { ...prev, [key]: defaultsRef.current[key] ?? 120 };
+      persist(next);
+      return next;
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return { widths, startResize, resetColumn };
 }

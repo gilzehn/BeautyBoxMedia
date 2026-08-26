@@ -31,6 +31,23 @@ workbooks (NRGRMR and TBBTB): `P. Cost` → `purchase_cost`, and Prep / Inbound
 seeded the matching `unit_economics` rows. Loaded 2026-08-25: NRG 350,
 RMR 260, TBB 1,398, TB 754 (zero-cost rows included); BCP starts empty.
 
+**`brand` comes from the Profit-Calc sheet, not from Amazon.** Amazon's own
+`brand` field is dirty — the same brand appears as `govino`/`Govino`, three
+invisibly-different `Inglot` spellings, occasionally the wrong brand, and 217
+rows had none at all. Rows then scatter across several dropdown entries and
+look "missing". The sheets' Brand column is curated (0 blanks, 57 brands), so
+it is the source of truth. A brand fixed in the sheet is re-applied by
+re-running the brand update; new SKUs imported from Amazon are labelled with
+the sheet's spelling for their brand, resolved through aliases learned from
+SKUs already carrying that brand.
+
+**2026-08-26 brand completion.** For 37 named brands, every remaining Amazon
+SKU was imported (1,259 rows: TB 719, TBB 293, NRG 189, RMR 58) so a brand's
+catalogue is complete rather than limited to whatever the sheet listed. These
+arrive with `purchase_cost = 0` — they are real listings awaiting a cost, and
+the screen flags them ("Needs cost" filter, counted separately from the
+average-margin stat) so a missing cost never reads as a fat margin.
+
 ### `unit_economics` — Amazon data + planning inputs
 
 One row per account + SKU (only where Amazon data exists):
@@ -123,9 +140,12 @@ the other `/bizconsole` tables), and the view runs with
 `/bizconsole` → **Accounts** in the sidebar. Pick an **account** (or "All
 accounts") and a **brand**, then switch between two chip tabs:
 
-- **COGS** — the product master. Edit **Purchase Cost** inline (saves on blur),
-  add a product manually, or delete one. Changing a cost immediately moves the
-  profit shown on the other tab.
+- **COGS** — the product master. Edit **Purchase Cost** and **Product Type**
+  inline (they save on blur/change), add a product manually, or delete one.
+  Changing a cost immediately moves the profit shown on the other tab.
+  **Bulk product type:** tick rows (or the header box to take everything
+  currently shown), pick a type in the bar that appears, and hit Apply — one
+  request updates them all. **Needs cost** filters to rows still at $0.00.
 - **Unit Economics** — profitability per product at the current Amazon price,
   plus three planning inputs you can type into:
 
@@ -146,3 +166,7 @@ counts them for the current filter.
 > **Permissions:** `accounts` is its own menu section. Admins and users without
 > an explicit `app_metadata.sections` allowlist see it right away; a user with a
 > restricted allowlist needs `accounts` added via the Users screen.
+
+**Column widths are draggable** on both tabs: grab the divider on a column
+header's right edge, or double-click it to reset that column. Widths are saved
+per table in your browser, so your layout survives a reload.
