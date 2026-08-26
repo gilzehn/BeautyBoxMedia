@@ -26,6 +26,7 @@ import {
 } from '@/lib/brands';
 import { FilterMulti, NoteIcon, TrashIcon, uniq } from './screens/shared';
 import ProfileSettingsModal from './ProfileSettingsModal';
+import AccountsScreen from './screens/AccountsScreen';
 import SettingsUsersScreen from './screens/SettingsUsersScreen';
 import TasksScreen from './screens/TasksScreen';
 import LeadsScreen from './screens/LeadsScreen';
@@ -923,6 +924,8 @@ export default function BizManagePage() {
             <div className={styles.comingSoonCard}>
               <p>No sections are enabled for your account yet — ask an administrator.</p>
             </div>
+          ) : view === 'accounts' ? (
+            <AccountsScreen options={options} onAddOption={registerOption} />
           ) : view === 'tasks' ? (
             <TasksScreen options={options} onAddOption={registerOption} />
           ) : view === 'leads' ? (

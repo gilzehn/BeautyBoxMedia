@@ -53,6 +53,7 @@ create table if not exists public.unit_economics (
   inbound_cost       numeric(12,2) not null default 0,
   discount_pct       numeric(6,4),  -- e.g. 0.20 = 20% off; null = no discount planned
   desired_profit_pct numeric(6,4),  -- e.g. 0.25 = target 25% margin; drives suggested_price
+  desired_price      numeric(12,2),  -- target sell price; drives desired_price_profit
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now()
 );
@@ -83,10 +84,15 @@ drop policy if exists "unit_economics_write_authenticated" on public.unit_econom
 create policy "unit_economics_write_authenticated"
   on public.unit_economics for all to authenticated using (true) with check (true);
 
+
 -- 4. unit_economics_view -----------------------------------------------------
 -- One row per account+SKU with every Profit-Calc formula computed.
 -- security_invoker makes the view respect the tables' RLS (authenticated only).
-create or replace view public.unit_economics_view
+-- Dropped and recreated rather than "create or replace": Postgres refuses to
+-- rename or reorder existing view columns (42P16) when columns land mid-list.
+drop view if exists public.unit_economics_view;
+
+create view public.unit_economics_view
 with (security_invoker = true) as
 select
   ue.id,
@@ -110,7 +116,7 @@ select
   ue.current_price,
   ue.referral_fee,
   ue.storage_fee + ue.fulfillment_fee + ue.referral_fee           as total_fee,
-  -- Profitability
+  -- Profitability at the current price
   ue.current_price
     - (c.purchase_cost + ue.prep_cost + ue.inbound_cost)
     - (ue.storage_fee + ue.fulfillment_fee + ue.referral_fee)     as profit,
@@ -126,7 +132,13 @@ select
       - (ue.storage_fee + ue.fulfillment_fee + ue.referral_fee))
       / ue.current_price, 4)
   end                                                             as be_tacos,
-  -- Discount planning (referral fee scales with the discounted price)
+  -- Amazon charges referral as a % of the actual sell price, so every scenario
+  -- below re-derives the fee from this rate instead of reusing referral_fee
+  -- (which belongs to current_price). 15% is the sheet's default.
+  case when ue.current_price > 0
+       then round(ue.referral_fee / ue.current_price, 4)
+       else 0.15 end                                              as referral_rate,
+  -- Discount planning
   ue.discount_pct,
   case when ue.discount_pct is not null then
     round(ue.current_price * (1 - ue.discount_pct), 2)
@@ -147,7 +159,7 @@ select
         * ue.current_price * (1 - ue.discount_pct))
       / (ue.current_price * (1 - ue.discount_pct)), 4)
   end                                                             as discounted_margin_pct,
-  -- Target pricing
+  -- Target margin -> suggested price
   ue.desired_profit_pct,
   case when ue.desired_profit_pct is not null
        and (1 - (case when ue.current_price > 0
@@ -159,6 +171,34 @@ select
                    then ue.referral_fee / ue.current_price
                    else 0.15 end) - ue.desired_profit_pct), 2)
   end                                                             as suggested_price,
+  -- Target price -> resulting profit / margin
+  ue.desired_price,
+  case when ue.desired_price is not null and ue.desired_price > 0 then
+    round(ue.desired_price
+      - (c.purchase_cost + ue.prep_cost + ue.inbound_cost)
+      - ue.storage_fee - ue.fulfillment_fee
+      - (case when ue.current_price > 0
+              then ue.referral_fee / ue.current_price
+              else 0.15 end) * ue.desired_price, 2)
+  end                                                             as desired_price_profit,
+  case when ue.desired_price is not null and ue.desired_price > 0 then
+    round((ue.desired_price
+      - (c.purchase_cost + ue.prep_cost + ue.inbound_cost)
+      - ue.storage_fee - ue.fulfillment_fee
+      - (case when ue.current_price > 0
+              then ue.referral_fee / ue.current_price
+              else 0.15 end) * ue.desired_price) / ue.desired_price, 4)
+  end                                                             as desired_price_margin_pct,
+  -- The price at which profit is exactly zero.
+  case when (1 - (case when ue.current_price > 0
+                       then ue.referral_fee / ue.current_price
+                       else 0.15 end)) > 0 then
+    round((c.purchase_cost + ue.prep_cost + ue.inbound_cost
+           + ue.storage_fee + ue.fulfillment_fee)
+      / (1 - (case when ue.current_price > 0
+                   then ue.referral_fee / ue.current_price
+                   else 0.15 end)), 2)
+  end                                                             as breakeven_price,
   ue.synced_at,
   ue.updated_at
 from public.unit_economics ue
@@ -166,4 +206,4 @@ join public.cogs c
   on c.account = ue.account and c.sku = ue.sku;
 
 comment on view public.unit_economics_view is
-  'Profit-Calc formulas over cogs + unit_economics: total cost/fee, profit, margin %, BE TACOS, discount planning and desired-profit suggested price.';
+  'Profit-Calc formulas over cogs + unit_economics: total cost/fee, profit, margin %, BE TACOS, discount planning, desired-margin suggested price, desired-price profit, and break-even price.';

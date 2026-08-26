@@ -40,7 +40,8 @@ One row per account + SKU (only where Amazon data exists):
   `current_price`, `referral_fee`, `synced_at`.
 - **Manual planning inputs**: `prep_cost`, `inbound_cost` (seeded from the
   Profit-Calc sheet), `discount_pct` (e.g. `0.20` = plan a 20% discount),
-  `desired_profit_pct` (e.g. `0.25` = target a 25% margin).
+  `desired_profit_pct` (e.g. `0.25` = target a 25% margin), and
+  `desired_price` (a target sell price to price-check).
 
 ### `unit_economics_view` — the Profit-Calc formulas
 
@@ -56,6 +57,9 @@ Join of the two tables with every derived column computed:
 | `discounted_profit` | discounted_price − total_cost − storage_fee − fulfillment_fee − referral_rate × discounted_price |
 | `discounted_margin_pct` | discounted_profit ÷ discounted_price |
 | `suggested_price` | (total_cost + storage_fee + fulfillment_fee) ÷ (1 − referral_rate − desired_profit_pct) |
+| `desired_price_profit` | desired_price − total_cost − storage_fee − fulfillment_fee − referral_rate × desired_price |
+| `desired_price_margin_pct` | desired_price_profit ÷ desired_price |
+| `breakeven_price` | (total_cost + storage_fee + fulfillment_fee) ÷ (1 − referral_rate) |
 
 `referral_rate` is `referral_fee / current_price` (falls back to the 15%
 default when there is no price). Discount/suggested columns stay NULL until
@@ -106,10 +110,39 @@ Blend rules used by the loader (keep the same when automating, e.g. in n8n):
 `sales_price`; `referral_fee` = fee-preview estimate, else 15% of price;
 upsert on `(account, sku)` and set `synced_at = now()`; never touch the
 manual columns (`purchase_cost`, `prep_cost`, `inbound_cost`,
-`discount_pct`, `desired_profit_pct`) during a sync.
+`discount_pct`, `desired_profit_pct`, `desired_price`) during a sync.
 
 ## Security
 
 Both tables have RLS enabled with authenticated-only policies (same model as
 the other `/bizconsole` tables), and the view runs with
 `security_invoker = true`, so the anon key alone can read nothing.
+
+## The Accounts screen
+
+`/bizconsole` → **Accounts** in the sidebar. Pick an **account** (or "All
+accounts") and a **brand**, then switch between two chip tabs:
+
+- **COGS** — the product master. Edit **Purchase Cost** inline (saves on blur),
+  add a product manually, or delete one. Changing a cost immediately moves the
+  profit shown on the other tab.
+- **Unit Economics** — profitability per product at the current Amazon price,
+  plus three planning inputs you can type into:
+
+| Input | What it answers |
+|---|---|
+| **Discount %** | "If I run 20% off, what happens?" → discounted price, profit, margin |
+| **Desired Profit %** | "What price gives me a 25% margin?" → suggested price |
+| **Desired Price** | "If I sell at $13.90, what do I make?" → profit and margin at that price |
+
+All three save to the database, so a plan persists and the whole team sees it.
+Each scenario re-derives the referral fee from the scenario's own price (Amazon
+charges it as a percentage), which is why a discount cuts the fee too.
+
+The **Break-even** column is the price at which profit is exactly zero — any
+product priced below it is losing money on every unit, and the header line
+counts them for the current filter.
+
+> **Permissions:** `accounts` is its own menu section. Admins and users without
+> an explicit `app_metadata.sections` allowlist see it right away; a user with a
+> restricted allowlist needs `accounts` added via the Users screen.

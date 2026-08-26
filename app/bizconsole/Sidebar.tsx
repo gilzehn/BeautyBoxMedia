@@ -8,6 +8,7 @@ import styles from './bizconsole.module.css';
 // placeholder views until their sections are built out.
 export type ViewId =
   | 'brands'
+  | 'accounts'
   | 'agency-clients'
   | 'tasks'
   | 'leads'
@@ -24,6 +25,7 @@ export type ViewId =
 
 export const VIEW_TITLES: Record<ViewId, string> = {
   brands: 'Brand List',
+  accounts: 'Accounts',
   'agency-clients': 'Agency Clients',
   tasks: 'Tasks',
   leads: 'Leads',
@@ -43,10 +45,18 @@ export const VIEW_TITLES: Record<ViewId, string> = {
 // Per-user visibility is granted per top-level menu section. The allowlist
 // lives in app_metadata.sections (written only by the admin-users edge
 // function); absent/null means every section, and admins always see all.
-export type SectionKey = 'brands' | 'agency-clients' | 'tasks' | 'sales' | 'finance' | 'analysis';
+export type SectionKey =
+  | 'brands'
+  | 'accounts'
+  | 'agency-clients'
+  | 'tasks'
+  | 'sales'
+  | 'finance'
+  | 'analysis';
 
 export const ALL_SECTIONS: SectionKey[] = [
   'brands',
+  'accounts',
   'agency-clients',
   'tasks',
   'sales',
@@ -56,6 +66,7 @@ export const ALL_SECTIONS: SectionKey[] = [
 
 export const SECTION_LABELS: Record<SectionKey, string> = {
   brands: 'Brand List',
+  accounts: 'Accounts',
   'agency-clients': 'Agency Clients',
   tasks: 'Tasks',
   sales: 'Sales',
@@ -67,6 +78,7 @@ export const SECTION_LABELS: Record<SectionKey, string> = {
 // and are admin-only).
 export const VIEW_SECTION: Record<ViewId, SectionKey | 'settings'> = {
   brands: 'brands',
+  accounts: 'accounts',
   'agency-clients': 'agency-clients',
   tasks: 'tasks',
   leads: 'sales',
@@ -118,6 +130,15 @@ function GridIcon() {
       <rect x="14" y="3" width="7" height="7" rx="1" />
       <rect x="3" y="14" width="7" height="7" rx="1" />
       <rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
+  );
+}
+
+function TagIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+      <path d="M7 7h.01" />
     </svg>
   );
 }
@@ -192,6 +213,7 @@ function ChevronsRightIcon() {
 const MENU: SidebarSection[] = [
   { key: 'favorites', label: 'Favorites', icon: () => <StarIcon />, favorites: true },
   { key: 'brands', label: 'Brand List', icon: GridIcon, view: 'brands' },
+  { key: 'accounts', label: 'Accounts', icon: TagIcon, view: 'accounts' },
   { key: 'agency-clients', label: 'Agency Clients', icon: UsersIcon, view: 'agency-clients' },
   { key: 'tasks', label: 'Tasks', icon: ChecklistIcon, view: 'tasks' },
   {
