@@ -1,0 +1,28 @@
+{
+  "account": "NRG",
+  "_comment": "public.brands (Supabase, account_name='NRG') joined to the P&L. `aliases` maps the brand strings that appear in Amazon/Supabase product data onto the Brand List name; `focus` marks the brands the team asked for recommendations on.",
+  "columns": ["brand","registry","resellerType","numAsins","ownedBy","assignee","status","priority","focus","aliases"],
+  "rows": [
+    ["Ariston","Yes","Exclusive","50","Mariann","Ahmad","Active","7",true,["Ariston","Ariston Specialities"]],
+    ["Baobab","No","Reseller","80","Mariann","","Active","",false,["Baobab"]],
+    ["Bodifresh","Yes","Exclusive","13","Mariann","iCommteam","Active","8",true,["Bodifresh"]],
+    ["Brandywine","No","Reseller","31","Mariann","","Active","",true,["Brandywine"]],
+    ["Crisan","Yes","Exclusive","","BBMEDIA","","Active","",true,["CRISAN","Crisan"]],
+    ["Do/Mastey","No","Not specified","","Mariann","","Closing Out","",false,["Do/Mastey","Mastey"]],
+    ["Glimmer Goddess","No","Not specified","18","Mariann","","Closing Out","High",false,["GLIMMER GODDESS"]],
+    ["Inglot","No","Reseller","19","Mariann","","Active","",true,["Inglot"]],
+    ["Kiara Sky","No","Not specified","","Mariann","","Closing Out","",false,["KIARA SKY","Kiara Sky"]],
+    ["Kitoko","No","Reseller","2","Mariann","","Active","",true,["Kitoko","Affinage"]],
+    ["Life Factory","No","Not specified","63","Mariann","","Closing Out","Medium",false,["Lifefactory","Life Factory"]],
+    ["Lineco","No","Not specified","","Mariann","","Closing Out","",false,["Lineco"]],
+    ["Milagros","Yes","Exclusive under Skin Revolution","0","Mariann","","Active","",true,["Milagros"]],
+    ["MinaiBrow","Yes","Exclusive","57","BBMEDIA","Umar","Active","1",true,["MinaiBrow","MINA"]],
+    ["Plantlife","No","Not specified","","Mariann","","Closing Out","",false,["Plantlife"]],
+    ["Saratoga Olive Oil Co","No","Not specified","","Mariann","","Closing Out","",false,["Saratoga Olive Oil Co.","Saratoga Olive Oil Co"]],
+    ["Scimera","Yes","Exclusive","9","Mariann","","Active","",true,["Scimera Bioscience","Scimera"]],
+    ["Sqwinchers","No","Reseller","86","Mariann","","Active","",true,["Sqwincher","Sqwincher Zero","SQWINCHER CORP","JPSR"]],
+    ["Staleks","No","Not specified","","Mariann","","Closing Out","",false,["Staleks","STALEKS PRO"]],
+    ["Two Old Goats","No","Reseller","1","Mariann","","Active","",false,["Two Old Goats"]],
+    ["Y-Not Natural","Yes","Exclusive","30","Mariann","iCommteam","Active","",false,["Y Not Natural","Y-Not Natural"]]
+  ]
+}

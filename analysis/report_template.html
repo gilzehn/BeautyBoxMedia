@@ -10,25 +10,12 @@
 <style>
 :root{
   color-scheme: light;
-  --plane:#eceff3;
-  --surface:#ffffff;
-  --surface-2:#f5f7f9;
-  --surface-3:#eaeef2;
-  --ink:#0e1419;
-  --ink-2:#48545f;
-  --muted:#78848f;
-  --line:#dde3e9;
-  --line-2:#c7d0d9;
-  --accent:#0f4c81;
-  --accent-2:#1668ad;
-  --accent-wash:#e7f0f8;
-  --pos:#256abf;
-  --neg:#d03b3b;
-  --good:#0ca30c;
-  --good-ink:#006300;
-  --warning:#fab219;
-  --serious:#ec835a;
-  --critical:#d03b3b;
+  --plane:#eceff3; --surface:#ffffff; --surface-2:#f5f7f9; --surface-3:#eaeef2;
+  --ink:#0e1419; --ink-2:#48545f; --muted:#78848f;
+  --line:#dde3e9; --line-2:#c7d0d9;
+  --accent:#0f4c81; --accent-2:#1668ad; --accent-wash:#e7f0f8;
+  --pos:#256abf; --neg:#d03b3b; --good:#0ca30c; --good-ink:#006300;
+  --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
   --shadow:0 1px 2px rgba(14,20,25,.05), 0 12px 28px -22px rgba(14,20,25,.5);
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --sans:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -36,22 +23,11 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme: dark;
-    --plane:#0b0f13;
-    --surface:#151b22;
-    --surface-2:#1b232b;
-    --surface-3:#222c35;
-    --ink:#eef2f6;
-    --ink-2:#a9b5c1;
-    --muted:#7d8b98;
-    --line:#242e38;
-    --line-2:#34424e;
-    --accent:#7db8ea;
-    --accent-2:#a5cef3;
-    --accent-wash:#16283a;
-    --pos:#3987e5;
-    --neg:#e66767;
-    --good:#0ca30c;
-    --good-ink:#3fc23f;
+    --plane:#0b0f13; --surface:#151b22; --surface-2:#1b232b; --surface-3:#222c35;
+    --ink:#eef2f6; --ink-2:#a9b5c1; --muted:#7d8b98;
+    --line:#242e38; --line-2:#34424e;
+    --accent:#7db8ea; --accent-2:#a5cef3; --accent-wash:#16283a;
+    --pos:#3987e5; --neg:#e66767; --good-ink:#3fc23f;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 28px -22px #000;
   }
 }
@@ -60,243 +36,169 @@
   --plane:#0b0f13; --surface:#151b22; --surface-2:#1b232b; --surface-3:#222c35;
   --ink:#eef2f6; --ink-2:#a9b5c1; --muted:#7d8b98; --line:#242e38; --line-2:#34424e;
   --accent:#7db8ea; --accent-2:#a5cef3; --accent-wash:#16283a;
-  --pos:#3987e5; --neg:#e66767; --good:#0ca30c; --good-ink:#3fc23f;
+  --pos:#3987e5; --neg:#e66767; --good-ink:#3fc23f;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 28px -22px #000;
 }
-
 *{box-sizing:border-box}
-body{
-  margin:0; background:var(--plane); color:var(--ink);
-  font-family:var(--sans); font-size:15px; line-height:1.5;
-  -webkit-font-smoothing:antialiased;
-}
-.wrap{max-width:1360px; margin:0 auto; padding:0 24px 96px}
-a{color:var(--accent-2)}
+body{margin:0; background:var(--plane); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1280px; margin:0 auto; padding:0 22px 90px}
 
-/* --- masthead ---------------------------------------------------------- */
-.masthead{
-  border-bottom:1px solid var(--line); background:var(--surface);
-  padding:28px 0 0;
-}
-.mast-in{max-width:1360px; margin:0 auto; padding:0 24px}
-.eyebrow{
-  font-size:11px; letter-spacing:.14em; text-transform:uppercase;
-  color:var(--muted); font-weight:600;
-}
-h1{
-  font-size:clamp(28px,4vw,40px); line-height:1.05; margin:10px 0 6px;
-  letter-spacing:-.022em; font-weight:700; text-wrap:balance;
-}
-.sub{color:var(--ink-2); max-width:62ch; margin:0 0 20px}
-.mast-meta{
-  display:flex; flex-wrap:wrap; gap:8px 28px; padding-bottom:20px;
-  font-size:13px; color:var(--ink-2);
-}
-.mast-meta b{font-weight:600; color:var(--ink); font-family:var(--mono); font-size:12.5px}
+/* masthead */
+.masthead{background:var(--surface); border-bottom:1px solid var(--line); padding:24px 0 0}
+.mast-in{max-width:1280px; margin:0 auto; padding:0 22px}
+.eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600; margin:0}
+h1{font-size:clamp(26px,3.6vw,34px); line-height:1.06; margin:8px 0 6px; letter-spacing:-.022em; font-weight:700}
+.sub{color:var(--ink-2); max-width:64ch; margin:0 0 16px; font-size:14.5px}
+.mast-meta{display:flex; flex-wrap:wrap; gap:6px 26px; padding-bottom:16px; font-size:12.5px; color:var(--ink-2)}
+.mast-meta b{font-weight:500; color:var(--ink); font-family:var(--mono); font-size:12px}
 
-/* --- sticky section nav ------------------------------------------------ */
-nav.jump{
-  position:sticky; top:0; z-index:30; background:var(--surface);
-  border-bottom:1px solid var(--line);
-}
-.jump-in{
-  max-width:1360px; margin:0 auto; padding:0 24px; display:flex; gap:2px;
-  overflow-x:auto; scrollbar-width:none;
-}
-.jump-in::-webkit-scrollbar{display:none}
-.jump a{
-  padding:12px 14px; font-size:13.5px; font-weight:500; color:var(--ink-2);
-  text-decoration:none; border-bottom:2px solid transparent; white-space:nowrap;
-}
-.jump a:hover{color:var(--ink); background:var(--surface-2)}
-.jump a.on{color:var(--accent-2); border-bottom-color:var(--accent-2)}
+/* sticky period bar */
+.bar{position:sticky; top:0; z-index:30; background:var(--surface); border-bottom:1px solid var(--line)}
+.bar-in{max-width:1280px; margin:0 auto; padding:8px 22px; display:flex; gap:10px;
+  align-items:center; flex-wrap:wrap}
+.bar-lbl{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); font-weight:600}
+.per{font:inherit; font-size:12.5px; font-weight:500; padding:6px 12px; cursor:pointer;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink-2); border-radius:7px; white-space:nowrap}
+.per:hover{color:var(--ink); border-color:var(--line-2)}
+.per[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+:root[data-theme="dark"] .per[aria-pressed="true"]{color:#0b0f13}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .per[aria-pressed="true"]{color:#0b0f13}}
+.per .sm{display:block; font-size:10px; font-weight:400; opacity:.75}
+.bar a{margin-left:auto; font-size:13px; color:var(--accent-2); text-decoration:none}
+.bar a:hover{text-decoration:underline}
 
-section{padding-top:44px}
-h2{
-  font-size:20px; letter-spacing:-.015em; margin:0 0 4px; font-weight:600;
-}
-.lede{color:var(--ink-2); margin:0 0 18px; max-width:76ch; font-size:14px}
+section{padding-top:34px}
+h2{font-size:19px; letter-spacing:-.015em; margin:0 0 4px; font-weight:600}
+.lede{color:var(--ink-2); margin:0 0 16px; max-width:78ch; font-size:14px}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow)}
 
-/* --- cards & tiles ----------------------------------------------------- */
-.card{
-  background:var(--surface); border:1px solid var(--line); border-radius:10px;
-  box-shadow:var(--shadow);
-}
-.kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(178px,1fr)); gap:12px}
-.kpi{padding:15px 16px 14px}
-.kpi .k{
-  font-size:11px; letter-spacing:.09em; text-transform:uppercase;
-  color:var(--muted); font-weight:600;
-}
-.kpi .v{
-  font-size:27px; font-weight:600; letter-spacing:-.02em; margin-top:6px;
-  font-variant-numeric:tabular-nums;
-}
-.kpi .n{font-size:12.5px; color:var(--ink-2); margin-top:3px}
+/* coverage banner */
+.gate{display:flex; gap:13px; padding:15px 17px; border-radius:10px; margin:0 0 16px;
+  background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--critical)}
+.gate.warn{border-left-color:var(--warning)}
+.gate h3{margin:0 0 3px; font-size:15px; font-weight:600}
+.gate p{margin:0; color:var(--ink-2); font-size:13.5px; max-width:84ch}
+.gate .ico{flex:none; width:21px; height:21px; color:var(--critical); margin-top:1px}
+.gate.warn .ico{color:var(--warning)}
+code{font-family:var(--mono); font-size:12px; background:var(--surface-2); padding:1px 5px;
+  border-radius:4px; border:1px solid var(--line)}
+
+/* KPIs */
+.kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:11px}
+.kpi{padding:14px 15px 13px}
+.kpi .k{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); font-weight:600}
+.kpi .v{font-size:26px; font-weight:600; letter-spacing:-.02em; margin-top:5px; font-variant-numeric:tabular-nums}
+.kpi .n{font-size:12.5px; color:var(--ink-2); margin-top:2px}
 .v.neg{color:var(--neg)}
 
-/* --- gate banner ------------------------------------------------------- */
-.gate{
-  display:flex; gap:14px; padding:16px 18px; border-radius:10px; margin:0 0 20px;
-  background:var(--surface); border:1px solid var(--line);
-  border-left:4px solid var(--critical);
-}
-.gate.warn{border-left-color:var(--warning)}
-.gate h3{margin:0 0 4px; font-size:15px; font-weight:600}
-.gate p{margin:0; color:var(--ink-2); font-size:14px; max-width:80ch}
-.gate .ico{flex:none; width:22px; height:22px; color:var(--critical); margin-top:1px}
-.gate.warn .ico{color:var(--warning)}
-
-/* --- charts ------------------------------------------------------------ */
-.charts{display:grid; grid-template-columns:1.15fr .85fr; gap:16px; align-items:start}
-@media (max-width:960px){.charts{grid-template-columns:1fr}}
-.chart-head{padding:16px 18px 0}
-.chart-head h3{margin:0; font-size:15px; font-weight:600}
-.chart-head p{margin:3px 0 0; font-size:12.5px; color:var(--muted)}
-.chart-body{padding:12px 8px 16px}
-.legend{display:flex; gap:16px; padding:0 18px 14px; font-size:12px; color:var(--ink-2)}
-.legend i{
-  display:inline-block; width:10px; height:10px; border-radius:2px;
-  margin-right:6px; vertical-align:-1px;
-}
-svg .lbl{font-family:var(--sans); font-size:11.5px; fill:var(--ink-2)}
-svg .val{font-family:var(--mono); font-size:11.5px; fill:var(--ink); font-weight:500}
-svg .grid{stroke:var(--line); stroke-width:1}
-svg .base{stroke:var(--line-2); stroke-width:1}
-svg .hit{fill:transparent; cursor:default}
-svg .hit:hover + .bar, svg .row.on .bar{opacity:.82}
-.tip{
-  position:fixed; z-index:60; pointer-events:none; opacity:0; transition:opacity .1s;
-  background:var(--surface); border:1px solid var(--line-2); border-radius:8px;
-  box-shadow:var(--shadow); padding:9px 11px; font-size:12.5px; max-width:280px;
-}
-.tip .t{font-weight:600; margin-bottom:3px}
-.tip .r{display:flex; justify-content:space-between; gap:18px; color:var(--ink-2)}
-.tip .r b{font-family:var(--mono); color:var(--ink); font-weight:500}
-
-/* --- findings ---------------------------------------------------------- */
-.f-strip{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px}
-.chip{
-  border:1px solid var(--line); background:var(--surface); border-radius:999px;
-  padding:6px 13px; font-size:13px; cursor:pointer; color:var(--ink-2);
-  font-weight:500; display:inline-flex; align-items:center; gap:7px;
-}
-.chip:hover{border-color:var(--line-2); color:var(--ink)}
-.chip[aria-pressed="true"]{background:var(--accent-wash); border-color:var(--accent); color:var(--accent)}
-.chip .n{font-family:var(--mono); font-size:12px; opacity:.85}
-.finding{
-  display:grid; grid-template-columns:6px 1fr auto; gap:0 16px; align-items:start;
-  padding:0; margin-bottom:10px; overflow:hidden;
-}
-.finding .sev{background:var(--warning)}
-.finding.critical .sev{background:var(--critical)}
-.finding.serious .sev{background:var(--serious)}
-.finding .body{padding:14px 0 14px 2px}
-.finding .impact{padding:14px 18px 14px 0; text-align:right}
-.finding h4{margin:0 0 3px; font-size:14.5px; font-weight:600}
-.finding .who{
-  font-family:var(--mono); font-size:12px; color:var(--muted); margin-bottom:6px;
-  word-break:break-all;
-}
-.finding p{margin:0 0 6px; font-size:13.5px; color:var(--ink-2)}
-.finding .do{
-  font-size:13.5px; color:var(--ink); padding-left:12px;
-  border-left:2px solid var(--line-2);
-}
-.finding .amt{
-  font-family:var(--mono); font-size:19px; font-weight:600; letter-spacing:-.01em;
-  font-variant-numeric:tabular-nums;
-}
-.finding .amt.risk{color:var(--muted); font-size:16px}
-.finding .amt-l{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em}
-.more{
-  display:block; width:100%; text-align:center; padding:11px; border:1px dashed var(--line-2);
-  background:transparent; border-radius:8px; color:var(--ink-2); font:inherit;
-  font-size:13.5px; cursor:pointer;
-}
-.more:hover{background:var(--surface-2); color:var(--ink)}
-
-/* --- ledger table ------------------------------------------------------ */
-.tools{
-  display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:12px;
-}
-.tools input[type=search], .tools select{
-  font:inherit; font-size:13.5px; padding:8px 11px; border-radius:8px;
-  border:1px solid var(--line-2); background:var(--surface); color:var(--ink);
-}
-.tools input[type=search]{min-width:230px}
+/* table */
+.tools{display:flex; flex-wrap:wrap; gap:9px; align-items:center; margin-bottom:11px}
+.tools input[type=search]{font:inherit; font-size:13.5px; padding:8px 11px; border-radius:8px;
+  border:1px solid var(--line-2); background:var(--surface); color:var(--ink); min-width:240px}
 .tools label{font-size:13px; color:var(--ink-2); display:inline-flex; gap:7px; align-items:center}
-.scroll{overflow-x:auto; border-radius:10px; border:1px solid var(--line); background:var(--surface)}
+.seg{display:inline-flex; border:1px solid var(--line-2); border-radius:8px; overflow:hidden}
+.seg button{font:inherit; font-size:13px; padding:7px 12px; border:0; background:var(--surface);
+  color:var(--ink-2); cursor:pointer; border-right:1px solid var(--line-2)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent-wash); color:var(--accent); font-weight:600}
+.btn{font:inherit; font-size:13px; padding:7px 12px; border-radius:8px; border:1px solid var(--line-2);
+  background:var(--surface); color:var(--ink-2); cursor:pointer}
+.btn:hover{color:var(--ink); border-color:var(--muted)}
+.scroll{overflow:auto; max-height:80vh; border-radius:10px; border:1px solid var(--line); background:var(--surface)}
 table{border-collapse:collapse; width:100%; font-size:13px}
-thead th{
-  position:sticky; top:44px; z-index:10; background:var(--surface-2);
-  text-align:right; padding:9px 10px; font-size:11px; font-weight:600;
-  letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
-  border-bottom:1px solid var(--line); white-space:nowrap; cursor:pointer;
-}
+thead th{position:sticky; top:0; z-index:10; background:var(--surface-2); text-align:right;
+  padding:9px 10px; font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--muted); border-bottom:1px solid var(--line); white-space:nowrap; cursor:pointer}
 thead th:first-child{text-align:left; padding-left:14px}
 thead th:hover{color:var(--ink)}
 thead th .ar{opacity:.45; font-size:9px}
-tbody td{
-  padding:7px 10px; text-align:right; border-bottom:1px solid var(--line);
-  font-variant-numeric:tabular-nums; font-family:var(--mono); font-size:12.5px;
-  white-space:nowrap;
-}
-tbody td:first-child{
-  text-align:left; font-family:var(--sans); font-size:13.5px; padding-left:14px;
-  white-space:normal; min-width:300px; max-width:440px;
-}
+tbody td{padding:7px 10px; text-align:right; border-bottom:1px solid var(--line);
+  font-variant-numeric:tabular-nums; font-family:var(--mono); font-size:12.5px; white-space:nowrap}
+tbody td:first-child{text-align:left; font-family:var(--sans); font-size:13.5px; padding-left:14px;
+  white-space:normal; min-width:320px; max-width:460px}
 tr.brand{background:var(--surface-2); cursor:pointer}
 tr.brand td{font-weight:600; border-bottom:1px solid var(--line-2)}
 tr.brand td:first-child{font-size:14px}
-tr.group{background:var(--surface); cursor:pointer}
-tr.group td:first-child{padding-left:34px; color:var(--ink-2)}
-tr.sku td:first-child{padding-left:54px}
+tr.brand:hover{background:var(--surface-3)}
+tr.sku td:first-child{padding-left:38px}
 tr.sku:hover{background:var(--surface-2)}
 .tw{display:inline-block; width:14px; color:var(--muted); font-size:10px}
 .nm{display:block; color:var(--ink)}
-.id{
-  display:block; font-family:var(--mono); font-size:11px; color:var(--muted);
-  margin-top:1px; word-break:break-all;
-}
-td.neg{color:var(--neg)}
-td.pos{color:var(--good-ink)}
-.pill{
-  display:inline-block; padding:1px 7px; border-radius:999px; font-size:10.5px;
-  font-family:var(--sans); font-weight:600; letter-spacing:.03em; vertical-align:1px;
-  margin-left:6px; border:1px solid transparent;
-}
+.id{display:block; font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:1px; word-break:break-all}
+.bmeta{display:block; margin-top:2px; font-size:11px; color:var(--muted); font-weight:400}
+td.neg{color:var(--neg)} td.pos{color:var(--good-ink)} td.mut{color:var(--muted)}
+.pill{display:inline-block; padding:1px 7px; border-radius:999px; font-size:10.5px; font-family:var(--sans);
+  font-weight:600; letter-spacing:.03em; margin-left:6px; border:1px solid transparent; vertical-align:1px}
 .pill.nocost{background:var(--accent-wash); color:var(--accent); border-color:var(--accent)}
 .pill.loss{background:rgba(208,59,59,.1); color:var(--critical); border-color:var(--critical)}
-.mbar{
-  display:inline-block; vertical-align:middle; width:54px; height:8px;
-  background:var(--surface-3); border-radius:2px; overflow:hidden; margin-right:8px;
-  position:relative;
-}
+.tag{display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:600;
+  letter-spacing:.03em; border:1px solid var(--line-2); color:var(--ink-2); margin-left:5px}
+.tag.focus{border-color:var(--accent); color:var(--accent); background:var(--accent-wash)}
+.tag.closing{border-color:var(--serious); color:var(--serious)}
+.tag.offlist{border-color:var(--muted); color:var(--muted)}
+.tag.nocost{border-color:var(--critical); color:var(--critical); background:rgba(208,59,59,.08)}
+.mbar{display:inline-block; vertical-align:middle; width:50px; height:8px; background:var(--surface-3);
+  border-radius:2px; overflow:hidden; margin-right:8px; position:relative}
 .mbar i{position:absolute; top:0; bottom:0; display:block}
-.empty{padding:26px 16px; text-align:center; color:var(--muted); font-size:14px}
+.empty{padding:24px 16px; text-align:center; color:var(--muted); font-size:14px}
+.cov{display:inline-block; width:46px; height:6px; background:var(--surface-3); border-radius:3px;
+  overflow:hidden; margin-right:7px; vertical-align:middle}
+.cov i{display:block; height:100%; background:var(--pos)}
 
-/* --- method ------------------------------------------------------------ */
-.method{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px}
-.method .card{padding:18px}
-.method h3{margin:0 0 10px; font-size:14px; font-weight:600}
-.method dl{margin:0; font-size:13px}
-.method dt{
-  font-family:var(--mono); font-size:12px; color:var(--ink); margin-top:10px;
-  font-weight:500;
-}
-.method dt:first-child{margin-top:0}
-.method dd{margin:2px 0 0; color:var(--ink-2)}
+/* recommendations */
+.f-strip{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px}
+.chip{border:1px solid var(--line); background:var(--surface); border-radius:999px; padding:6px 13px;
+  font:inherit; font-size:13px; cursor:pointer; color:var(--ink-2); font-weight:500}
+.chip:hover{border-color:var(--line-2); color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--accent-wash); border-color:var(--accent); color:var(--accent)}
+.chip .n{font-family:var(--mono); font-size:12px; opacity:.85; margin-left:5px}
+.brandblock{margin-bottom:20px; overflow:hidden}
+.bb-head{display:flex; flex-wrap:wrap; gap:9px 20px; align-items:baseline; padding:15px 17px;
+  background:var(--surface-2); border-bottom:1px solid var(--line)}
+.bb-head h3{margin:0; font-size:16px; font-weight:600}
+.bb-head .st{display:flex; gap:17px; flex-wrap:wrap; margin-left:auto; font-size:12.5px; color:var(--ink-2)}
+.bb-head .st b{font-family:var(--mono); color:var(--ink); font-weight:500; font-variant-numeric:tabular-nums}
+.bb-body{padding:13px 17px 3px}
+.bb-body h4.grp{margin:5px 0 9px; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); font-weight:600}
+.rec{display:grid; grid-template-columns:4px 1fr auto; gap:0 13px; margin-bottom:8px;
+  border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--surface)}
+.rec .sev{background:var(--warning)}
+.rec.critical .sev{background:var(--critical)}
+.rec.serious .sev{background:var(--serious)}
+.rec.good .sev{background:var(--good)}
+.rec .body{padding:11px 0 11px 2px}
+.rec h5{margin:0 0 3px; font-size:14px; font-weight:600}
+.rec .who{font-family:var(--mono); font-size:11.5px; color:var(--muted); margin-bottom:5px; word-break:break-all}
+.rec p{margin:0 0 5px; font-size:13px; color:var(--ink-2)}
+.rec .do{font-size:13px; padding-left:11px; border-left:2px solid var(--line-2)}
+.rec .impact{padding:11px 15px 11px 0; text-align:right; white-space:nowrap}
+.rec .amt{font-family:var(--mono); font-size:17px; font-weight:600; font-variant-numeric:tabular-nums}
+.rec .amt.risk{color:var(--muted); font-size:15px}
+.rec .amt.none{color:var(--muted); font-size:13px; font-weight:400}
+.rec .amt-l{font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em}
+.more{display:block; width:100%; text-align:center; padding:10px; border:1px dashed var(--line-2);
+  background:transparent; border-radius:8px; color:var(--ink-2); font:inherit; font-size:13.5px;
+  cursor:pointer; margin-bottom:10px}
+.more:hover{background:var(--surface-2); color:var(--ink)}
+
+/* method */
+.method{display:grid; grid-template-columns:repeat(auto-fit,minmax(310px,1fr)); gap:14px}
+.method .card{padding:17px}
+.method h3{margin:0 0 9px; font-size:14px; font-weight:600}
 .method ul{margin:0; padding-left:18px; font-size:13px; color:var(--ink-2)}
 .method li{margin-bottom:7px}
-.method code{
-  font-family:var(--mono); font-size:12px; background:var(--surface-2);
-  padding:1px 5px; border-radius:4px; border:1px solid var(--line);
-}
-footer{
-  margin-top:46px; padding-top:18px; border-top:1px solid var(--line);
-  font-size:12.5px; color:var(--muted);
-}
+footer{margin-top:40px; padding-top:16px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted)}
+dialog{border:1px solid var(--line-2); border-radius:10px; background:var(--surface); color:var(--ink);
+  padding:0; max-width:min(760px,92vw); box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(8,12,16,.55)}
+.dlg-head{padding:15px 17px; border-bottom:1px solid var(--line); display:flex; gap:12px; align-items:baseline}
+.dlg-head h3{margin:0; font-size:15px; font-weight:600}
+.dlg-body{padding:15px 17px}
+.dlg-body textarea{width:100%; height:280px; font-family:var(--mono); font-size:12px; padding:10px;
+  border-radius:8px; border:1px solid var(--line-2); background:var(--surface-2); color:var(--ink); resize:vertical}
+.dlg-foot{padding:0 17px 15px; display:flex; gap:9px; align-items:center}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 </head>
@@ -304,483 +206,454 @@ footer{
 <header class="masthead">
   <div class="mast-in">
     <p class="eyebrow" id="eyebrow"></p>
-    <h1 id="title">ASIN Profit Ledger</h1>
+    <h1 id="title">Profit Ledger</h1>
     <p class="sub" id="sub"></p>
     <div class="mast-meta" id="meta"></div>
   </div>
 </header>
 
-<nav class="jump">
-  <div class="jump-in">
-    <a href="#summary">Summary</a>
-    <a href="#leaks">Where the profit leaks</a>
-    <a href="#ledger">Brand → group → SKU</a>
-    <a href="#method">Method &amp; sources</a>
-  </div>
-</nav>
+<div class="bar"><div class="bar-in" id="bar"><span class="bar-lbl">Period</span></div></div>
 
 <div class="wrap">
   <section id="summary">
     <div id="gates"></div>
     <div class="kpis" id="kpis"></div>
-    <div class="charts" style="margin-top:16px">
-      <div class="card">
-        <div class="chart-head">
-          <h3>Where every dollar of gross sales went</h3>
-          <p id="wf-sub"></p>
-        </div>
-        <div class="legend">
-          <span><i style="background:var(--pos)"></i>money in</span>
-          <span><i style="background:var(--neg)"></i>cost out</span>
-          <span><i style="background:var(--ink-2)"></i>running total</span>
-        </div>
-        <div class="chart-body"><svg id="waterfall" role="img" aria-label="Waterfall from gross sales to net profit"></svg></div>
-      </div>
-      <div class="card">
-        <div class="chart-head">
-          <h3>Net profit by brand</h3>
-          <p>Top 14 by net sales. Bars right of the line make money.</p>
-        </div>
-        <div class="chart-body"><svg id="brandchart" role="img" aria-label="Net profit by brand"></svg></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="leaks">
-    <h2>Where the profit leaks</h2>
-    <p class="lede">Every leak we can put a dollar on, biggest first. Categories overlap on purpose —
-      a SKU that sells at a loss is usually also an ad or a refund problem — so read the pool as gross
-      opportunity, not a sum of independent wins.</p>
-    <div class="f-strip" id="fstrip"></div>
-    <div id="findings"></div>
-    <button class="more" id="fmore" hidden></button>
   </section>
 
   <section id="ledger">
-    <h2>Brand → product group → SKU</h2>
-    <p class="lede">The full P&amp;L, expandable to the ASIN. Click a brand to open its product groups,
-      a group to open its SKUs. Sort by any column.</p>
+    <h2>Brands, expandable to every SKU</h2>
+    <p class="lede">Brand totals for the selected period. Click a brand to see all of its SKUs — the ones with a
+      landed cost and the ones without, so you can see exactly where a cost needs adding.</p>
     <div class="tools">
       <input type="search" id="q" placeholder="Filter by brand, SKU, ASIN or title" aria-label="Filter rows">
-      <label><input type="checkbox" id="onlyLoss"> Loss-making only</label>
-      <label><input type="checkbox" id="onlyNoCost"> Missing cost only</label>
-      <label><input type="checkbox" id="expandAll"> Expand everything</label>
+      <div class="seg" id="costSeg">
+        <button data-v="all" aria-pressed="true">All SKUs</button>
+        <button data-v="cost" aria-pressed="false">With COGS</button>
+        <button data-v="nocost" aria-pressed="false">Without COGS</button>
+        <button data-v="profit" aria-pressed="false">Profitable</button>
+        <button data-v="loss" aria-pressed="false">Loss</button>
+      </div>
+      <label><input type="checkbox" id="expandAll"> Expand all brands</label>
+      <button class="btn" id="exportBtn">Export missing-cost list</button>
       <span id="rowcount" style="font-size:12.5px;color:var(--muted);margin-left:auto"></span>
     </div>
     <div class="scroll"><table id="ledgerTable"><thead></thead><tbody></tbody></table></div>
   </section>
 
+  <section id="recos">
+    <h2>Recommendations</h2>
+    <p class="lede">For the ten focus brands only, computed over the whole window
+      (<span id="recoWindow"></span>) so the numbers are stable — the brand-level read first, then the SKU-level
+      leaks inside it. Every other brand above is data only. Categories overlap on purpose, so the totals are
+      gross opportunity, not a sum of independent wins.</p>
+    <div class="f-strip" id="recostrip"></div>
+    <div id="recos-body"></div>
+  </section>
+
   <section id="method">
     <h2>Method &amp; sources</h2>
-    <p class="lede">Every figure traces to a source row. Nothing here is estimated except the three
-      allocations named below.</p>
     <div class="method" id="methodBody"></div>
     <footer id="foot"></footer>
   </section>
 </div>
 
-<div class="tip" id="tip" role="status" aria-live="polite"></div>
+<dialog id="exportDlg">
+  <div class="dlg-head"><h3>SKUs with no landed cost</h3><span id="dlgCount" style="font-size:12.5px;color:var(--muted)"></span></div>
+  <div class="dlg-body">
+    <p style="margin:0 0 10px;font-size:13.5px;color:var(--ink-2)">CSV for Supabase <code>public.cogs</code> —
+      account, sku, asin, title, units and net sales in the selected period. Fill in
+      <code>purchase_cost</code> and every profit figure for these rows becomes real.</p>
+    <textarea id="dlgText" readonly spellcheck="false"></textarea>
+  </div>
+  <div class="dlg-foot">
+    <button class="btn" id="copyBtn">Copy to clipboard</button>
+    <button class="btn" id="closeBtn">Close</button>
+    <span id="copyMsg" style="font-size:12.5px;color:var(--muted)"></span>
+  </div>
+</dialog>
+
 <script>
 const REPORT = /*__REPORT_JSON__*/null;
 </script>
 <script>
 (function(){
 "use strict";
-const R = REPORT, T = R.totals, M = R.meta;
-const $ = (s,r)=> (r||document).querySelector(s);
-const el = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
-const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const R = REPORT, M = R.meta, MI = {};
+R.metrics.forEach((k,i)=>{ MI[k]=i; });
+const TOTAL = M.totalKey, ZERO = R.metrics.map(()=>0);
+let period = TOTAL, skuFilter = "all";
 
-const money = v => (v<0?"-$":"$") + Math.abs(v).toLocaleString("en-US",{maximumFractionDigits:0});
-const money2 = v => (v<0?"-$":"$") + Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
-const pct = (v,d)=> (v*100).toFixed(d==null?1:d) + "%";
+const $ = (s,r)=>(r||document).querySelector(s);
+const el = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money = v => (v<0?"-$":"$")+Math.abs(v).toLocaleString("en-US",{maximumFractionDigits:0});
+const money2 = v => (v<0?"-$":"$")+Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct = (v,d)=>(v*100).toFixed(d==null?1:d)+"%";
 const num = v => Math.round(v).toLocaleString("en-US");
 const dateFmt = s => new Date(s+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
 
-const skuBy = {};
-R.skus.forEach(s => { skuBy[s.sku] = s; });
+/* The same arithmetic build_report.py runs, so table and findings cannot drift. */
+function derive(m){
+  const g = k => m[MI[k]] || 0;
+  const net = g("gross") - g("promo") - g("refunds");
+  const fees = g("referral") + g("fba") + g("otherFee") + g("storage") + g("inbound");
+  const cmBeforeAds = net + g("reimb") - fees - g("cogs");
+  const contrib = cmBeforeAds - g("ads");
+  const profit = contrib - g("overhead");
+  const d = {}; R.metrics.forEach(k => { d[k]=g(k); });
+  d.netSales=net; d.amazonFees=fees; d.cmBeforeAds=cmBeforeAds; d.contrib=contrib; d.netProfit=profit;
+  d.margin = net ? profit/net : 0;
+  d.tacos = net>0 ? g("ads")/net : 0;
+  d.acos = g("adSales")>0 ? g("ads")/g("adSales") : 0;
+  d.refundRate = g("units") ? g("retUnits")/g("units") : 0;
+  d.beAcos = net>0 ? cmBeforeAds/net : 0;
+  return d;
+}
+const skuBy = {}; R.skus.forEach(s => { skuBy[s.sku] = s; });
+const mOf = (s,p) => s.m[p] || ZERO;
+function roll(list,p){
+  const t = R.metrics.map(()=>0);
+  list.forEach(s => { const m = mOf(s,p); for (let i=0;i<t.length;i++) t[i]+=m[i]||0; });
+  const d = derive(t);
+  d.skuCount = list.length;
+  d.costed = list.filter(s=>s.hasCost).length;
+  d.noCostSales = list.filter(s=>!s.hasCost).reduce((a,s)=>a+derive(mOf(s,p)).netSales,0);
+  d.selling = list.filter(s=>mOf(s,p)[MI.units]>0).length;
+  return d;
+}
+const periodOf = k => R.periods.find(p=>p.key===k);
+const label = k => periodOf(k).label;
+const brandSkus = b => b.skus.map(k=>skuBy[k]);
 
 /* ---------- masthead ---------- */
 $("#eyebrow").textContent = `${M.account} · ${M.accountName} · Amazon US`;
 $("#title").textContent = `${M.account} Profit Ledger`;
-$("#sub").textContent = `Every dollar the account earned and spent between ${dateFmt(M.from)} and ${dateFmt(M.to)}, `
-  + `read down from the whole brand to the individual ASIN — refunds, promotions, Amazon fees, advertising, `
-  + `reimbursements and landed cost all in the same column.`;
+$("#sub").textContent = `Brand-by-brand profit for ${dateFmt(M.from)} to ${dateFmt(M.to)}, expandable to every SKU — `
+  + `net of refunds, promotions, Amazon fees, advertising, reimbursements and landed cost.`;
 $("#meta").innerHTML = [
-  ["Window", `${M.from} → ${M.to} (${M.days} days)`],
+  ["Window", `${M.from} → ${M.to}`],
+  ["Months", R.periods.filter(p=>p.key!==TOTAL).map(p=>p.label).join(" · ")],
   ["SKUs with activity", num(M.skuCount)],
-  ["Brands", num(R.tree.length)],
+  ["Brands", num(R.brands.length)],
   ["Built", M.generated],
-].map(([k,v]) => `${k} <b>${esc(v)}</b>`).join("");
+].map(([k,v])=>`${k} <b>${esc(v)}</b>`).join("");
+$("#recoWindow").textContent = `${M.from} → ${M.to}`;
 
-/* ---------- coverage gate ---------- */
-const cov = R.coverage;
-const covShare = T.netSales ? cov.noCostSales / T.netSales : 0;
-const gates = $("#gates");
-if (cov.noCost > 0){
-  const warn = covShare < 0.05;
-  gates.appendChild(el("div", "gate" + (warn ? " warn" : ""),
+/* ---------- period bar ---------- */
+function renderBar(){
+  const bar = $("#bar");
+  [...bar.querySelectorAll("button,a")].forEach(n=>n.remove());
+  R.periods.forEach(p => {
+    const b = el("button","per",
+      `${esc(p.label)}<span class="sm">${p.key===TOTAL?`${p.days} days`:`${p.from.slice(5)}–${p.to.slice(8)}`}</span>`);
+    b.setAttribute("aria-pressed", String(p.key===period));
+    b.onclick = () => { period = p.key; renderAll(); };
+    bar.appendChild(b);
+  });
+  const a = el("a","",`Recommendations for the ${M.focusBrands.length} focus brands ↓`);
+  a.href = "#recos"; bar.appendChild(a);
+}
+
+/* ---------- coverage + KPIs ---------- */
+function renderTop(){
+  const T = roll(R.skus, period), p = periodOf(period);
+  const g = $("#gates"); g.innerHTML = "";
+  const noCost = R.skus.filter(s=>!s.hasCost);
+  const share = T.netSales ? T.noCostSales/T.netSales : 0;
+  g.appendChild(el("div","gate",
     `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
        <path d="M12 9v5"/><path d="M12 17.5h.01"/><path d="M10.3 3.9 1.8 18.4A2 2 0 0 0 3.5 21.4h17A2 2 0 0 0 22.2 18.4L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
-     <div>
-       <h3>${num(cov.noCost)} of ${num(M.skuCount)} SKUs have no landed cost on file — ${pct(covShare)} of net sales</h3>
-       <p>Those rows carry <b>${money(cov.noCostSales)}</b> of net sales and ${num(cov.noCostUnits)} units with
-       <code style="font-family:var(--mono);font-size:12px">purchase_cost = 0</code> in Supabase
-       <code style="font-family:var(--mono);font-size:12px">public.cogs</code>, so their profit is overstated by whatever
-       the goods actually cost. Read every margin on this page as a ceiling until those costs are filled in;
-       the figures below marked <span class="pill nocost">no cost</span> are the ones to fix first.</p>
-     </div>`));
-}
+     <div><h3>${num(noCost.length)} of ${num(M.skuCount)} SKUs have no landed cost — ${pct(share)} of net sales in ${esc(label(period))}</h3>
+     <p>Those rows carry <b>${money(T.noCostSales)}</b> of net sales with <code>purchase_cost = 0</code> in Supabase
+     <code>public.cogs</code>, so their profit is overstated by whatever the goods cost. Filter to
+     <b>Without COGS</b> below, or export the list, to see exactly which ones to fill in.</p></div>`));
+  if (p.partial) g.appendChild(el("div","gate warn",
+    `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+       <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+     <div><h3>${esc(p.label)} is a part month — ${p.from} to ${p.to}</h3>
+     <p>Settlement is posted-date based and the ledger ends on ${esc(M.to)}, so this column covers ${p.days} days.
+     Read it as a run rate against the full months, not as a finished month.</p></div>`));
 
-/* ---------- KPI tiles ---------- */
-const covered = R.skus.filter(s => s.hasCost);
-const covNet = covered.reduce((a,s)=>a+s.netSales,0);
-const covProfit = covered.reduce((a,s)=>a+s.netProfit,0);
-const kpis = [
-  ["Net sales", money(T.netSales), `${num(T.units)} units · gross ${money(T.gross)}`],
-  ["Net profit", money(T.netProfit), `${pct(T.margin)} of net sales`, T.netProfit < 0],
-  ["Profit where cost is known", money(covProfit),
-   `${pct(covNet ? covProfit/covNet : 0)} on ${money(covNet)} of net sales`, covProfit < 0],
-  ["Amazon fees", money(T.amazonFees), `${pct(T.amazonFees/T.netSales)} of net sales`],
-  ["Advertising", money(T.ads), `TACOS ${pct(T.tacos)} · ACOS ${pct(T.acos)}`],
-  ["Refunds", money(T.refunds), `${pct(T.refundRate)} of units returned`],
-];
-kpis.forEach(([k,v,n,neg]) => $("#kpis").appendChild(el("div","card kpi",
-  `<div class="k">${esc(k)}</div><div class="v${neg?" neg":""}">${esc(v)}</div><div class="n">${n}</div>`)));
-
-/* ---------- tooltip ---------- */
-const tip = $("#tip");
-function showTip(e, html){
-  tip.innerHTML = html; tip.style.opacity = "1";
-  const r = tip.getBoundingClientRect();
-  let x = e.clientX + 14, y = e.clientY + 14;
-  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
-  if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
-  tip.style.left = x + "px"; tip.style.top = y + "px";
-}
-const hideTip = () => { tip.style.opacity = "0"; };
-
-/* ---------- waterfall ---------- */
-function waterfall(){
-  const steps = [
-    ["Gross sales",        T.gross,     "in"],
-    ["Promotions",        -T.promo,     "out"],
-    ["Refunds",           -T.refunds,   "out"],
-    ["Net sales",          null,        "sub"],
-    ["Referral fees",     -T.referral,  "out"],
-    ["FBA fulfilment",    -T.fba,       "out"],
-    ["Storage",           -T.storage,   "out"],
-    ["Inbound & placement",-T.inbound,  "out"],
-    ["Other Amazon fees", -T.otherFee,  "out"],
-    ["Reimbursements",     T.reimb,     "in"],
-    ["Advertising",       -T.ads,       "out"],
-    ["Landed COGS",       -T.cogs,      "out"],
-    ["Contribution",       null,        "sub"],
-    ["Account overhead",  -T.overhead,  "out"],
-    ["Net profit",         null,        "sub"],
+  const C = roll(R.skus.filter(s=>s.hasCost), period);
+  const tiles = [
+    ["Net sales", money(T.netSales), `${num(T.units)} units · ${esc(label(period))}`],
+    ["Net profit", money(T.netProfit), `${pct(T.margin)} of net sales`, T.netProfit<0],
+    ["Profit where COGS is known", money(C.netProfit),
+     `${pct(C.netSales?C.netProfit/C.netSales:0)} on ${money(C.netSales)} of net sales`, C.netProfit<0],
+    ["Advertising", money(T.ads), `TACOS ${pct(T.tacos)} · ACOS ${pct(T.acos)}`],
+    ["SKUs without COGS", num(noCost.length), `${money(T.noCostSales)} of net sales`],
   ];
-  const W = 690, padL = 138, padR = 98, rowH = 25, top = 10;
-  const H = top + steps.length * rowH + 16;
-  const max = Math.max(T.gross, 1);
-  const x = v => padL + (v / max) * (W - padL - padR);
-  let run = 0, out = "";
-  const grid = [0, .25, .5, .75, 1].map(f => {
-    const gx = x(max*f);
-    return `<line class="grid" x1="${gx}" y1="${top-4}" x2="${gx}" y2="${top + steps.length*rowH}"/>`
-         + `<text class="lbl" x="${gx}" y="${H-4}" text-anchor="middle" style="font-size:10px">${money(max*f)}</text>`;
-  }).join("");
-  steps.forEach((s, i) => {
-    const [label, delta, kind] = s;
-    const y = top + i * rowH;
-    let x1, x2, fill, val;
-    if (kind === "sub"){
-      x1 = x(0); x2 = x(run); fill = "var(--ink-2)"; val = run;
-    } else {
-      const from = run, to = run + delta;
-      run = to;
-      x1 = x(Math.min(from, to)); x2 = x(Math.max(from, to));
-      fill = delta >= 0 ? "var(--pos)" : "var(--neg)"; val = delta;
-    }
-    const w = Math.max(Math.abs(x2 - x1), 1.5);
-    const bw = kind === "sub" ? 13 : 11;
-    const by = y + (rowH - bw)/2;
-    out += `<g class="row">`
-      + `<text class="lbl" x="${padL-10}" y="${y+rowH/2+4}" text-anchor="end"${kind==="sub"?' style="font-weight:600;fill:var(--ink)"':''}>${esc(label)}</text>`
-      + `<rect class="bar" x="${x1}" y="${by}" width="${w}" height="${bw}" rx="2.5" fill="${fill}"/>`
-      + `<text class="val" x="${W-padR+8}" y="${y+rowH/2+4}"${kind==="sub"?' style="font-weight:600"':''}>${money(val)}</text>`
-      + `<rect class="hit" x="0" y="${y}" width="${W}" height="${rowH}"`
-      + ` data-l="${esc(label)}" data-v="${val}" data-r="${kind==="sub"?val:run}"/>`
-      + `</g>`;
-  });
-  const svg = $("#waterfall");
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  svg.style.width = "100%"; svg.style.height = "auto";
-  svg.innerHTML = grid + out;
-  svg.querySelectorAll(".hit").forEach(h => {
-    h.addEventListener("mousemove", e => showTip(e,
-      `<div class="t">${esc(h.dataset.l)}</div>`
-      + `<div class="r"><span>amount</span><b>${money2(+h.dataset.v)}</b></div>`
-      + `<div class="r"><span>running total</span><b>${money2(+h.dataset.r)}</b></div>`
-      + `<div class="r"><span>of gross sales</span><b>${pct(Math.abs(h.dataset.v)/T.gross)}</b></div>`));
-    h.addEventListener("mouseleave", hideTip);
-  });
-  $("#wf-sub").textContent = `${money(T.gross)} gross → ${money(T.netProfit)} net profit (${pct(T.margin)}).`;
+  const k = $("#kpis"); k.innerHTML = "";
+  tiles.forEach(([a,b,c,neg]) => k.appendChild(el("div","card kpi",
+    `<div class="k">${esc(a)}</div><div class="v${neg?" neg":""}">${esc(b)}</div><div class="n">${c}</div>`)));
 }
 
-/* ---------- brand chart ---------- */
-function brandChart(){
-  const top = R.tree.slice(0, 14);
-  const rest = R.tree.slice(14);
-  const rows = top.map(b => ({name: b.name, v: b.totals.netProfit, t: b.totals}));
-  if (rest.length){
-    const v = rest.reduce((a,b)=>a+b.totals.netProfit,0);
-    const ns = rest.reduce((a,b)=>a+b.totals.netSales,0);
-    rows.push({name:`Other (${rest.length} brands)`, v, t:{netSales:ns, netProfit:v, margin: ns?v/ns:0, skuCount: rest.reduce((a,b)=>a+b.totals.skuCount,0)}});
-  }
-  const W = 540, padL = 132, padR = 94, rowH = 24, top0 = 8;
-  const H = top0 + rows.length * rowH + 8;
-  const lo = Math.min(0, ...rows.map(r=>r.v)), hi = Math.max(0, ...rows.map(r=>r.v));
-  const span = (hi - lo) || 1;
-  const x = v => padL + ((v - lo) / span) * (W - padL - padR);
-  const zero = x(0);
-  let out = `<line class="base" x1="${zero}" y1="${top0-2}" x2="${zero}" y2="${top0 + rows.length*rowH}"/>`;
-  rows.forEach((r, i) => {
-    const y = top0 + i*rowH, bw = 11, by = y + (rowH-bw)/2;
-    const x1 = Math.min(zero, x(r.v)), w = Math.max(Math.abs(x(r.v) - zero), 1.5);
-    out += `<g class="row">`
-      + `<text class="lbl" x="${padL-10}" y="${y+rowH/2+4}" text-anchor="end">${esc(r.name.length>19?r.name.slice(0,18)+"…":r.name)}</text>`
-      + `<rect class="bar" x="${x1}" y="${by}" width="${w}" height="${bw}" rx="2.5" fill="${r.v<0?"var(--neg)":"var(--pos)"}"/>`
-      + `<text class="val" x="${W-padR+8}" y="${y+rowH/2+4}">${money(r.v)}</text>`
-      + `<rect class="hit" x="0" y="${y}" width="${W}" height="${rowH}" data-i="${i}"/></g>`;
-  });
-  const svg = $("#brandchart");
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  svg.style.width = "100%"; svg.style.height = "auto";
-  svg.innerHTML = out;
-  svg.querySelectorAll(".hit").forEach(h => {
-    const r = rows[+h.dataset.i];
-    h.addEventListener("mousemove", e => showTip(e,
-      `<div class="t">${esc(r.name)}</div>`
-      + `<div class="r"><span>net sales</span><b>${money2(r.t.netSales)}</b></div>`
-      + `<div class="r"><span>net profit</span><b>${money2(r.t.netProfit)}</b></div>`
-      + `<div class="r"><span>margin</span><b>${pct(r.t.margin)}</b></div>`
-      + `<div class="r"><span>SKUs</span><b>${num(r.t.skuCount)}</b></div>`));
-    h.addEventListener("mouseleave", hideTip);
-  });
-}
-
-/* ---------- findings ---------- */
-const KINDS = {
-  loss:      "Sells at a loss",
-  ads:       "Ad spend over break-even",
-  nocost:    "Missing landed cost",
-  refunds:   "Refund rate",
-  fees:      "Fee-heavy",
-  promo:     "Promotion depth",
-  unsellable:"Unsellable returns",
-  dead:      "Dead stock",
-  buybox:    "Buy Box loss",
-};
-let kindFilter = null, showAll = false;
-function renderFindings(){
-  const list = R.findings.filter(f => !kindFilter || f.kind === kindFilter);
-  const box = $("#findings"); box.innerHTML = "";
-  const shown = showAll ? list : list.slice(0, 20);
-  if (!shown.length) box.appendChild(el("div","card empty","Nothing flagged in this category."));
-  shown.forEach(f => {
-    const risk = f.kind === "nocost";
-    box.appendChild(el("div", `card finding ${f.sev}`,
-      `<div class="sev"></div>
-       <div class="body">
-         <h4>${esc(f.title)}</h4>
-         <div class="who">${esc(f.scope)}</div>
-         <p>${esc(f.detail)}</p>
-         <div class="do">${esc(f.action)}</div>
-       </div>
-       <div class="impact">
-         <div class="amt-l">${risk ? "sales at risk" : "per quarter"}</div>
-         <div class="amt${risk ? " risk" : ""}">${money(risk ? f.at_risk : f.impact)}</div>
-       </div>`));
-  });
-  const more = $("#fmore");
-  if (list.length > 20){
-    more.hidden = false;
-    more.textContent = showAll ? `Show the top 20 only` : `Show all ${list.length} findings`;
-  } else { more.hidden = true; }
-}
-function renderStrip(){
-  const strip = $("#fstrip"); strip.innerHTML = "";
-  const counts = {};
-  R.findings.forEach(f => { counts[f.kind] = (counts[f.kind]||0) + 1; });
-  const pool = R.findings.reduce((a,f)=>a+f.impact,0);
-  const all = el("button","chip",`All findings <span class="n">${R.findings.length}</span>`);
-  all.setAttribute("aria-pressed", String(kindFilter === null));
-  all.onclick = () => { kindFilter = null; showAll = false; renderStrip(); renderFindings(); };
-  strip.appendChild(all);
-  Object.keys(KINDS).filter(k => counts[k]).forEach(k => {
-    const sum = R.findings.filter(f=>f.kind===k).reduce((a,f)=>a+f.impact,0);
-    const c = el("button","chip",
-      `${esc(KINDS[k])} <span class="n">${counts[k]}${sum > 0 ? " · " + money(sum) : ""}</span>`);
-    c.setAttribute("aria-pressed", String(kindFilter === k));
-    c.onclick = () => { kindFilter = (kindFilter === k ? null : k); showAll = false; renderStrip(); renderFindings(); };
-    strip.appendChild(c);
-  });
-  strip.appendChild(el("span","", `<span style="font-size:12.5px;color:var(--muted);padding:6px 4px;display:inline-block">
-    gross opportunity <b style="font-family:var(--mono);color:var(--ink)">${money(pool)}</b> over ${M.days} days</span>`));
-}
-$("#fmore").onclick = () => { showAll = !showAll; renderFindings(); };
-
-/* ---------- ledger ---------- */
+/* ---------- the one table ---------- */
 const COLS = [
-  {k:"name",   t:"Brand / group / SKU", num:false},
-  {k:"units",  t:"Units",        f:num},
-  {k:"netSales",t:"Net sales",   f:money},
-  {k:"refunds",t:"Refunds",      f:money},
-  {k:"amazonFees",t:"Amazon fees",f:money},
-  {k:"ads",    t:"Ads",          f:money},
-  {k:"cogs",   t:"COGS",         f:money},
-  {k:"netProfit",t:"Net profit", f:money, sign:true},
-  {k:"margin", t:"Margin",       f:v=>pct(v), bar:true, sign:true},
-  {k:"tacos",  t:"TACOS",        f:v=>pct(v)},
-  {k:"refundRate",t:"Refund %",  f:v=>pct(v)},
+  {k:"name", t:"Brand / SKU"},
+  {k:"units", t:"Units", f:num},
+  {k:"netSales", t:"Net sales", f:money},
+  {k:"refunds", t:"Refunds", f:money},
+  {k:"amazonFees", t:"Amazon fees", f:money},
+  {k:"ads", t:"Ads", f:money},
+  {k:"cogs", t:"COGS", f:money},
+  {k:"netProfit", t:"Net profit", f:money, sign:true},
+  {k:"margin", t:"Margin", f:v=>pct(v), bar:true, sign:true},
+  {k:"cost", t:"Cost / unit"},
 ];
 let sortKey = "netSales", sortDir = -1;
-const openBrands = new Set(), openGroups = new Set();
+const open = new Set();
 
-function cellsFor(t){
+function passes(s){
+  if (skuFilter === "cost") return s.hasCost;
+  if (skuFilter === "nocost") return !s.hasCost;
+  if (skuFilter === "profit") return derive(mOf(s,period)).netProfit > 0;
+  if (skuFilter === "loss") return derive(mOf(s,period)).netProfit < 0;
+  return true;
+}
+function cells(d, extra){
   return COLS.slice(1).map(c => {
-    const v = t[c.k] || 0;
-    let cls = "";
-    if (c.sign) cls = v < 0 ? "neg" : (v > 0 ? "pos" : "");
+    if (c.k === "cost") return extra;
+    const v = d[c.k] || 0;
+    let cls = c.sign ? (v<0?"neg":(v>0?"pos":"")) : "";
     let inner = c.f(v);
     if (c.bar){
-      const w = Math.min(Math.abs(v), 1) * 100;
-      inner = `<span class="mbar"><i style="${v<0?`right:50%;`:`left:50%;`}width:${w/2}%;background:${v<0?"var(--neg)":"var(--pos)"}"></i>
-        <i style="left:50%;width:1px;background:var(--line-2)"></i></span>${inner}`;
+      const w = Math.min(Math.abs(v),1)*100;
+      inner = `<span class="mbar"><i style="${v<0?"right:50%;":"left:50%;"}width:${w/2}%;background:${v<0?"var(--neg)":"var(--pos)"}"></i>`
+            + `<i style="left:50%;width:1px;background:var(--line-2)"></i></span>${inner}`;
     }
     return `<td class="${cls}">${inner}</td>`;
   }).join("");
 }
-function sorted(arr, get){
-  return arr.slice().sort((a,b) => {
-    const av = get(a), bv = get(b);
-    if (sortKey === "name") return String(av).localeCompare(String(bv)) * (sortDir === -1 ? 1 : -1);
-    return (av - bv) * sortDir;
-  });
-}
-function matches(s, q){
-  if (!q) return true;
-  return (s.sku + " " + s.asin + " " + s.name + " " + s.brand + " " + s.group).toLowerCase().includes(q);
-}
 function renderLedger(){
   const q = $("#q").value.trim().toLowerCase();
-  const onlyLoss = $("#onlyLoss").checked, onlyNoCost = $("#onlyNoCost").checked;
   const expandAll = $("#expandAll").checked;
   const head = $("#ledgerTable thead");
   head.innerHTML = "<tr>" + COLS.map(c =>
-    `<th data-k="${c.k}">${esc(c.t)} <span class="ar">${sortKey===c.k ? (sortDir===-1?"▼":"▲") : ""}</span></th>`).join("") + "</tr>";
+    `<th data-k="${c.k}">${esc(c.t)} <span class="ar">${sortKey===c.k?(sortDir===-1?"▼":"▲"):""}</span></th>`).join("") + "</tr>";
   head.querySelectorAll("th").forEach(th => th.onclick = () => {
-    const k = th.dataset.k;
-    if (sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = k === "name" ? 1 : -1; }
+    const k = th.dataset.k; if (k === "cost") return;
+    if (sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = k==="name"?1:-1; }
     renderLedger();
   });
-
+  const match = s => !q || (s.sku+" "+s.asin+" "+s.name+" "+s.brand).toLowerCase().includes(q);
   const body = $("#ledgerTable tbody"); body.innerHTML = "";
-  let shownSkus = 0;
-  const brands = sorted(R.tree, b => sortKey === "name" ? b.name : (b.totals[sortKey]||0));
-  brands.forEach(b => {
-    const bSkus = [];
-    b.groups.forEach(g => g.skus.forEach(k => bSkus.push(skuBy[k])));
-    const keep = bSkus.filter(s => matches(s,q) && (!onlyLoss || s.netProfit < 0) && (!onlyNoCost || !s.hasCost));
-    if (!keep.length) return;
-    const isOpen = expandAll || openBrands.has(b.name) || (q && keep.length <= 60);
-    const tr = el("tr","brand");
-    tr.innerHTML = `<td><span class="tw">${isOpen ? "▾" : "▸"}</span>${esc(b.name)}
-        <span class="id">${keep.length} SKU${keep.length===1?"":"s"} · ${b.groups.length} group${b.groups.length===1?"":"s"}</span></td>`
-      + cellsFor(b.totals);
-    tr.onclick = () => { openBrands.has(b.name) ? openBrands.delete(b.name) : openBrands.add(b.name); renderLedger(); };
+  let shown = 0;
+
+  const rows = R.brands.map(b => {
+    const kept = brandSkus(b).filter(s => match(s) && passes(s));
+    return {b, kept, t: roll(kept, period)};
+  }).filter(r => r.kept.length || (!q && skuFilter === "all"));
+
+  rows.sort((a,z) => sortKey === "name"
+    ? a.b.brand.localeCompare(z.b.brand) * (sortDir===-1?1:-1)
+    : ((a.t[sortKey]||0) - (z.t[sortKey]||0)) * sortDir);
+
+  rows.forEach(({b,kept,t}) => {
+    const isOpen = expandAll || open.has(b.brand) || (q && kept.length <= 80);
+    const tags = (b.focus ? '<span class="tag focus">focus</span>' : "")
+      + (!b.onList ? '<span class="tag offlist">not on the list</span>' : "")
+      + (b.status && b.status !== "Active" ? `<span class="tag closing">${esc(b.status)}</span>` : "")
+      + (b.resellerType && b.resellerType !== "Not specified" ? `<span class="tag">${esc(b.resellerType)}</span>` : "")
+      // A brand with no cost on any SKU shows a margin it has not earned — say so on the row.
+      + (t.skuCount && !t.costed ? '<span class="tag nocost">no COGS at all</span>' : "");
+    const meta = `${kept.length} SKU${kept.length===1?"":"s"}${skuFilter!=="all"||q?" shown":""}`
+      + ` · ${t.selling} sold${b.numAsins?` · ${esc(b.numAsins)} ASINs listed`:""}`
+      + `${b.ownedBy?` · ${esc(b.ownedBy)}`:""}`;
+    const cov = t.skuCount ? t.costed/t.skuCount : 0;
+    const covCell = `<td class="${cov<1?"mut":""}"><span class="cov"><i style="width:${(cov*100).toFixed(0)}%"></i></span>`
+      + `${t.costed}/${t.skuCount}</td>`;
+    const tr = el("tr","brand",
+      `<td><span class="nm"><span class="tw">${isOpen?"▾":"▸"}</span>${esc(b.brand)}${tags}</span>
+        <span class="bmeta">${meta}</span></td>` + cells(t, covCell));
+    tr.onclick = () => { open.has(b.brand) ? open.delete(b.brand) : open.add(b.brand); renderLedger(); };
     body.appendChild(tr);
-    if (!isOpen) { shownSkus += keep.length; return; }
-    const groups = sorted(b.groups, g => sortKey === "name" ? g.name : (g.totals[sortKey]||0));
-    groups.forEach(g => {
-      const gs = g.skus.map(k=>skuBy[k]).filter(s => matches(s,q) && (!onlyLoss || s.netProfit < 0) && (!onlyNoCost || !s.hasCost));
-      if (!gs.length) return;
-      const gKey = b.name + "||" + g.name;
-      const gOpen = expandAll || openGroups.has(gKey) || (q && gs.length <= 40);
-      const gt = el("tr","group");
-      gt.innerHTML = `<td><span class="tw">${gOpen ? "▾" : "▸"}</span>${esc(g.name)}
-          <span class="id">${gs.length} SKU${gs.length===1?"":"s"}</span></td>` + cellsFor(g.totals);
-      gt.onclick = e => { e.stopPropagation(); openGroups.has(gKey) ? openGroups.delete(gKey) : openGroups.add(gKey); renderLedger(); };
-      body.appendChild(gt);
-      if (!gOpen) { shownSkus += gs.length; return; }
-      sorted(gs, s => sortKey === "name" ? s.name : (s[sortKey]||0)).forEach(s => {
-        shownSkus++;
-        const pills = (!s.hasCost ? '<span class="pill nocost">no cost</span>' : "")
-                    + (s.netProfit < 0 && s.hasCost ? '<span class="pill loss">loss</span>' : "");
-        const st = el("tr","sku");
-        st.innerHTML = `<td><span class="nm">${esc(s.name || s.sku)}${pills}</span>
-            <span class="id">${esc(s.sku)} · ${esc(s.asin || "no ASIN")}${s.tier ? " · " + esc(s.tier) : ""}</span></td>`
-          + cellsFor(s);
-        body.appendChild(st);
+    if (!isOpen){ shown += kept.length; return; }
+    kept.slice().sort((a,z) => sortKey === "name"
+      ? String(a.name||a.sku).localeCompare(String(z.name||z.sku)) * (sortDir===-1?1:-1)
+      : ((derive(mOf(a,period))[sortKey]||0) - (derive(mOf(z,period))[sortKey]||0)) * sortDir)
+      .forEach(s => {
+        shown++;
+        const d = derive(mOf(s,period));
+        const pills = (!s.hasCost ? '<span class="pill nocost">no COGS</span>' : "")
+                    + (d.netProfit < 0 && s.hasCost ? '<span class="pill loss">loss</span>' : "");
+        const costCell = s.hasCost
+          ? `<td>${money2(s.landed)}</td>`
+          : `<td class="mut">— add</td>`;
+        body.appendChild(el("tr","sku",
+          `<td><span class="nm">${esc(s.name||s.sku)}${pills}</span>
+            <span class="id">${esc(s.sku)} · ${esc(s.asin||"no ASIN")}${s.tier?" · "+esc(s.tier):""}</span></td>`
+          + cells(d, costCell)));
       });
-    });
   });
-  if (!body.children.length) body.innerHTML = `<tr><td colspan="${COLS.length}" class="empty">No rows match that filter.</td></tr>`;
-  $("#rowcount").textContent = `${num(shownSkus)} of ${num(M.skuCount)} SKUs`;
+  if (!body.children.length) body.innerHTML = `<tr><td colspan="${COLS.length}" class="empty">Nothing matches that filter.</td></tr>`;
+  const total = R.skus.filter(s => match(s) && passes(s)).length;
+  $("#rowcount").textContent = `${num(total)} of ${num(M.skuCount)} SKUs · ${label(period)}`;
 }
-["q","onlyLoss","onlyNoCost","expandAll"].forEach(id => {
-  const node = document.getElementById(id);
-  node.addEventListener(id === "q" ? "input" : "change", renderLedger);
-});
+
+/* ---------- export the missing-cost list ---------- */
+function exportCsv(){
+  const rows = R.skus.filter(s => !s.hasCost)
+    .map(s => ({s, d: derive(mOf(s,period))}))
+    .sort((a,z) => z.d.netSales - a.d.netSales);
+  const esc2 = v => `"${String(v==null?"":v).replace(/"/g,'""')}"`;
+  const csv = ["account,sku,asin,title,units,net_sales,purchase_cost"]
+    .concat(rows.map(({s,d}) =>
+      [M.account, s.sku, s.asin, s.name, Math.round(d.units), d.netSales.toFixed(2), ""].map(esc2).join(",")))
+    .join("\n");
+  $("#dlgText").value = csv;
+  $("#dlgCount").textContent = `${num(rows.length)} SKUs · ${label(period)}`;
+  $("#copyMsg").textContent = "";
+  $("#exportDlg").showModal();
+}
+$("#exportBtn").onclick = exportCsv;
+$("#closeBtn").onclick = () => $("#exportDlg").close();
+$("#copyBtn").onclick = async () => {
+  const t = $("#dlgText");
+  try { await navigator.clipboard.writeText(t.value); $("#copyMsg").textContent = "Copied."; }
+  catch { t.select(); $("#copyMsg").textContent = "Press ⌘C / Ctrl+C to copy the selection."; }
+};
+
+/* ---------- recommendations ---------- */
+let brandFilter = null;
+function recCard(f, showWho){
+  const risk = f.impact === 0 && f.at_risk;
+  const none = f.impact === 0 && !f.at_risk;
+  return el("div", `rec ${f.sev}`,
+    `<div class="sev"></div>
+     <div class="body">
+       <h5>${esc(f.title)}</h5>
+       ${showWho && f.sku ? `<div class="who">${esc(f.sku)}${f.asin?" · "+esc(f.asin):""}${f.name?" · "+esc(f.name):""}</div>` : ""}
+       <p>${esc(f.detail)}</p>
+       <div class="do">${esc(f.action)}</div>
+     </div>
+     <div class="impact">
+       <div class="amt-l">${risk?"sales at risk":none?"":"over the window"}</div>
+       <div class="amt${risk?" risk":""}${none?" none":""}">${none?"structural":money(risk?f.at_risk:f.impact)}</div>
+     </div>`);
+}
+function renderRecos(){
+  const strip = $("#recostrip"); strip.innerHTML = "";
+  // Brand-level findings restate the same dollars at a higher altitude, so the
+  // headline number counts SKU-level impacts only — adding both would double count.
+  const val = r => r.skuFindings.reduce((x,f)=>x+f.impact,0);
+  const total = R.recos.reduce((a,r)=>a+val(r),0);
+  const all = el("button","chip",`All ten <span class="n">${money(total)} at SKU level</span>`);
+  all.setAttribute("aria-pressed", String(brandFilter===null));
+  all.onclick = () => { brandFilter = null; renderRecos(); };
+  strip.appendChild(all);
+  R.recos.forEach(r => {
+    const v = val(r);
+    const c = el("button","chip",`${esc(r.brand)} <span class="n">${v>0?money(v):"—"}</span>`);
+    c.setAttribute("aria-pressed", String(brandFilter===r.brand));
+    c.onclick = () => { brandFilter = brandFilter===r.brand ? null : r.brand; renderRecos(); };
+    strip.appendChild(c);
+  });
+
+  const box = $("#recos-body"); box.innerHTML = "";
+  R.recos.filter(r => !brandFilter || r.brand === brandFilter).forEach(r => {
+    const b = R.brands.find(x => x.brand === r.brand);
+    const list = brandSkus(b);
+    const t = roll(list, TOTAL);
+    const block = el("div","card brandblock");
+    const stats = list.length
+      ? [["net sales",money(t.netSales)],["net profit",money(t.netProfit)],["margin",pct(t.margin)],
+         ["ads",money(t.ads)],["TACOS",pct(t.tacos)],["refunds",pct(t.refundRate)],
+         ["COGS on file",`${t.costed}/${t.skuCount}`]]
+      : [["net sales","—"],["SKUs","0"]];
+    block.appendChild(el("div","bb-head",
+      `<h3>${esc(r.brand)}</h3><div class="st">${stats.map(([k,v])=>`<span>${k} <b>${v}</b></span>`).join("")}</div>`));
+    const body = el("div","bb-body");
+    if (r.brandFindings.length){
+      body.appendChild(el("h4","grp","For the brand"));
+      r.brandFindings.forEach(f => body.appendChild(recCard(f,false)));
+    }
+    const top = r.skuFindings.slice(0,10);
+    if (top.length){
+      body.appendChild(el("h4","grp",`By SKU — ${top.length} of ${r.skuFindings.length}, biggest first`));
+      top.forEach(f => body.appendChild(recCard(f,true)));
+      if (r.skuFindings.length > top.length){
+        const more = el("button","more",`Show the remaining ${r.skuFindings.length-top.length} SKU findings for ${esc(r.brand)}`);
+        more.onclick = () => { more.remove(); r.skuFindings.slice(10).forEach(f => body.appendChild(recCard(f,true))); };
+        body.appendChild(more);
+      }
+    }
+    if (!r.brandFindings.length && !r.skuFindings.length)
+      body.appendChild(el("div","empty","Nothing flagged — this brand is clean on every test."));
+    block.appendChild(body);
+    box.appendChild(block);
+  });
+}
 
 /* ---------- method ---------- */
 function renderMethod(){
-  const a = R.accountCosts, al = R.alloc;
+  const camp = R.campaign.rows.reduce((a,r)=>a+r[3],0);
+  const settle = Object.values(R.accountCosts).reduce((a,m)=>a+m.advertising,0);
+  const tokens = [...new Set(R.campaign.rows.map(r=>r[1]))];
+  const cov = R.coverage;
   const cards = [
-    ["What each number is made of", `<dl>
-      <dt>Net sales</dt><dd>Item principal + shipping + gift wrap, less promotional rebates and refunds. Marketplace-facilitator tax is excluded on both sides — Amazon collects and withholds the same amount.</dd>
-      <dt>Amazon fees</dt><dd>Referral commission (net of the part returned on refunds), FBA per-unit fulfilment, shipping and gift-wrap chargebacks, plus the allocated storage and inbound lines below.</dd>
-      <dt>Advertising</dt><dd>Sponsored Products, Brands and Display cost attributed to the ASIN, scaled so the total ties to the <code>Cost of Advertising</code> line on the settlement.</dd>
-      <dt>COGS</dt><dd>Supabase <code>purchase_cost + prep_cost + inbound_cost</code> × units shipped, less units that came back sellable and went straight back into stock.</dd>
-      <dt>Net profit</dt><dd>Net sales + reimbursements − Amazon fees − advertising − COGS − allocated account overhead.</dd>
-      <dt>Break-even ACOS</dt><dd>Contribution before advertising ÷ net sales — the most an ad-driven dollar of sales can cost before it destroys profit.</dd>
-    </dl>`],
-    ["Where the data comes from", `<ul>
-      <li><b>Amazon activity</b> — BigQuery <code>amzbi-418608.amazon_source_data</code>: settlement ledger v2 (every order, refund, fee, reimbursement and credit line), FBA returns, All Listings, FBA fee preview, storage fees, sales &amp; traffic by SKU, and the Sponsored Products / Brands / Display reports. Query: <code>analysis/sku_profit_pl.sql</code>.</li>
-      <li><b>Landed cost</b> — Supabase BBMEDIA <code>public.cogs</code> joined to <code>public.unit_economics</code>. Cost never comes from BigQuery. Query: <code>analysis/cogs.sql</code>.</li>
-      <li><b>SKU list</b> — the settlement ledger, so every SKU that moved money in the window is here whether or not it is still listed; identity comes from the All Listings report, which is the live Amazon catalog.</li>
-      <li><b>Brand and product group</b> — Supabase <code>cogs.brand</code> / <code>cogs.product_group</code>, falling back to the brand on the FBA fee preview when Supabase has none.</li>
+    ["How the profit is built", `<ul>
+      <li><b>Net sales</b> = principal + shipping + gift wrap − promotional rebates − refunds. Marketplace-facilitator
+      tax is excluded on both sides; Amazon collects and withholds the same amount.</li>
+      <li><b>Amazon fees</b> = referral (net of the part refunded), FBA fulfilment, shipping and gift-wrap chargebacks,
+      plus allocated storage and inbound/placement.</li>
+      <li><b>COGS</b> = Supabase <code>purchase_cost + prep_cost + inbound_cost</code> × units shipped, less units that
+      came back sellable.</li>
+      <li><b>Net profit</b> = net sales + reimbursements − Amazon fees − advertising − COGS − allocated account overhead
+      (removals, disposals, returns processing, subscription, adjustments).</li>
+      <li>Three allocations, all per month: advertising by ASIN then SKU revenue share, storage by each ASIN's share of
+      the storage-fee report, inbound per unit shipped. Both ad and storage allocations are scaled so each month ties
+      to that month's settlement total. Everything else is charged where Amazon charged it.</li>
     </ul>`],
-    ["The three allocations", `<ul>
-      <li><b>Advertising</b> is reported per ASIN, then split across that ASIN's SKUs by revenue share and scaled by ${al.ad_factor.toFixed(4)}× to match the ${money(a.advertising)} charged on the settlement.</li>
-      <li><b>Storage</b> (${money(a.storage)}, including long-term) is spread by each ASIN's share of the FBA storage-fee report, scaled ${al.storage_factor.toFixed(3)}× because the report covers only the months billed inside the window.</li>
-      <li><b>Inbound &amp; placement</b> (${money(a.inbound_logistics)}) is spread per unit shipped; <b>account overhead</b> (${money(al.overhead_pool)} of removals, disposals, returns processing, subscription and adjustments) by net-sales share.</li>
-      <li>Everything else is charged where Amazon charged it — no smoothing, no estimates.</li>
+    ["Is ad spend read from campaign names?", `<ul>
+      <li><b>No — the P&amp;L attributes ad dollars by the ad's ASIN, not by campaign name.</b> Every ad id maps to its
+      ASIN through the Sponsored Products / Display product-ads tables; a Sponsored Brands creative is split evenly
+      across the ASINs on it, then ASIN spend is shared across that ASIN's SKUs by revenue.</li>
+      <li>The campaign names would work too — NRG names them
+      <code>iComm | Brand - line | SP | targeting</code> — and the two views agree at account level:
+      ${money(camp)} by campaign name against ${money(settle)} charged on the settlement (${pct(camp/settle)}).</li>
+      <li>Only ${tokens.length} brands are advertised at all: ${tokens.map(esc).join(", ")}. Every other brand on the
+      account carries no ad spend, so its ads column is zero by fact, not by attribution.</li>
+      <li>ASIN attribution is the one that can be charged to a SKU, which is why the profit column uses it.</li>
+    </ul>`],
+    ["Where the data comes from", `<ul>
+      <li><b>Amazon activity</b> — BigQuery <code>amzbi-418608.amazon_source_data</code>: settlement ledger v2 (every
+      order, refund, fee, reimbursement and credit line), FBA returns, All Listings, fee preview, storage fees,
+      sales &amp; traffic by SKU, SP/SB/SD ad reports. Query: <code>analysis/sku_profit_pl.sql</code>.</li>
+      <li><b>Landed cost</b> — Supabase BBMEDIA <code>public.cogs</code> + <code>public.unit_economics</code>. Cost never
+      comes from BigQuery and is never estimated. Query: <code>analysis/cogs.sql</code>.</li>
+      <li><b>Brand list</b> — Supabase <code>public.brands</code> for this account, matched to Amazon's brand spellings
+      through an alias map ("Sqwincher Zero" → Sqwinchers, "STALEKS PRO" → Staleks, "Lifefactory" → Life Factory).</li>
+      <li><b>SKU list</b> — the settlement ledger, so every SKU that moved money is here whether or not it is still
+      listed; identity comes from All Listings, the live Amazon catalog.</li>
     </ul>`],
     ["Reading it honestly", `<ul>
-      <li>A SKU with <span class="pill nocost">no cost</span> shows profit it has not earned. ${num(cov.noCost)} SKUs and ${money(cov.noCostSales)} of net sales are in that state.</li>
-      <li>Ad sales are Amazon's 14-day attribution, which overlaps with organic sales — treat TACOS, not ACOS, as the honest number.</li>
-      <li>Settlement is posted-date based: an order shipped on the last day of the window may settle after it, and its refund may land in a later window than its sale.</li>
-      <li>Findings overlap. Fixing the ad waste on a loss-making SKU may close both lines at once, so never add the pool up as guaranteed savings.</li>
+      <li>${num(cov.noCost)} SKUs carry no landed cost — ${money(cov.noCostSales)} of net sales across the window.
+      Their margins are ceilings, not results, which is what the <b>Profit where COGS is known</b> tile exists to show.</li>
+      <li>Ad sales are Amazon's 14-day attribution and overlap with organic sales; TACOS is the honest number, not ACOS.</li>
+      <li>Settlement is posted-date based, so an order shipped at a month's end can settle in the next one, and the
+      last month in the window is a part month.</li>
+      <li>Recommendations overlap. Fixing the ad waste on a loss-making SKU can close two lines at once, so the pool
+      is gross opportunity, not guaranteed savings.</li>
     </ul>`],
   ];
-  $("#methodBody").innerHTML = cards.map(([h,b]) => `<div class="card"><h3>${esc(h)}</h3>${b}</div>`).join("");
+  $("#methodBody").innerHTML = cards.map(([h,b])=>`<div class="card"><h3>${esc(h)}</h3>${b}</div>`).join("");
   $("#foot").innerHTML = `${esc(M.account)} · ${esc(M.accountName)} (account ${esc(String(M.accountId))}) · `
-    + `${esc(M.from)} → ${esc(M.to)} · built ${esc(M.generated)} by <code style="font-family:var(--mono)">analysis/build_report.py</code>. `
+    + `${esc(M.from)} → ${esc(M.to)} · built ${esc(M.generated)} by <code>analysis/build_report.py</code>. `
     + `Regenerate after any change to Supabase costs — this file is a snapshot, not a live view.`;
 }
 
-/* ---------- section nav ---------- */
-const links = [...document.querySelectorAll(".jump a")];
-const obs = new IntersectionObserver(es => {
-  es.forEach(e => {
-    if (e.isIntersecting) links.forEach(l => l.classList.toggle("on", l.getAttribute("href") === "#" + e.target.id));
-  });
-}, {rootMargin: "-45px 0px -75% 0px"});
-document.querySelectorAll("section").forEach(s => obs.observe(s));
+/* ---------- wiring ---------- */
+$("#q").addEventListener("input", renderLedger);
+$("#expandAll").addEventListener("change", renderLedger);
+$("#costSeg").querySelectorAll("button").forEach(b => b.onclick = () => {
+  skuFilter = b.dataset.v;
+  $("#costSeg").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x===b)));
+  renderLedger();
+});
 
-waterfall(); brandChart(); renderStrip(); renderFindings(); renderLedger(); renderMethod();
-addEventListener("resize", () => { waterfall(); brandChart(); });
+function renderAll(){ renderBar(); renderTop(); renderLedger(); }
+renderAll(); renderRecos(); renderMethod();
 })();
 </script>
 </body>

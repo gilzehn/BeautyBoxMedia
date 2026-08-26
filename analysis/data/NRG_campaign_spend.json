@@ -1,0 +1,32 @@
+{
+  "account": "NRG",
+  "_comment": "Advertising by the brand token in the campaign name (iComm | <Brand> - <line> | <type> | <targeting>), from the SP/SB/SD campaign reports. This is the ad team's view of brand spend; the P&L attributes the same dollars by the ad's ASIN. Source: analysis/campaign_spend.sql.",
+  "columns": ["ym","token","type","cost","sales"],
+  "tokenToBrand": {"Ariston":"Ariston","Bodifresh":"Bodifresh","MinaiBrow":"MinaiBrow","Sqwincher Zero":"Sqwinchers","YNN":"Y-Not Natural"},
+  "rows": [
+    ["2026-05","Ariston","SP",5814.69,15521.49],
+    ["2026-06","Ariston","SP",3936.46,13017.41],
+    ["2026-07","Ariston","SP",4308.62,16329.81],
+    ["2026-08","Ariston","SP",3374.93,8979.79],
+    ["2026-05","Bodifresh","SB",3313.82,978.01],
+    ["2026-05","Bodifresh","SD",3378.89,450.62],
+    ["2026-05","Bodifresh","SP",1525.95,2455.38],
+    ["2026-06","Bodifresh","SB",66.32,106.28],
+    ["2026-06","Bodifresh","SP",724.74,1141.38],
+    ["2026-07","Bodifresh","SB",57.09,120.45],
+    ["2026-07","Bodifresh","SP",287.75,954.30],
+    ["2026-08","Bodifresh","SB",38.13,18.66],
+    ["2026-08","Bodifresh","SP",1667.30,1850.46],
+    ["2026-05","MinaiBrow","SP",2434.64,2382.53],
+    ["2026-06","MinaiBrow","SP",4255.59,7450.05],
+    ["2026-07","MinaiBrow","SP",2606.00,8910.12],
+    ["2026-05","Sqwincher Zero","SP",18836.55,69090.11],
+    ["2026-06","Sqwincher Zero","SP",17295.68,43937.14],
+    ["2026-07","Sqwincher Zero","SP",31963.31,129150.88],
+    ["2026-08","Sqwincher Zero","SP",19899.82,49759.37],
+    ["2026-05","YNN","SP",464.71,1555.80],
+    ["2026-06","YNN","SP",1427.49,3264.46],
+    ["2026-07","YNN","SP",532.62,1516.98],
+    ["2026-08","YNN","SP",1309.84,1794.00]
+  ]
+}
