@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useMemo, useState, FormEvent } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, FormEvent } from 'react';
 import styles from '../bizconsole.module.css';
 import {
   CogsRow,
@@ -13,8 +13,26 @@ import {
   deleteCogs,
   getUnitEconomics,
   updateUnitEconomicsPlan,
+  updateUnitEconomicsBulk,
+  refreshUnitEconomics,
+  SavedViewRow,
+  getSavedViews,
+  addSavedView,
+  updateSavedView,
+  deleteSavedView,
 } from '@/lib/unitEconomics';
-import { TrashIcon, ScreenHead, formatMoney, uniq, useColumnWidths, ResizeHandle, ColGroup } from './shared';
+import {
+  TrashIcon,
+  ScreenHead,
+  formatMoney,
+  uniq,
+  useColumnWidths,
+  ResizeHandle,
+  ColGroup,
+  TopScrollbar,
+  ColumnDef,
+  reconcileColumns,
+} from './shared';
 
 type Tab = 'cogs' | 'unit-economics';
 
@@ -25,25 +43,40 @@ const TABS: { id: Tab; label: string }[] = [
 
 const ADD_NEW = '__add_new__';
 
+// Fields the Unit Economics bulk editor can set. `pct` values are typed as
+// percentages and stored as rates; `cogs` writes to the cogs table instead.
+const UE_BULK_FIELDS: { key: string; label: string; kind: 'pct' | 'money'; target: 'ue' | 'cogs' }[] = [
+  { key: 'discountPct', label: 'Discount %', kind: 'pct', target: 'ue' },
+  { key: 'desiredProfitPct', label: 'Desired Profit %', kind: 'pct', target: 'ue' },
+  { key: 'desiredPrice', label: 'Desired Price', kind: 'money', target: 'ue' },
+  { key: 'prepCost', label: 'Prep', kind: 'money', target: 'ue' },
+  { key: 'inboundCost', label: 'Inbound', kind: 'money', target: 'ue' },
+  { key: 'purchaseCost', label: 'Purchase Cost (COGS)', kind: 'money', target: 'cogs' },
+];
+
 // Column keys and their starting widths. Users drag from here; the chosen
 // widths are remembered per table in localStorage.
-const COGS_COLUMNS: { key: string; label: string; width: number; num?: boolean }[] = [
-  { key: 'select', label: '', width: 38 },
+const COGS_COLUMNS: ColumnDef[] = [
+  { key: 'select', label: '', width: 38, required: true },
   { key: 'account', label: 'Account', width: 90 },
-  { key: 'sku', label: 'SKU', width: 170 },
+  { key: 'sku', label: 'SKU', width: 170, required: true },
   { key: 'asin', label: 'ASIN', width: 110 },
   { key: 'title', label: 'Title', width: 300 },
   { key: 'brand', label: 'Brand', width: 140 },
   { key: 'productGroup', label: 'Product Type', width: 150 },
   { key: 'channel', label: 'Channel', width: 90 },
   { key: 'purchaseCost', label: 'Purchase Cost', width: 120, num: true },
-  { key: 'actions', label: '', width: 56 },
+  { key: 'actions', label: '', width: 56, required: true },
 ];
 
-const UE_COLUMNS: { key: string; label: string; width: number; num?: boolean; plan?: boolean }[] = [
-  { key: 'sku', label: 'SKU', width: 170 },
+const UE_COLUMNS: ColumnDef[] = [
+  { key: 'select', label: '', width: 38, required: true },
+  { key: 'sku', label: 'SKU', width: 170, required: true },
   { key: 'brand', label: 'Brand', width: 130 },
   { key: 'title', label: 'Title', width: 260 },
+  { key: 'purchaseCost', label: 'COGS', width: 95, num: true },
+  { key: 'prep', label: 'Prep', width: 85, num: true, plan: true },
+  { key: 'inbound', label: 'Inbound', width: 95, num: true, plan: true },
   { key: 'totalCost', label: 'Total Cost', width: 105, num: true },
   { key: 'storage', label: 'Storage', width: 90, num: true },
   { key: 'fba', label: 'FBA', width: 90, num: true },
@@ -125,6 +158,32 @@ export default function AccountsScreen({
   const ueCols = useColumnWidths(
     'accounts.unitEconomics',
     Object.fromEntries(UE_COLUMNS.map((c) => [c.key, c.width]))
+  );
+
+  // Column visibility, saved views, and the top-scrollbar targets. COGS and
+  // Unit Economics keep independent selections, so everything is per-tab.
+  const [cogsVisible, setCogsVisible] = useState<string[]>(COGS_COLUMNS.map((c) => c.key));
+  const [ueVisible, setUeVisible] = useState<string[]>(UE_COLUMNS.map((c) => c.key));
+  const [views, setViews] = useState<SavedViewRow[]>([]);
+  const [activeViewId, setActiveViewId] = useState<number | null>(null);
+  const [viewDirty, setViewDirty] = useState(false);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const columnsRef = useRef<HTMLDivElement>(null);
+  const cogsScrollRef = useRef<HTMLDivElement>(null);
+  const ueScrollRef = useRef<HTMLDivElement>(null);
+
+  const [ueSelected, setUeSelected] = useState<Set<number>>(new Set());
+  const [ueBulkField, setUeBulkField] = useState('');
+  const [ueBulkValue, setUeBulkValue] = useState('');
+  const [ueBulkBusy, setUeBulkBusy] = useState(false);
+
+  const allColumns = tab === 'cogs' ? COGS_COLUMNS : UE_COLUMNS;
+  const visibleKeys = tab === 'cogs' ? cogsVisible : ueVisible;
+  const setVisibleKeys = tab === 'cogs' ? setCogsVisible : setUeVisible;
+  const cols = tab === 'cogs' ? cogsCols : ueCols;
+  const visibleColumns = useMemo(
+    () => allColumns.filter((c) => visibleKeys.includes(c.key)),
+    [allColumns, visibleKeys]
   );
 
   const [addOpen, setAddOpen] = useState(false);
@@ -346,6 +405,154 @@ export default function AccountsScreen({
     }
   };
 
+  const toggleUeRow = (id: number) =>
+    setUeSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const visibleUeIds = visibleUe.map((r) => r.id);
+  const allUeSelected = visibleUeIds.length > 0 && visibleUeIds.every((id) => ueSelected.has(id));
+
+  const toggleAllUeVisible = () =>
+    setUeSelected((prev) => {
+      const next = new Set(prev);
+      if (allUeSelected) visibleUeIds.forEach((id) => next.delete(id));
+      else visibleUeIds.forEach((id) => next.add(id));
+      return next;
+    });
+
+  // Bulk-set one planning field across the ticked rows. Purchase Cost lives on
+  // `cogs`, so it takes the cogs path and the view rows are re-read afterwards.
+  const applyUeBulk = async () => {
+    const field = UE_BULK_FIELDS.find((f) => f.key === ueBulkField);
+    const rows = visibleUe.filter((r) => ueSelected.has(r.id));
+    if (!field || rows.length === 0) return;
+    const parsed = field.kind === 'pct' ? pctToStore(ueBulkValue) : moneyToStore(ueBulkValue);
+    if (parsed === null && field.kind === 'money') return; // a price needs a number
+    setUeBulkBusy(true);
+    setSaveError('');
+    try {
+      if (field.target === 'cogs') {
+        const keys = new Set(rows.map((r) => `${r.account}~${r.sku}`));
+        const cogsIds = cogsRows.filter((c) => keys.has(`${c.account}~${c.sku}`)).map((c) => c.id);
+        const savedCogs = await updateCogsBulk(cogsIds, { purchaseCost: parsed ?? 0 });
+        const byId = new Map(savedCogs.map((c) => [c.id, c]));
+        setCogsRows((prev) => prev.map((c) => byId.get(c.id) ?? c));
+        const fresh = await refreshUnitEconomics(rows.map((r) => r.id));
+        const ueById = new Map(fresh.map((r) => [r.id, r]));
+        setUeRows((prev) => prev.map((r) => ueById.get(r.id) ?? r));
+      } else {
+        const saved = await updateUnitEconomicsBulk(rows.map((r) => r.id), { [field.key]: parsed });
+        const byId = new Map(saved.map((r) => [r.id, r]));
+        setUeRows((prev) => prev.map((r) => byId.get(r.id) ?? r));
+      }
+      setUeSelected(new Set());
+      setUeBulkValue('');
+    } catch (err) {
+      setSaveError(`Couldn't apply the change: ${err instanceof Error ? err.message : 'update failed'}`);
+    } finally {
+      setUeBulkBusy(false);
+    }
+  };
+
+  // --- Saved views ---------------------------------------------------------
+  useEffect(() => {
+    getSavedViews('accounts', tab)
+      .then(setViews)
+      .catch(() => setViews([])); // a view list failure must not block the table
+    setActiveViewId(null);
+    setViewDirty(false);
+  }, [tab]);
+
+  // The columns popover closes the same way FilterMulti's does.
+  useEffect(() => {
+    if (!columnsOpen) return;
+    const onDown = (e: PointerEvent) => {
+      if (columnsRef.current && !columnsRef.current.contains(e.target as Node)) setColumnsOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setColumnsOpen(false);
+    };
+    document.addEventListener('pointerdown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [columnsOpen]);
+
+  const toggleColumn = (key: string) => {
+    setVisibleKeys((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+    if (activeViewId !== null) setViewDirty(true);
+  };
+
+  const showAllColumns = () => {
+    setVisibleKeys(allColumns.map((c) => c.key));
+    if (activeViewId !== null) setViewDirty(true);
+  };
+
+  const applyView = (view: SavedViewRow | null) => {
+    if (!view) {
+      setVisibleKeys(allColumns.map((c) => c.key));
+      setActiveViewId(null);
+      setViewDirty(false);
+      return;
+    }
+    // Reconcile against today's columns so an older view still renders.
+    setVisibleKeys(reconcileColumns(view.columns, allColumns));
+    for (const [key, px] of Object.entries(view.widths)) cols.setWidth(key, px);
+    setActiveViewId(view.id);
+    setViewDirty(false);
+  };
+
+  const saveCurrentView = async () => {
+    const existing = views.find((v) => v.id === activeViewId);
+    const name = existing
+      ? existing.name
+      : window.prompt('Name this view:')?.trim();
+    if (!name) return;
+    const payload = {
+      screen: 'accounts',
+      tab,
+      name,
+      columns: visibleKeys,
+      widths: Object.fromEntries(visibleKeys.map((k) => [k, cols.widths[k]])),
+    };
+    setSaveError('');
+    try {
+      if (existing) {
+        const saved = await updateSavedView(existing.id, payload);
+        setViews((prev) => prev.map((v) => (v.id === saved.id ? saved : v)));
+        setActiveViewId(saved.id);
+      } else {
+        const created = await addSavedView(payload);
+        setViews((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+        setActiveViewId(created.id);
+      }
+      setViewDirty(false);
+    } catch (err) {
+      setSaveError(`Couldn't save the view: ${err instanceof Error ? err.message : 'save failed'}`);
+    }
+  };
+
+  const removeView = async () => {
+    const view = views.find((v) => v.id === activeViewId);
+    if (!view) return;
+    if (!window.confirm(`Delete the view "${view.name}"? Everyone loses it.`)) return;
+    try {
+      await deleteSavedView(view.id);
+      setViews((prev) => prev.filter((v) => v.id !== view.id));
+      applyView(null);
+    } catch (err) {
+      setSaveError(`Couldn't delete the view: ${err instanceof Error ? err.message : 'delete failed'}`);
+    }
+  };
+
   const removeCogs = async (row: CogsRow) => {
     if (!window.confirm(`Delete ${row.sku}? This removes its cost row.`)) return;
     setSaveError('');
@@ -476,6 +683,125 @@ export default function AccountsScreen({
         )}
       </div>
 
+      <div className={styles.viewBar}>
+        <select
+          className={styles.searchInput}
+          value={activeViewId ?? ''}
+          aria-label="Saved view"
+          onChange={(e) => {
+            const raw = e.target.value;
+            if (raw === '__save__') {
+              saveCurrentView();
+              return;
+            }
+            applyView(raw === '' ? null : views.find((v) => v.id === Number(raw)) ?? null);
+          }}
+        >
+          <option value="">All columns</option>
+          {views.map((v) => (
+            <option key={v.id} value={v.id}>
+              {v.name}
+            </option>
+          ))}
+          <option value="__save__">＋ Save current view…</option>
+        </select>
+
+        <div className={styles.columnsWrap} ref={columnsRef}>
+          <button
+            type="button"
+            className={styles.chip}
+            aria-haspopup="true"
+            aria-expanded={columnsOpen}
+            onClick={() => setColumnsOpen((o) => !o)}
+          >
+            Columns ({visibleColumns.length}/{allColumns.length}) ▾
+          </button>
+          {columnsOpen && (
+            <div className={styles.columnsMenu} role="menu" aria-label="Choose columns">
+              <div className={styles.columnsMenuActions}>
+                <button type="button" className={styles.linkBtn} onClick={showAllColumns}>
+                  Show all
+                </button>
+              </div>
+              {allColumns
+                .filter((c) => !c.required)
+                .map((c) => (
+                  <label key={c.key} className={styles.columnsMenuRow}>
+                    <input
+                      type="checkbox"
+                      checked={visibleKeys.includes(c.key)}
+                      onChange={() => toggleColumn(c.key)}
+                    />
+                    <span>{c.label}</span>
+                  </label>
+                ))}
+            </div>
+          )}
+        </div>
+
+        {viewDirty && <span className={styles.dirtyChip}>Modified</span>}
+        {activeViewId !== null && viewDirty && (
+          <>
+            <button type="button" className={styles.linkBtn} onClick={saveCurrentView}>
+              Save
+            </button>
+            <button
+              type="button"
+              className={styles.linkBtn}
+              onClick={() => applyView(views.find((v) => v.id === activeViewId) ?? null)}
+            >
+              Revert
+            </button>
+          </>
+        )}
+        {activeViewId !== null && (
+          <button type="button" className={styles.linkBtn} onClick={removeView}>
+            Delete view
+          </button>
+        )}
+      </div>
+
+      {tab === 'unit-economics' && ueSelected.size > 0 && (
+        <div className={styles.bulkBar}>
+          <span className={styles.bulkCount}>{ueSelected.size} selected</span>
+          <select
+            className={styles.searchInput}
+            value={ueBulkField}
+            onChange={(e) => setUeBulkField(e.target.value)}
+            aria-label="Field to set"
+          >
+            <option value="">Set field…</option>
+            {UE_BULK_FIELDS.map((f) => (
+              <option key={f.key} value={f.key}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+          <input
+            className={styles.searchInput}
+            style={{ maxWidth: 120 }}
+            value={ueBulkValue}
+            onChange={(e) => setUeBulkValue(e.target.value)}
+            placeholder={
+              UE_BULK_FIELDS.find((f) => f.key === ueBulkField)?.kind === 'pct' ? 'e.g. 15' : 'e.g. 0.30'
+            }
+            inputMode="decimal"
+            aria-label="Value to apply"
+          />
+          <button
+            className="btn btn-primary"
+            type="button"
+            disabled={!ueBulkField || ueBulkValue.trim() === '' || ueBulkBusy}
+            onClick={applyUeBulk}
+          >
+            {ueBulkBusy ? 'Applying…' : 'Apply'}
+          </button>
+          <button className="btn" type="button" onClick={() => setUeSelected(new Set())}>
+            Clear
+          </button>
+        </div>
+      )}
+
       {tab === 'cogs' && selected.size > 0 && (
         <div className={styles.bulkBar}>
           <span className={styles.bulkCount}>{selected.size} selected</span>
@@ -597,12 +923,14 @@ export default function AccountsScreen({
       )}
 
       {tab === 'cogs' ? (
-        <div className={styles.tableWrapScroll}>
+        <>
+        <TopScrollbar targetRef={cogsScrollRef} />
+        <div className={styles.tableWrapScroll} ref={cogsScrollRef}>
           <table className={`${styles.table} ${styles.tableFixed}`}>
-            <ColGroup columns={COGS_COLUMNS.map((c) => c.key)} widths={cogsCols.widths} />
+            <ColGroup columns={visibleColumns.map((c) => c.key)} widths={cogsCols.widths} />
             <thead>
               <tr>
-                {COGS_COLUMNS.map((c) => (
+                {visibleColumns.map((c) => (
                   <th
                     key={c.key}
                     className={`${c.num ? styles.numCol : ''} ${c.key === 'select' ? styles.checkCol : ''}`}
@@ -626,113 +954,145 @@ export default function AccountsScreen({
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={10} className={styles.emptyCell}>
+                  <td colSpan={visibleColumns.length} className={styles.emptyCell}>
                     Loading…
                   </td>
                 </tr>
               ) : visibleCogs.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className={styles.emptyCell}>
+                  <td colSpan={visibleColumns.length} className={styles.emptyCell}>
                     {cogsRows.length === 0
                       ? 'No products yet — add the first one.'
                       : 'No products match the filters.'}
                   </td>
                 </tr>
               ) : (
-                visibleCogs.map((row) => (
-                  <tr key={row.id} className={savingIds.has(row.id) ? styles.rowSaving : undefined}>
-                    <td className={styles.checkCol}>
-                      <input
-                        type="checkbox"
-                        checked={selected.has(row.id)}
-                        onChange={() => toggleRow(row.id)}
-                        aria-label={`Select ${row.sku}`}
-                      />
-                    </td>
-                    <td>
-                      <span className={`${styles.pill} ${styles.badgeNeutral}`}>{row.account}</span>
-                    </td>
-                    <td title={row.sku}>{row.sku}</td>
-                    <td>{row.asin || <span className={styles.muted}>—</span>}</td>
-                    <td title={row.title || row.itemName}>
-                      {row.title || row.itemName || <span className={styles.muted}>—</span>}
-                    </td>
-                    <td title={row.brand}>{row.brand || <span className={styles.muted}>—</span>}</td>
-                    <td>
-                      <div className={styles.selectCell}>
-                        {row.productGroup ? (
-                          <span className={`${styles.pill} ${styles.badgeNeutral}`}>{row.productGroup}</span>
-                        ) : (
-                          <span className={styles.muted}>—</span>
-                        )}
-                        <select
-                          className={styles.overlaySelect}
-                          value={row.productGroup}
-                          aria-label={`Product type for ${row.sku}`}
-                          onChange={(e) => handleProductGroup(row, e.target.value)}
+                visibleCogs.map((row) => {
+                  // Cells are keyed so hiding a column can never misalign a row.
+                  const cells: Record<string, JSX.Element> = {
+                    select: (
+                      <td className={styles.checkCol}>
+                        <input
+                          type="checkbox"
+                          checked={selected.has(row.id)}
+                          onChange={() => toggleRow(row.id)}
+                          aria-label={`Select ${row.sku}`}
+                        />
+                      </td>
+                    ),
+                    account: (
+                      <td>
+                        <span className={`${styles.pill} ${styles.badgeNeutral}`}>{row.account}</span>
+                      </td>
+                    ),
+                    sku: <td title={row.sku}>{row.sku}</td>,
+                    asin: <td>{row.asin || <span className={styles.muted}>—</span>}</td>,
+                    title: (
+                      <td title={row.title || row.itemName}>
+                        {row.title || row.itemName || <span className={styles.muted}>—</span>}
+                      </td>
+                    ),
+                    brand: <td title={row.brand}>{row.brand || <span className={styles.muted}>—</span>}</td>,
+                    productGroup: (
+                      <td>
+                        <div className={styles.selectCell}>
+                          {row.productGroup ? (
+                            <span className={`${styles.pill} ${styles.badgeNeutral}`}>{row.productGroup}</span>
+                          ) : (
+                            <span className={styles.muted}>—</span>
+                          )}
+                          <select
+                            className={styles.overlaySelect}
+                            value={row.productGroup}
+                            aria-label={`Product type for ${row.sku}`}
+                            onChange={(e) => handleProductGroup(row, e.target.value)}
+                          >
+                            <option value="">—</option>
+                            {uniq([...productGroupValues, row.productGroup]).filter(Boolean).map((g) => (
+                              <option key={g} value={g}>
+                                {g}
+                              </option>
+                            ))}
+                            <option value={ADD_NEW}>＋ Add new…</option>
+                          </select>
+                        </div>
+                      </td>
+                    ),
+                    channel: <td>{row.fulfillmentChannel || <span className={styles.muted}>—</span>}</td>,
+                    purchaseCost: (
+                      <td className={styles.numCol}>
+                        <input
+                          className={`${styles.ghostInput} ${styles.numInput}`}
+                          type="text"
+                          inputMode="decimal"
+                          defaultValue={String(row.purchaseCost)}
+                          aria-label={`Purchase cost for ${row.sku}`}
+                          onBlur={(e) => {
+                            const raw = e.target.value.trim().replace(/[$,]/g, '');
+                            const n = Number(raw);
+                            if (raw === '' || Number.isNaN(n)) {
+                              e.target.value = String(row.purchaseCost);
+                              return;
+                            }
+                            if (n !== row.purchaseCost) patchCogs(row, { purchaseCost: n });
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') e.currentTarget.blur();
+                          }}
+                        />
+                      </td>
+                    ),
+                    actions: (
+                      <td className={styles.rowActions}>
+                        <button
+                          className={styles.iconBtn}
+                          type="button"
+                          aria-label={`Delete ${row.sku}`}
+                          onClick={() => removeCogs(row)}
                         >
-                          <option value="">—</option>
-                          {uniq([...productGroupValues, row.productGroup]).filter(Boolean).map((g) => (
-                            <option key={g} value={g}>
-                              {g}
-                            </option>
-                          ))}
-                          <option value={ADD_NEW}>＋ Add new…</option>
-                        </select>
-                      </div>
-                    </td>
-                    <td>{row.fulfillmentChannel || <span className={styles.muted}>—</span>}</td>
-                    <td className={styles.numCol}>
-                      <input
-                        className={`${styles.ghostInput} ${styles.numInput}`}
-                        type="text"
-                        inputMode="decimal"
-                        defaultValue={String(row.purchaseCost)}
-                        aria-label={`Purchase cost for ${row.sku}`}
-                        onBlur={(e) => {
-                          const raw = e.target.value.trim().replace(/[$,]/g, '');
-                          const n = Number(raw);
-                          if (raw === '' || Number.isNaN(n)) {
-                            e.target.value = String(row.purchaseCost);
-                            return;
-                          }
-                          if (n !== row.purchaseCost) patchCogs(row, { purchaseCost: n });
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') e.currentTarget.blur();
-                        }}
-                      />
-                    </td>
-                    <td className={styles.rowActions}>
-                      <button
-                        className={styles.iconBtn}
-                        type="button"
-                        aria-label={`Delete ${row.sku}`}
-                        onClick={() => removeCogs(row)}
-                      >
-                        <TrashIcon />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                          <TrashIcon />
+                        </button>
+                      </td>
+                    ),
+                  };
+                  return (
+                    <tr key={row.id} className={savingIds.has(row.id) ? styles.rowSaving : undefined}>
+                      {visibleColumns.map((c) => (
+                        <Fragment key={c.key}>{cells[c.key]}</Fragment>
+                      ))}
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
+        </>
       ) : (
-        <div className={styles.tableWrapScroll}>
+        <>
+        <TopScrollbar targetRef={ueScrollRef} />
+        <div className={styles.tableWrapScroll} ref={ueScrollRef}>
           <table className={`${styles.table} ${styles.tableFixed}`}>
-            <ColGroup columns={UE_COLUMNS.map((c) => c.key)} widths={ueCols.widths} />
+            <ColGroup columns={visibleColumns.map((c) => c.key)} widths={ueCols.widths} />
             <thead>
               <tr>
-                {UE_COLUMNS.map((c) => (
+                {visibleColumns.map((c) => (
                   <th
                     key={c.key}
                     className={`${c.num ? styles.numCol : ''} ${c.plan ? styles.planHead : ''} ${
                       c.key === 'sku' ? styles.stickyCol : ''
-                    }`}
+                    } ${c.key === 'select' ? styles.checkCol : ''}`}
                   >
-                    {c.label}
+                    {c.key === 'select' ? (
+                      <input
+                        type="checkbox"
+                        checked={allUeSelected}
+                        onChange={toggleAllUeVisible}
+                        aria-label="Select all shown products"
+                      />
+                    ) : (
+                      c.label
+                    )}
                     <ResizeHandle columnKey={c.key} onStart={ueCols.startResize} onReset={ueCols.resetColumn} />
                   </th>
                 ))}
@@ -741,122 +1101,167 @@ export default function AccountsScreen({
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={21} className={styles.emptyCell}>
+                  <td colSpan={visibleColumns.length} className={styles.emptyCell}>
                     Loading…
                   </td>
                 </tr>
               ) : visibleUe.length === 0 ? (
                 <tr>
-                  <td colSpan={21} className={styles.emptyCell}>
+                  <td colSpan={visibleColumns.length} className={styles.emptyCell}>
                     {ueRows.length === 0
                       ? 'No unit economics yet — add products in the COGS tab.'
                       : 'No products match the filters.'}
                   </td>
                 </tr>
               ) : (
-                visibleUe.map((row) => (
-                  <tr key={row.id} className={savingIds.has(row.id) ? styles.rowSaving : undefined}>
-                    <td className={styles.stickyCol}>{row.sku}</td>
-                    <td>{row.brand || <span className={styles.muted}>—</span>}</td>
-                    <td title={row.title}>
-                      {row.title || <span className={styles.muted}>—</span>}
-                    </td>
-                    <td className={styles.numCol}>{formatMoney(row.totalCost)}</td>
-                    <td className={styles.numCol}>{formatMoney(row.storageFee)}</td>
-                    <td className={styles.numCol}>{formatMoney(row.fulfillmentFee)}</td>
-                    <td className={styles.numCol}>{formatMoney(row.referralFee)}</td>
-                    <td className={styles.numCol}>{formatMoney(row.totalFee)}</td>
-                    <td className={styles.numCol}>
-                      {row.currentPrice > 0 ? (
-                        formatMoney(row.currentPrice)
-                      ) : (
-                        <span className={styles.muted}>—</span>
-                      )}
-                    </td>
-                    <td className={styles.numCol}>{signed(row.profit, formatMoney)}</td>
-                    <td className={styles.numCol}>{signed(row.marginPct, (v) => pct(v))}</td>
-                    <td className={styles.numCol}>
-                      {row.breakevenPrice === null ? (
-                        <span className={styles.muted}>—</span>
-                      ) : (
-                        formatMoney(row.breakevenPrice)
-                      )}
-                    </td>
+                visibleUe.map((row) => {
+                  // Same keyed-cell approach as the COGS table.
+                  const planInput = (
+                    key: string,
+                    label: string,
+                    value: string,
+                    onCommit: (raw: string) => void
+                  ) => (
                     <td className={`${styles.numCol} ${styles.planCell}`}>
                       <input
                         className={`${styles.ghostInput} ${styles.numInput}`}
                         type="text"
                         inputMode="decimal"
                         placeholder="—"
-                        defaultValue={pctToDisplay(row.discountPct)}
-                        aria-label={`Discount percent for ${row.sku}`}
-                        onBlur={(e) => {
-                          const next = pctToStore(e.target.value);
-                          if (next !== row.discountPct) patchPlan(row, { discountPct: next });
-                        }}
+                        defaultValue={value}
+                        aria-label={`${label} for ${row.sku}`}
+                        onBlur={(e) => onCommit(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') e.currentTarget.blur();
                         }}
                       />
                     </td>
-                    <td className={styles.numCol}>
-                      {row.discountedPrice === null ? (
-                        <span className={styles.muted}>—</span>
-                      ) : (
-                        formatMoney(row.discountedPrice)
-                      )}
-                    </td>
-                    <td className={styles.numCol}>{signed(row.discountedProfit, formatMoney)}</td>
-                    <td className={styles.numCol}>{signed(row.discountedMarginPct, (v) => pct(v))}</td>
-                    <td className={`${styles.numCol} ${styles.planCell}`}>
-                      <input
-                        className={`${styles.ghostInput} ${styles.numInput}`}
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="—"
-                        defaultValue={pctToDisplay(row.desiredProfitPct)}
-                        aria-label={`Desired profit percent for ${row.sku}`}
-                        onBlur={(e) => {
-                          const next = pctToStore(e.target.value);
-                          if (next !== row.desiredProfitPct) patchPlan(row, { desiredProfitPct: next });
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') e.currentTarget.blur();
-                        }}
-                      />
-                    </td>
-                    <td className={styles.numCol}>
-                      {row.suggestedPrice === null ? (
-                        <span className={styles.muted}>—</span>
-                      ) : (
-                        <strong>{formatMoney(row.suggestedPrice)}</strong>
-                      )}
-                    </td>
-                    <td className={`${styles.numCol} ${styles.planCell}`}>
-                      <input
-                        className={`${styles.ghostInput} ${styles.numInput}`}
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="—"
-                        defaultValue={row.desiredPrice === null ? '' : String(row.desiredPrice)}
-                        aria-label={`Desired price for ${row.sku}`}
-                        onBlur={(e) => {
-                          const next = moneyToStore(e.target.value);
-                          if (next !== row.desiredPrice) patchPlan(row, { desiredPrice: next });
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') e.currentTarget.blur();
-                        }}
-                      />
-                    </td>
-                    <td className={styles.numCol}>{signed(row.desiredPriceProfit, formatMoney)}</td>
-                    <td className={styles.numCol}>{signed(row.desiredPriceMarginPct, (v) => pct(v))}</td>
-                  </tr>
-                ))
+                  );
+                  const cells: Record<string, JSX.Element> = {
+                    select: (
+                      <td className={styles.checkCol}>
+                        <input
+                          type="checkbox"
+                          checked={ueSelected.has(row.id)}
+                          onChange={() => toggleUeRow(row.id)}
+                          aria-label={`Select ${row.sku}`}
+                        />
+                      </td>
+                    ),
+                    sku: <td className={styles.stickyCol}>{row.sku}</td>,
+                    brand: <td>{row.brand || <span className={styles.muted}>—</span>}</td>,
+                    title: (
+                      <td title={row.title}>{row.title || <span className={styles.muted}>—</span>}</td>
+                    ),
+                    purchaseCost: <td className={styles.numCol}>{formatMoney(row.purchaseCost)}</td>,
+                    prep: planInput('prep', 'Prep', String(row.prepCost), (raw) => {
+                      const n = moneyToStore(raw);
+                      if (n !== null && n !== row.prepCost) patchPlan(row, { prepCost: n });
+                    }),
+                    inbound: planInput('inbound', 'Inbound', String(row.inboundCost), (raw) => {
+                      const n = moneyToStore(raw);
+                      if (n !== null && n !== row.inboundCost) patchPlan(row, { inboundCost: n });
+                    }),
+                    totalCost: <td className={styles.numCol}>{formatMoney(row.totalCost)}</td>,
+                    storage: <td className={styles.numCol}>{formatMoney(row.storageFee)}</td>,
+                    fba: <td className={styles.numCol}>{formatMoney(row.fulfillmentFee)}</td>,
+                    referral: <td className={styles.numCol}>{formatMoney(row.referralFee)}</td>,
+                    totalFee: <td className={styles.numCol}>{formatMoney(row.totalFee)}</td>,
+                    price: (
+                      <td className={styles.numCol}>
+                        {row.currentPrice > 0 ? (
+                          formatMoney(row.currentPrice)
+                        ) : (
+                          <span className={styles.muted}>—</span>
+                        )}
+                      </td>
+                    ),
+                    profit: <td className={styles.numCol}>{signed(row.profit, formatMoney)}</td>,
+                    margin: <td className={styles.numCol}>{signed(row.marginPct, (v) => pct(v))}</td>,
+                    breakeven: (
+                      <td className={styles.numCol}>
+                        {row.breakevenPrice === null ? (
+                          <span className={styles.muted}>—</span>
+                        ) : (
+                          formatMoney(row.breakevenPrice)
+                        )}
+                      </td>
+                    ),
+                    discountPct: planInput(
+                      'discountPct',
+                      'Discount percent',
+                      pctToDisplay(row.discountPct),
+                      (raw) => {
+                        const next = pctToStore(raw);
+                        if (next !== row.discountPct) patchPlan(row, { discountPct: next });
+                      }
+                    ),
+                    discPrice: (
+                      <td className={styles.numCol}>
+                        {row.discountedPrice === null ? (
+                          <span className={styles.muted}>—</span>
+                        ) : (
+                          formatMoney(row.discountedPrice)
+                        )}
+                      </td>
+                    ),
+                    discProfit: (
+                      <td className={styles.numCol}>{signed(row.discountedProfit, formatMoney)}</td>
+                    ),
+                    discMargin: (
+                      <td className={styles.numCol}>
+                        {signed(row.discountedMarginPct, (v) => pct(v))}
+                      </td>
+                    ),
+                    desiredProfitPct: planInput(
+                      'desiredProfitPct',
+                      'Desired profit percent',
+                      pctToDisplay(row.desiredProfitPct),
+                      (raw) => {
+                        const next = pctToStore(raw);
+                        if (next !== row.desiredProfitPct) patchPlan(row, { desiredProfitPct: next });
+                      }
+                    ),
+                    suggestedPrice: (
+                      <td className={styles.numCol}>
+                        {row.suggestedPrice === null ? (
+                          <span className={styles.muted}>—</span>
+                        ) : (
+                          <strong>{formatMoney(row.suggestedPrice)}</strong>
+                        )}
+                      </td>
+                    ),
+                    desiredPrice: planInput(
+                      'desiredPrice',
+                      'Desired price',
+                      row.desiredPrice === null ? '' : String(row.desiredPrice),
+                      (raw) => {
+                        const next = moneyToStore(raw);
+                        if (next !== row.desiredPrice) patchPlan(row, { desiredPrice: next });
+                      }
+                    ),
+                    desiredProfit: (
+                      <td className={styles.numCol}>{signed(row.desiredPriceProfit, formatMoney)}</td>
+                    ),
+                    desiredMargin: (
+                      <td className={styles.numCol}>
+                        {signed(row.desiredPriceMarginPct, (v) => pct(v))}
+                      </td>
+                    ),
+                  };
+                  return (
+                    <tr key={row.id} className={savingIds.has(row.id) ? styles.rowSaving : undefined}>
+                      {visibleColumns.map((c) => (
+                        <Fragment key={c.key}>{cells[c.key]}</Fragment>
+                      ))}
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
+        </>
       )}
     </>
   );

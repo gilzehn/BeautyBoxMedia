@@ -178,3 +178,36 @@ counts them for the current filter.
 **Column widths are draggable** on both tabs: grab the divider on a column
 header's right edge, or double-click it to reset that column. Widths are saved
 per table in your browser, so your layout survives a reload.
+
+**A scrollbar sits above the table** as well as below it — with hundreds of
+rows the bottom one is unreachable. It hides itself when every column already
+fits.
+
+**Columns and saved views.** `Columns ▾` toggles any column off (SKU, the
+checkbox and the row actions always stay). Save an arrangement with
+**＋ Save current view…** in the view dropdown: it stores the visible columns
+and their widths in `public.saved_views` and is **shared with the whole team**.
+Editing a view's columns marks it *Modified* with Save / Revert, so a shared
+view is never overwritten by accident. A view saved before a column existed
+still works — unknown keys are dropped and new columns appear rather than the
+table blanking out.
+
+**Bulk editing on Unit Economics.** Tick rows, choose a field — Discount %,
+Desired Profit %, Desired Price, Prep, Inbound, or Purchase Cost — type one
+value and Apply. Purchase Cost writes to `cogs`, the rest to `unit_economics`;
+either way the affected rows are re-read from the view so the recomputed
+profit, margin and suggestions come straight back.
+
+### Planning defaults, 2026-08-26
+
+Every row was seeded with **Prep $0.50, Inbound $0.30, Discount 15%, Desired
+Profit 20%**. The inbound figure **replaced the $0.52 that came from the
+Profit-Calc sheet** on ~2,700 rows, at the user's explicit request: total cost
+falls $0.22 per unit there, so profit and margin rise correspondingly (e.g. NRG
+`KITOKO-3.8` went from 17.9% to 18.7% margin). Every row now shows a discounted
+price and a suggested price where most previously showed "—".
+
+A future Amazon sync will not disturb this: the refresh rules above never touch
+`prep_cost`, `inbound_cost`, `discount_pct`, `desired_profit_pct` or
+`desired_price`. Re-running the *Profit-Calc cost import*, however, would
+reintroduce $0.52 unless inbound is excluded from it.

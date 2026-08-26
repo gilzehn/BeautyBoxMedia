@@ -304,6 +304,12 @@ export function useColumnWidths(storageKey: string, defaults: Record<string, num
     document.body.style.userSelect = 'none';
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Used when a saved view restores its stored widths.
+  const setWidth = useCallback((key: string, px: number) => {
+    if (!Number.isFinite(px) || px < MIN_COLUMN_WIDTH) return;
+    setWidths((prev) => (prev[key] === px ? prev : { ...prev, [key]: px }));
+  }, []);
+
   const resetColumn = useCallback((key: string) => {
     setWidths((prev) => {
       const next = { ...prev, [key]: defaultsRef.current[key] ?? 120 };
@@ -312,5 +318,93 @@ export function useColumnWidths(storageKey: string, defaults: Record<string, num
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { widths, startResize, resetColumn };
+  return { widths, startResize, resetColumn, setWidth };
+}
+
+// --- Top scrollbar -----------------------------------------------------------
+// A wide table's own scrollbar sits below hundreds of rows, so it is unreachable
+// in practice. This mirrors it above the table and keeps the two in sync.
+
+export function TopScrollbar({ targetRef }: { targetRef: React.RefObject<HTMLDivElement> }) {
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  const [needed, setNeeded] = useState(false);
+  // The two scroll handlers would otherwise feed each other into a loop.
+  const syncing = useRef(false);
+
+  useEffect(() => {
+    const target = targetRef.current;
+    const strip = stripRef.current;
+    if (!target || !strip) return;
+
+    const measure = () => {
+      setWidth(target.scrollWidth);
+      setNeeded(target.scrollWidth > target.clientWidth + 1);
+    };
+    measure();
+
+    const onTarget = () => {
+      if (syncing.current) return;
+      syncing.current = true;
+      strip.scrollLeft = target.scrollLeft;
+      syncing.current = false;
+    };
+    const onStrip = () => {
+      if (syncing.current) return;
+      syncing.current = true;
+      target.scrollLeft = strip.scrollLeft;
+      syncing.current = false;
+    };
+
+    target.addEventListener('scroll', onTarget);
+    strip.addEventListener('scroll', onStrip);
+    // Column resizes and hidden columns both change scrollWidth without a
+    // window resize, so observe the table itself.
+    const observer = new ResizeObserver(measure);
+    observer.observe(target);
+    const table = target.querySelector('table');
+    if (table) observer.observe(table);
+    window.addEventListener('resize', measure);
+
+    return () => {
+      target.removeEventListener('scroll', onTarget);
+      strip.removeEventListener('scroll', onStrip);
+      observer.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [targetRef]);
+
+  return (
+    <div
+      ref={stripRef}
+      className={styles.topScroll}
+      // Kept mounted so the ref stays live and measuring keeps working.
+      style={needed ? undefined : { visibility: 'hidden', height: 0 }}
+      aria-hidden="true"
+    >
+      <div className={styles.topScrollInner} style={{ width: `${width}px` }} />
+    </div>
+  );
+}
+
+// --- Column visibility -------------------------------------------------------
+
+export interface ColumnDef {
+  key: string;
+  label: string;
+  width: number;
+  num?: boolean;
+  plan?: boolean;
+  required?: boolean; // never hideable (identity / selection / actions)
+}
+
+// Reconciles a saved column list against the columns that exist today: unknown
+// keys are dropped and newly added columns appear, so an old saved view keeps
+// working instead of blanking the table.
+export function reconcileColumns(saved: string[], all: ColumnDef[]): string[] {
+  const known = new Set(all.map((c) => c.key));
+  const kept = saved.filter((k) => known.has(k));
+  const missing = all.filter((c) => c.required && !kept.includes(c.key)).map((c) => c.key);
+  const order = all.map((c) => c.key);
+  return [...kept, ...missing].sort((a, b) => order.indexOf(a) - order.indexOf(b));
 }

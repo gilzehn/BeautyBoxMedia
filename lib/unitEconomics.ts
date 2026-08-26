@@ -301,3 +301,128 @@ export async function updateUnitEconomicsPlan(
   if (readError) throw readError;
   return ueFromRecord(data as UnitEconomicsRecord);
 }
+
+// Applies the same planning patch to many rows at once, then re-reads them from
+// the view so the recomputed profit/margin/suggestion columns come back.
+export async function updateUnitEconomicsBulk(
+  ids: number[],
+  patch: Partial<UnitEconomicsPlanInput>
+): Promise<UnitEconomicsRow[]> {
+  const CHUNK = 500;
+  const updated: UnitEconomicsRow[] = [];
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    const slice = ids.slice(i, i + CHUNK);
+    const { error } = await client().from(UE_TABLE).update(planToRecord(patch)).in('id', slice);
+    if (error) throw error;
+    const { data, error: readError } = await client().from(UE_VIEW).select('*').in('id', slice);
+    if (readError) throw readError;
+    updated.push(...(data as UnitEconomicsRecord[]).map(ueFromRecord));
+  }
+  return updated;
+}
+
+// Re-reads specific view rows without changing anything — used after a bulk
+// cost edit, where the write went to `cogs` but the totals live in the view.
+export async function refreshUnitEconomics(ids: number[]): Promise<UnitEconomicsRow[]> {
+  const CHUNK = 500;
+  const rows: UnitEconomicsRow[] = [];
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    const { data, error } = await client()
+      .from(UE_VIEW)
+      .select('*')
+      .in('id', ids.slice(i, i + CHUNK));
+    if (error) throw error;
+    rows.push(...(data as UnitEconomicsRecord[]).map(ueFromRecord));
+  }
+  return rows;
+}
+
+// --- Saved views ------------------------------------------------------------
+// Named column arrangements per screen+tab, shared with the whole team.
+
+export interface SavedViewRow {
+  id: number;
+  screen: string;
+  tab: string;
+  name: string;
+  columns: string[];
+  widths: Record<string, number>;
+}
+
+export type SavedViewInput = Omit<SavedViewRow, 'id'>;
+
+interface SavedViewRecord {
+  id: number;
+  screen: string;
+  tab: string;
+  name: string;
+  columns: unknown;
+  widths: unknown;
+}
+
+function savedViewFromRecord(r: SavedViewRecord): SavedViewRow {
+  // jsonb arrives as whatever was written; a hand-edited or older row must not
+  // be able to crash the screen, so both fields are validated element by element.
+  const columns = Array.isArray(r.columns)
+    ? (r.columns as unknown[]).filter((c): c is string => typeof c === 'string')
+    : [];
+  const widths: Record<string, number> = {};
+  if (r.widths && typeof r.widths === 'object' && !Array.isArray(r.widths)) {
+    for (const [k, v] of Object.entries(r.widths as Record<string, unknown>)) {
+      if (typeof v === 'number' && Number.isFinite(v)) widths[k] = v;
+    }
+  }
+  return { id: r.id, screen: r.screen, tab: r.tab, name: r.name, columns, widths };
+}
+
+const VIEWS_TABLE = 'saved_views';
+
+export async function getSavedViews(screen: string, tab: string): Promise<SavedViewRow[]> {
+  const { data, error } = await client()
+    .from(VIEWS_TABLE)
+    .select('*')
+    .eq('screen', screen)
+    .eq('tab', tab)
+    .order('name');
+  if (error) throw error;
+  return (data as SavedViewRecord[]).map(savedViewFromRecord);
+}
+
+export async function addSavedView(input: SavedViewInput): Promise<SavedViewRow> {
+  const { data, error } = await client()
+    .from(VIEWS_TABLE)
+    .insert({
+      screen: input.screen,
+      tab: input.tab,
+      name: input.name,
+      columns: input.columns,
+      widths: input.widths,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return savedViewFromRecord(data as SavedViewRecord);
+}
+
+export async function updateSavedView(
+  id: number,
+  patch: Partial<Pick<SavedViewInput, 'name' | 'columns' | 'widths'>>
+): Promise<SavedViewRow> {
+  const record: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (patch.name !== undefined) record.name = patch.name;
+  if (patch.columns !== undefined) record.columns = patch.columns;
+  if (patch.widths !== undefined) record.widths = patch.widths;
+  const { data, error } = await client()
+    .from(VIEWS_TABLE)
+    .update(record)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return savedViewFromRecord(data as SavedViewRecord);
+}
+
+export async function deleteSavedView(id: number): Promise<void> {
+  const { error } = await client().from(VIEWS_TABLE).delete().eq('id', id);
+  if (error) throw error;
+}
