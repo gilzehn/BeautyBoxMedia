@@ -8,9 +8,17 @@
 -- This script maps every known variant to one canonical spelling and applies it
 -- to both tables. It is idempotent: re-running it changes nothing.
 --
--- Preview before applying:
---   select account, brand, count(*) from cogs
---    where brand in (<variant list below>) group by 1,2 order by 3 desc;
+-- Scope, measured against the BBMEDIA project on 2026-08-28:
+--   761 rows change in cogs, 11 rows change in brands, all 28 variants matched.
+--
+-- After it runs, brand joins cleanly and the only remaining differences are
+-- real data gaps rather than spelling:
+--   13 brands have products but no row in brands: Bacanha, Cabelinna, CAKE Nail,
+--     Ella Tu, Hayashi, Jason Wu, Kativa, Les Anis de Flavigny, Madeca,
+--     Pastiglie Leone, Rescue Detox, Seddy, W.Dressroom.
+--   11 brands have a row in brands but no products: Brush Clean Pro, Do/Mastey,
+--     French Farm, Kiara Sky, Lineco, Milagros, Nailplex Shield, Plantlife,
+--     Saratoga Olive Oil Co, Staleks, Two Old Goats.
 
 begin;
 
@@ -43,10 +51,13 @@ insert into brand_map (variant, canonical) values
   ('Toweldry',                  'Towel Dry'),
   ('Vivioptal',                 'Vivioptal Vitamins'),
   ('Y-Not Natural',             'Y Not Natural'),
-  -- judgement calls: a short label in brands vs the full trade name in cogs
-  ('Lisap Haircare',            'Lisap Milano'),
-  ('WPP',                       'Wellness Premium Products'),
-  ('WATERCOLORS',               'Watercolors Haircare');
+  -- Short labels chosen over the full trade names, per the brand owner's call.
+  -- The full names are Lisap Milano, Wellness Premium Products and
+  -- Watercolors Haircare; the team refers to them by the short forms below.
+  ('Lisap Milano',              'Lisap Haircare'),
+  ('Wellness Premium Products', 'WPP'),
+  ('WATERCOLORS',               'Watercolors'),
+  ('Watercolors Haircare',      'Watercolors');
 
 update cogs c
    set brand = m.canonical, updated_at = now()
