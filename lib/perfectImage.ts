@@ -117,17 +117,24 @@ export interface PerfectImageData {
   };
   ad_spend: {
     basis: string;
+    /** What the seller confirmed, and when. */
+    resolved: string;
+    /** Findings this restatement withdraws. They stay on the page as withdrawn. */
+    withdrawn: string[];
     ppc_sales_2025: number;
     ppc_sales_2026_to_aug: number;
     ad_spend_2025: number;
-    ad_spend_2026: string;
+    ad_spend_2026_to_aug: number;
     organic_sales_2025: number;
     organic_sales_2026_to_aug: number;
     organic_share_2025: number;
     organic_share_2026: number;
     roas_2025: number;
+    roas_2026: number;
     acos_2025: number;
+    acos_2026: number;
     tacos_2025: number;
+    tacos_2026: number;
     like_for_like_jan_to_20aug: {
       total_2025: number;
       total_2026: number;
@@ -147,7 +154,6 @@ export interface PerfectImageData {
     shopify_revenue_2026_stub: number;
     implied_shopify_tacos_2025: number;
     implied_shopify_tacos_2026: number;
-    open_question: string;
   };
   monthly: MonthRow[];
   products: ProductRow[];
@@ -176,38 +182,48 @@ export const perfectImage: PerfectImageData = {
     }
   },
   "ad_spend": {
-    "basis": "CORRECTED 31 Aug 2026. The 311,000 and 99,000 figures are PPC (ad-attributed) SALES, not spend.",
+    "basis": "RESOLVED 31 Aug 2026. The seller has now given both 2026 figures: Amazon ad SPEND of $99,000 and ad-attributed SALES of $294,965.88, both to 20 Aug. 2025 remains $90,000 of spend against $311,000 of attributed sales.",
+    "resolved": "The open question - whether the 2026 $99,000 was ad sales or ad spend - is answered: it is spend. Organic is measured on both sides again, and it falls.",
+    "withdrawn": [
+      "Organic +17.5% like-for-like. Organic sales fell 25.9% on the same window.",
+      "Organic share rising 68.1% to 84.3%. It fell to 53.1%.",
+      "Paid sales more than halved. Ad-attributed sales rose 39.2% like-for-like.",
+      "Amazon ad-cost reduction of ~$45,177 in the SDE bridge. Spend rose, it did not fall.",
+      "Implied Shopify TACOS of ~47.6%. On confirmed Amazon spend it is 29.8%."
+    ],
     "ppc_sales_2025": 311000,
-    "ppc_sales_2026_to_aug": 99000,
+    "ppc_sales_2026_to_aug": 294965.88,
     "ad_spend_2025": 90000,
-    "ad_spend_2026": "NOT PROVIDED - inferred ~28,650 to 20 Aug at constant 28.9% ACOS",
+    "ad_spend_2026_to_aug": 99000,
     "organic_sales_2025": 662484,
-    "organic_sales_2026_to_aug": 530356,
+    "organic_sales_2026_to_aug": 334390.48,
     "organic_share_2025": 68.1,
-    "organic_share_2026": 84.3,
+    "organic_share_2026": 53.1,
     "roas_2025": 3.46,
+    "roas_2026": 2.98,
     "acos_2025": 28.9,
+    "acos_2026": 33.6,
     "tacos_2025": 9.2,
+    "tacos_2026": 15.7,
     "like_for_like_jan_to_20aug": {
       "total_2025": 663317,
       "total_2026": 629356,
       "total_chg_pct": -5.1,
       "paid_2025": 211911,
-      "paid_2026": 99000,
-      "paid_chg_pct": -53.3,
+      "paid_2026": 294966,
+      "paid_chg_pct": 39.2,
       "organic_2025": 451406,
-      "organic_2026": 530356,
-      "organic_chg_pct": 17.5
+      "organic_2026": 334390,
+      "organic_chg_pct": -25.9
     },
     "pnl_advertising_2025": 238869,
     "pnl_advertising_2026_stub": 216016,
     "non_amazon_ad_2025": 148869,
-    "non_amazon_ad_2026": 187366,
+    "non_amazon_ad_2026": 117016,
     "shopify_revenue_2025": 452096,
     "shopify_revenue_2026_stub": 393278,
     "implied_shopify_tacos_2025": 32.9,
-    "implied_shopify_tacos_2026": 47.6,
-    "open_question": "Unconfirmed whether the 2026 99,000 is ad sales or ad spend. If spend: 2026 Amazon TACOS 15.7%, annualized spend ~155,000 (+72%), non-Amazon ad 117,016, implied Shopify TACOS 29.8%."
+    "implied_shopify_tacos_2026": 29.8
   },
   "monthly": [
     {
@@ -1715,6 +1731,25 @@ export const UNITS_LFL_PCT = -13.8;
 export const ASP_2025 = 26.3;
 export const ASP_2026 = 29.2;
 
+/**
+ * 2026 Amazon ad spend annualized on the dashboard's own basis (the 15.7% TACOS
+ * carried onto the May-Jul run rate). A straight calendar annualization of the
+ * $99,000 over 7.65 months gives ~$155,000; both are shown, the run-rate figure
+ * leads because that is the basis every other annualized number here uses.
+ */
+export const AD_SPEND_2026_ANNUALIZED =
+  (perfectImage.ad_spend.ad_spend_2026_to_aug / 629356.36) * 904871.32;
+export const AD_SPEND_2026_CALENDAR = perfectImage.ad_spend.ad_spend_2026_to_aug * (12 / 7.65);
+
+/**
+ * SDE bridge, restated once the 2026 spend was confirmed. The ad-cost reduction
+ * that carried $45,177 of the earlier bridge does not exist - spend rose - so the
+ * inventory drawdown now carries it alone.
+ */
+export const SDE_IMPROVEMENT_2026 = 82360;
+export const INVENTORY_DRAWDOWN = 154537;
+export const UNDERLYING_DETERIORATION = SDE_IMPROVEMENT_2026 - INVENTORY_DRAWDOWN;
+
 export const EXPOSED_RUN_RATE = 277054;
 export const EXPOSED_SHARE = 30.6;
 export const AMAZON_AT_RISK_TOTAL = 76654;
@@ -1792,5 +1827,17 @@ export function acceptanceChecks(): AcceptanceCheck[] {
       1
     ),
     check('every cited ASIN resolves to a product row', 0, unresolved.length, 0),
+    check(
+      '2026 organic = gross - ad-attributed sales',
+      y2026Total - perfectImage.ad_spend.ppc_sales_2026_to_aug,
+      perfectImage.ad_spend.organic_sales_2026_to_aug,
+      0.01
+    ),
+    check(
+      '2026 non-Amazon ad = P&L line - Amazon spend',
+      perfectImage.ad_spend.pnl_advertising_2026_stub - perfectImage.ad_spend.ad_spend_2026_to_aug,
+      perfectImage.ad_spend.non_amazon_ad_2026,
+      1
+    ),
   ];
 }

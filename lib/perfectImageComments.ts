@@ -5,7 +5,7 @@
 // recorded honestly - the notes that help the seller are marked as such and
 // stay on the page, because a one-sided deck gets discounted on sight.
 
-export type Stance = 'verified' | 'buyer' | 'seller' | 'flag' | 'ask';
+export type Stance = 'verified' | 'buyer' | 'seller' | 'flag' | 'ask' | 'withdrawn';
 
 export type SectionId =
   | 'headline'
@@ -34,6 +34,7 @@ export const STANCE_LABEL: Record<Stance, string> = {
   seller: 'For the seller',
   flag: 'Unconfirmed',
   ask: 'Diligence ask',
+  withdrawn: 'Withdrawn',
 };
 
 export const SECTIONS: { id: SectionId; n: number; title: string; answers: string }[] = [
@@ -75,37 +76,47 @@ export const comments: Comment[] = [
     title: 'Price is holding the revenue line up, not demand',
     figure: 'Units -13.8% vs revenue -6.0%',
     body:
-      'Jan-Jul like-for-like, revenue is down 6.0% and units are down 13.8%, with average selling price up 9.1% from $26.30 to $29.20. Volume is falling at twice the rate of revenue. We can no longer say the advertising cut is the mechanism - paid sales halved while organic grew - but the unit trend stands on its own and it is the trend a buyer inherits.',
+      'Jan-Jul like-for-like, revenue is down 6.0% and units are down 13.8%, with average selling price up 9.1% from $26.30 to $29.20. Volume is falling at twice the rate of revenue, and the advertising figures now point the same way: ad spend rose 10% in eight months against a full prior year while units fell. Price and paid media are both holding the revenue line up. Demand is not.',
     evidence: 'Settlement units, Jan-Jul 2025 vs Jan-Jul 2026',
   },
   {
     id: 'c-organic',
     section: 'headline',
-    stance: 'seller',
-    title: 'Organic sales are measured, and they grew while paid halved',
-    figure: 'Organic +17.5% like-for-like',
+    stance: 'buyer',
+    title: 'Organic sales fell 25.9%. The revenue that remains is increasingly bought',
+    figure: 'Organic 68.1% → 53.1% of gross',
     body:
-      'Organic is gross minus ad-attributed sales - a subtraction, not a model. It is 68.1% of 2025 revenue rising to 84.3% in 2026, and in dollars it rose from $451,406 to $530,356 (+17.5%) while paid sales fell 53.3%. The obvious read is that a meaningful share of 2025 spend was buying clicks on branded searches it would have won anyway. That is a real efficiency finding, it is a brand asset that transfers with the business, and the seller is entitled to it. Concede it plainly; it costs us nothing and buys credibility for the enforcement section.',
-    evidence: 'Seller-supplied PPC sales, corrected 31 Aug 2026',
+      'With both sides of 2026 measured, organic is $334,390 against $451,406 on the same Jan – 20 Aug window a year earlier, a 25.9% fall, while ad-attributed sales rose 39.2% to $294,966. Nearly half of Amazon revenue is now paid for, against under a third in 2025. The unpaid demand that a buyer is really acquiring — the part that transfers without a media budget — shrank by roughly $117,000 in eight months while the top line moved only 5.1%. This is the same story the unit line tells, and it is now visible in two independent measures.',
+    evidence: 'Seller-supplied PPC sales and spend, both years',
   },
   {
     id: 'c-99k',
     section: 'headline',
-    stance: 'flag',
-    title: 'One sentence from the seller decides where the advertising problem sits',
+    stance: 'verified',
+    title: 'Answered: the $99,000 is spend, and the seller has now given the sales figure too',
+    figure: '$99,000 spend · $294,966 attributed sales',
     body:
-      'The seller has confirmed the 2025 $311,000 is PPC sales against $90,000 of spend. He has not said which metric the 2026 $99,000 is. Read as sales - the symmetric reading used here - paid halved, organic grew and spend fell to roughly $45,000 annualized. Read as spend, Amazon TACOS goes from 9.2% to 15.7%, annualized spend rises 72% while revenue fell 6%, and the implied Shopify TACOS drops to 29.8%. Both readings are unfavourable, in different places. The 2026 paid/organic split on this page carries an unconfirmed marker until it is answered.',
-    evidence: 'Open question, ask 7a',
+      'The open question is closed. 2026 to 20 Aug: Amazon ad spend $99,000 against $294,965.88 of ad-attributed sales. Both sides of 2026 are now measured, as 2025 already was ($90,000 against $311,000), so organic is a subtraction on both years and every advertising figure on this page is stated rather than inferred. The answer is the unfavourable one: it moves the advertising problem out of Shopify and into Amazon, and it reverses the organic finding.',
+    evidence: 'Seller confirmation · supersedes ask 7a',
+  },
+  {
+    id: 'c-organic-withdrawn',
+    section: 'headline',
+    stance: 'withdrawn',
+    title: 'Withdrawn: organic +17.5%, and the paid-cannibalisation read that went with it',
+    body:
+      'The earlier version of this dashboard read the 2026 $99,000 as ad-attributed sales, which made organic $530,356 (84.3% of gross, +17.5% like-for-like) and paid sales look halved. On the confirmed figures none of that holds: organic is $334,390 (53.1%), down 25.9%, and paid sales rose 39.2%. Withdraw the branded-search cannibalisation reading with it — it was built on the same misreading. Do not circulate the earlier version.',
+    evidence: 'Restated 31 Aug 2026 on the seller\u2019s confirmation',
   },
   {
     id: 'c-shopify',
     section: 'headline',
     stance: 'buyer',
-    title: 'Amazon is the efficient channel. Shopify is bought at fifty cents on the dollar',
-    figure: 'Implied Shopify TACOS 32.9% → 47.6%',
+    title: 'Amazon is still the cheaper channel, but the gap has halved and it is closing from the wrong end',
+    figure: 'Shopify TACOS 32.9% → 29.8% · Amazon 9.2% → 15.7%',
     body:
-      'Subtracting Amazon from the P&L blended advertising line is the only channel split we have. Non-Amazon advertising was $148,869 against $452,096 of Shopify revenue in 2025 (32.9%), and roughly $187,366 against $393,278 in the 2026 stub (~47.6%). At a 55-67% gross margin, a 47.6% TACOS leaves single-digit contribution before any other cost. The seller’s headline growth story is Shopify at +49%; if this holds, that growth is close to contribution-neutral and cannot carry a 3.5x multiple. The 2026 Amazon spend inside this split is inferred at a constant 28.9% ACOS - confirm against console invoices before it goes in front of anyone.',
-    evidence: 'P&L advertising line less Amazon spend',
+      'With Amazon spend confirmed at $99,000, non-Amazon advertising in the 2026 stub is $117,016 against $393,278 of Shopify revenue — an implied 29.8% TACOS, not the ~47.6% carried on the inferred figure. Shopify acquisition cost is roughly flat, and slightly improved. The deterioration is on Amazon: TACOS 9.2% to 15.7%, ROAS 3.46x to 2.98x, ACOS 28.9% to 33.6%. The channel that was the efficient one is the one that moved. Shopify at ~30% TACOS against a 55-67% gross margin is still thin, and still needs the monthly spend detail to confirm, but it is no longer the largest open question in the deal.',
+    evidence: 'P&L advertising line less confirmed Amazon spend',
   },
   {
     id: 'c-6vs7',
@@ -308,11 +319,11 @@ export const comments: Comment[] = [
     id: 'c-bridge',
     section: 'conclusions',
     stance: 'buyer',
-    title: 'The 2026 earnings improvement is more than fully explained by non-operating effects',
-    figure: 'Underlying -$117,354',
+    title: 'The SDE bridge, restated on confirmed spend: the inventory finding now carries it alone',
+    figure: 'Underlying −$72,177',
     body:
-      'Amazon ad-cost reduction of ~$45,177 annualized plus $154,537 of product-cost understatement and inventory drawdown gives $199,714 of non-operating contribution against an $82,360 actual SDE improvement. The conclusion survives the advertising correction, but it now rests almost entirely on the inventory finding rather than on advertising - which raises the stakes on the contract-manufacturing documents.',
-    evidence: 'SDE bridge, restated 31 Aug 2026',
+      'The earlier bridge credited $45,177 of annualized Amazon ad-cost reduction to 2026. That item is gone — spend rose from $90,000 to $99,000 in eight months, roughly $142,000 annualized on the run-rate basis. Non-operating contribution is now the $154,537 of product-cost understatement and inventory drawdown alone, against an $82,360 actual SDE improvement: underlying deterioration of $72,177. Smaller than the $117,354 we carried, and resting entirely on the inventory finding, which raises the stakes on the contract-manufacturing documents further. Note the direction of the correction is against us on size and for us on quality — the higher ad spend is a real operating cost the seller absorbed, and the improvement still does not come from trading.',
+    evidence: 'SDE bridge, restated on confirmed 2026 spend',
   },
   {
     id: 'c-position',
@@ -357,9 +368,9 @@ export const comments: Comment[] = [
     id: 'ask-99k',
     section: 'conclusions',
     stance: 'ask',
-    title: '2a. Is the 2026 $99,000 ad sales or ad spend?',
+    title: '2a. Amazon Advertising console reports, monthly by campaign type, 2024–2026',
     body:
-      'One sentence. It decides whether the advertising problem sits in Shopify or in Amazon, and it is the only unconfirmed figure on the front page of this dashboard.',
+      'The headline ad question is answered — $99,000 of 2026 spend against $294,966 of attributed sales — so this becomes confirmation rather than discovery: the console export behind those two figures, monthly and by campaign type, plus what the spend increase was buying. Defensive branded spend against a shrinking organic base reads differently from launch spend behind the two growth SKUs, and the two point to different forward budgets for a buyer.',
   },
   {
     id: 'ask-health',

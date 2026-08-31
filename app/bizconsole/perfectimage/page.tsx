@@ -31,6 +31,9 @@ import {
   pct,
   num,
   sum,
+  AD_SPEND_2026_ANNUALIZED,
+  AD_SPEND_2026_CALENDAR,
+  UNDERLYING_DETERIORATION,
   EXPOSED_RUN_RATE,
   EXPOSED_SHARE,
   AMAZON_AT_RISK_TOTAL,
@@ -103,6 +106,7 @@ const LENSES: { id: Stance | 'all'; label: string }[] = [
   { id: 'flag', label: STANCE_LABEL.flag },
   { id: 'verified', label: STANCE_LABEL.verified },
   { id: 'ask', label: STANCE_LABEL.ask },
+  { id: 'withdrawn', label: STANCE_LABEL.withdrawn },
 ];
 
 // -------------------------------------------------------------------------
@@ -494,18 +498,19 @@ export default function PerfectImageDashboard() {
             label="Ad-attributed (PPC) sales"
             y2025={usd(ad.ppc_sales_2025)}
             y2026={usd(ad.ppc_sales_2026_to_aug)}
-            change={`31.9% → 15.7% of gross`}
+            change={`31.9% → 46.9% of gross`}
             changeTone="down"
-            flag="2026 basis unconfirmed"
-            note="Seller-supplied. 2025 is ad sales against $90,000 of spend."
+            note="Seller-supplied, both years. Nearly half of Amazon revenue is now bought."
           />
           <Kpi
             label="Organic sales"
             y2025={usd(ad.organic_sales_2025)}
             y2026={usd(ad.organic_sales_2026_to_aug)}
-            change={`${ad.organic_share_2025}% → ${ad.organic_share_2026}% of gross`}
-            changeTone="up"
-            note="Measured, not modelled: gross sales minus ad-attributed sales."
+            change={`${ad.organic_share_2025}% → ${ad.organic_share_2026}% of gross · ${pct(
+              ad.like_for_like_jan_to_20aug.organic_chg_pct
+            )} like-for-like`}
+            changeTone="down"
+            note="Measured on both years now: gross sales minus ad-attributed sales."
           />
           <Kpi
             label="Units"
@@ -523,21 +528,48 @@ export default function PerfectImageDashboard() {
             <strong>{usd(ad.ad_spend_2025)}</strong>
           </div>
           <div className={styles.mini}>
-            <span>Amazon ad spend 2026</span>
-            <strong className={styles.notProvided}>not provided</strong>
+            <span>Ad spend 2026 to 20 Aug</span>
+            <strong className={styles.bad}>{usd(ad.ad_spend_2026_to_aug)}</strong>
           </div>
           <div className={styles.mini}>
-            <span>ROAS 2025</span>
-            <strong>{ad.roas_2025.toFixed(2)}x</strong>
+            <span>Annualized on run rate</span>
+            <strong className={styles.bad}>
+              ~{usd(AD_SPEND_2026_ANNUALIZED)} <span className={styles.miniDelta}>+58%</span>
+            </strong>
           </div>
           <div className={styles.mini}>
-            <span>ACOS 2025</span>
-            <strong>{ad.acos_2025}%</strong>
+            <span>ROAS</span>
+            <strong>
+              {ad.roas_2025.toFixed(2)}x <span className={styles.miniDelta}>→ {ad.roas_2026.toFixed(2)}x</span>
+            </strong>
           </div>
           <div className={styles.mini}>
-            <span>TACOS 2025</span>
-            <strong className={styles.good}>{ad.tacos_2025}%</strong>
+            <span>ACOS</span>
+            <strong>
+              {ad.acos_2025}% <span className={styles.miniDelta}>→ {ad.acos_2026}%</span>
+            </strong>
           </div>
+          <div className={styles.mini}>
+            <span>TACOS</span>
+            <strong className={styles.good}>
+              {ad.tacos_2025}% <span className={styles.miniDeltaBad}>→ {ad.tacos_2026}%</span>
+            </strong>
+          </div>
+        </div>
+
+        <div className={styles.restated}>
+          <h4>Restated 31 Aug 2026, on the seller&apos;s confirmation</h4>
+          <p>{ad.resolved}</p>
+          <ul>
+            {ad.withdrawn.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+          <p className={styles.restatedFoot}>
+            A calendar annualization of the $99,000 over 7.65 months gives ~{usd(AD_SPEND_2026_CALENDAR)} (+72%);
+            the {usd(AD_SPEND_2026_ANNUALIZED)} above carries the 15.7% TACOS onto the May–Jul run
+            rate, which is the basis every other annualized figure here uses.
+          </p>
         </div>
 
         <div className={styles.card}>
@@ -569,19 +601,24 @@ export default function PerfectImageDashboard() {
             </div>
             <StackedSplit
               columns={[
-                { label: 'FY2025', sub: '68.1% organic', organic: ad.organic_sales_2025, paid: ad.ppc_sales_2025 },
+                {
+                  label: 'FY2025',
+                  sub: `${ad.organic_share_2025}% organic`,
+                  organic: ad.organic_sales_2025,
+                  paid: ad.ppc_sales_2025,
+                },
                 {
                   label: '2026 to 20 Aug',
-                  sub: '84.3% organic',
+                  sub: `${ad.organic_share_2026}% organic`,
                   organic: ad.organic_sales_2026_to_aug,
                   paid: ad.ppc_sales_2026_to_aug,
-                  unconfirmed: true,
                 },
               ]}
             />
             <p className={styles.caption}>
-              Organic = gross − ad-attributed sales. The 2026 paid block carries a dashed outline
-              because the seller has not confirmed whether the $99,000 is ad sales or ad spend.
+              Organic = gross − ad-attributed sales, measured on both years. The paid block grows
+              in absolute dollars on a smaller top line: $294,966 of 2026 gross is bought, against
+              $311,000 out of a year half as long again in 2025.
             </p>
           </div>
 
@@ -611,7 +648,7 @@ export default function PerfectImageDashboard() {
                   <td>Ad-attributed</td>
                   <td className={styles.numCol}>{usd(ad.like_for_like_jan_to_20aug.paid_2025)}</td>
                   <td className={styles.numCol}>{usd(ad.like_for_like_jan_to_20aug.paid_2026)}</td>
-                  <td className={`${styles.numCol} ${styles.down}`}>
+                  <td className={`${styles.numCol} ${styles.bad}`}>
                     {pct(ad.like_for_like_jan_to_20aug.paid_chg_pct)}
                   </td>
                 </tr>
@@ -619,7 +656,7 @@ export default function PerfectImageDashboard() {
                   <td>Organic</td>
                   <td className={styles.numCol}>{usd(ad.like_for_like_jan_to_20aug.organic_2025)}</td>
                   <td className={styles.numCol}>{usd(ad.like_for_like_jan_to_20aug.organic_2026)}</td>
-                  <td className={`${styles.numCol} ${styles.up}`}>
+                  <td className={`${styles.numCol} ${styles.bad}`}>
                     {pct(ad.like_for_like_jan_to_20aug.organic_chg_pct)}
                   </td>
                 </tr>
@@ -702,19 +739,22 @@ export default function PerfectImageDashboard() {
                 <td>2026 stub</td>
                 <td className={styles.numCol}>{usd(ad.pnl_advertising_2026_stub)}</td>
                 <td className={styles.numCol}>
-                  ~{usd(28650)} <span className={styles.inferred}>inferred</span>
+                  {usd(ad.ad_spend_2026_to_aug)} <span className={styles.confirmed}>confirmed</span>
                 </td>
-                <td className={styles.numCol}>~{usd(ad.non_amazon_ad_2026)}</td>
+                <td className={styles.numCol}>{usd(ad.non_amazon_ad_2026)}</td>
                 <td className={styles.numCol}>{usd(ad.shopify_revenue_2026_stub)}</td>
-                <td className={`${styles.numCol} ${styles.bad}`}>~{ad.implied_shopify_tacos_2026}%</td>
+                <td className={`${styles.numCol} ${styles.warn}`}>{ad.implied_shopify_tacos_2026}%</td>
               </tr>
             </tbody>
           </table>
           <p className={styles.callout}>
-            Amazon is the efficient channel at {ad.tacos_2025}% TACOS. Shopify — the seller&apos;s
-            growth story — is being bought at close to fifty cents of advertising per dollar of
-            revenue, and deteriorating. The 2026 Amazon figure is inferred at a constant{' '}
-            {ad.acos_2025}% ACOS.
+            On confirmed Amazon spend the non-Amazon line is {usd(ad.non_amazon_ad_2026)} against{' '}
+            {usd(ad.shopify_revenue_2026_stub)} of Shopify revenue — an implied{' '}
+            {ad.implied_shopify_tacos_2026}% TACOS, down from {ad.implied_shopify_tacos_2025}% and
+            no longer the ~47.6% the inferred figure produced. Shopify acquisition cost is roughly
+            flat. Amazon&apos;s moved: {ad.tacos_2025}% to {ad.tacos_2026}% TACOS. Both channels are
+            now inside a comparable band, and the one that deteriorated is the one being bought as
+            the stable, efficient half of this business.
           </p>
         </div>
 
@@ -1367,11 +1407,15 @@ export default function PerfectImageDashboard() {
               <li>Conversion 10.2% blended, flagship at 9.2%</li>
               <li>One A-to-z claim and one chargeback in 20 months across ~58,000 units</li>
               <li>Account Health Rating unaffected; no suspension risk</li>
-              <li>Amazon advertising is efficient: 9.2% TACOS, 3.46x ROAS, 28.9% ACOS</li>
               <li>
-                Organic is 68% of 2025 revenue rising to 84%, and organic dollars grew 17.5%
-                like-for-like while paid halved — measured, not modelled
+                Amazon advertising was efficient in 2025: 9.2% TACOS, 3.46x ROAS, 28.9% ACOS, and
+                68% of revenue unattributed to ads
               </li>
+              <li>
+                Both sides of advertising are now disclosed for both years — spend and attributed
+                sales — so organic is measured, not modelled
+              </li>
+              <li>Shopify acquisition cost is roughly flat: implied TACOS 32.9% → 29.8%</li>
               <li>August 2026 tracking +6.3% against August 2025</li>
             </ul>
           </div>
@@ -1383,14 +1427,19 @@ export default function PerfectImageDashboard() {
               <li>Both growth SKUs sit exactly at the concentration caps</li>
               <li>Three appeals unfiled; two rulings already lost</li>
               <li>Units −13.8% against revenue −6.0%; price is masking demand</li>
-              <li>ASIN concentration 60.7% in a single glycolic variation family</li>
               <li>
-                Implied Shopify TACOS 32.9% rising to ~47.6% — the growth story is bought at close
-                to fifty cents on the dollar
+                Organic sales −25.9% like-for-like while ad-attributed sales rose 39.2%; organic
+                share 68.1% → 53.1%
               </li>
               <li>
-                Ad-cost reduction ~$45,177 + inventory drawdown $154,537 = $199,714 against an
-                $82,360 SDE improvement — underlying performance deteriorated ~$117,354
+                Amazon advertising efficiency has deteriorated: TACOS 9.2% → 15.7%, ROAS 3.46x →
+                2.98x, ACOS 28.9% → 33.6%, spend ~+58% annualized against revenue −6%
+              </li>
+              <li>ASIN concentration 60.7% in a single glycolic variation family</li>
+              <li>
+                Inventory drawdown $154,537 against an $82,360 SDE improvement — underlying
+                performance deteriorated ~{usd(Math.abs(UNDERLYING_DETERIORATION))}, with no
+                ad-cost saving left to explain it
               </li>
             </ul>
           </div>
@@ -1404,9 +1453,10 @@ export default function PerfectImageDashboard() {
           <strong>Definitions.</strong> Gross sales — settlement product sales before platform
           fees, refunds and promotional rebates; the basis the P&amp;L uses. Run rate — May–Jul
           2026 × 4, which strips the Jan–Mar seasonal peak. PPC sales — Amazon ad-attributed
-          sales, seller-supplied, not ad spend. Organic sales — gross minus PPC sales, measured,
-          with the 2026 basis unconfirmed. 2026 — through 20 Aug 2026 unless a chart says
-          otherwise; August is partial.
+          sales, seller-supplied; distinct from ad spend, which is given separately for both years
+          ($90,000 in 2025, $99,000 to 20 Aug 2026). Organic sales — gross minus PPC sales,
+          measured on both years. 2026 — through 20 Aug 2026 unless a chart says otherwise;
+          August is partial.
         </p>
         <p className={styles.footerMeta}>
           {D.meta.source} · window {D.meta.settlement_window} · generated {D.meta.generated} ·{' '}
