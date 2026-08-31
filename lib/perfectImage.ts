@@ -117,10 +117,6 @@ export interface PerfectImageData {
   };
   ad_spend: {
     basis: string;
-    /** What the seller confirmed, and when. */
-    resolved: string;
-    /** Findings this restatement withdraws. They stay on the page as withdrawn. */
-    withdrawn: string[];
     ppc_sales_2025: number;
     ppc_sales_2026_to_aug: number;
     ad_spend_2025: number;
@@ -183,14 +179,6 @@ export const perfectImage: PerfectImageData = {
   },
   "ad_spend": {
     "basis": "RESOLVED 31 Aug 2026. The seller has now given both 2026 figures: Amazon ad SPEND of $99,000 and ad-attributed SALES of $294,965.88, both to 20 Aug. 2025 remains $90,000 of spend against $311,000 of attributed sales.",
-    "resolved": "The open question - whether the 2026 $99,000 was ad sales or ad spend - is answered: it is spend. Organic is measured on both sides again, and it falls.",
-    "withdrawn": [
-      "Organic +17.5% like-for-like. Organic sales fell 25.9% on the same window.",
-      "Organic share rising 68.1% to 84.3%. It fell to 53.1%.",
-      "Paid sales more than halved. Ad-attributed sales rose 39.2% like-for-like.",
-      "Amazon ad-cost reduction of ~$45,177 in the SDE bridge. Spend rose, it did not fall.",
-      "Implied Shopify TACOS of ~47.6%. On confirmed Amazon spend it is 29.8%."
-    ],
     "ppc_sales_2025": 311000,
     "ppc_sales_2026_to_aug": 294965.88,
     "ad_spend_2025": 90000,
@@ -1756,6 +1744,115 @@ export const AMAZON_AT_RISK_TOTAL = 76654;
 
 export const REMOVED_FY2025_REVENUE = 111678;
 export const REMOVED_SHARE_OF_CHANNEL = 11.5;
+
+// --- Company-level context -----------------------------------------------
+// Everything above this line is Amazon settlement data we can verify line by
+// line. What follows is the company-level frame around it, and the provenance
+// of each figure is carried with it: 'settlement' is reconciled to Amazon's own
+// data, 'pnl' is seller-supplied and unverified, 'derived' is arithmetic on the
+// other two.
+
+export type Provenance = 'settlement' | 'pnl' | 'derived';
+
+export interface ChannelRow {
+  channel: string;
+  value: number;
+  provenance: Provenance;
+  note?: string;
+}
+
+/**
+ * Revenue by channel. The 2026 column is the P&L stub as the seller labelled it
+ * ("7 months"); the Amazon line in it equals six months of settlement trading,
+ * so the mix is internally consistent even though the period label is not.
+ */
+export const REVENUE_2025: ChannelRow[] = [
+  {
+    channel: 'Amazon',
+    value: 973483.85,
+    provenance: 'settlement',
+    note: 'Settlement gross, ties to the P&L Amazon line to 0.01%',
+  },
+  { channel: 'Shopify', value: 452096, provenance: 'pnl', note: 'P&L, seller-supplied' },
+];
+
+export const REVENUE_2026_STUB: ChannelRow[] = [
+  {
+    channel: 'Amazon',
+    value: 499026,
+    provenance: 'pnl',
+    note: 'P&L stub line; equals Jan-Jun settlement gross ($499,803)',
+  },
+  { channel: 'Shopify', value: 393278, provenance: 'pnl', note: 'P&L stub, seller-supplied' },
+];
+
+export const ADVERTISING_2025: ChannelRow[] = [
+  { channel: 'Amazon', value: 90000, provenance: 'pnl', note: 'Seller-confirmed spend' },
+  {
+    channel: 'Non-Amazon (Meta, Google, other)',
+    value: 148869,
+    provenance: 'derived',
+    note: 'P&L advertising line less Amazon spend; no channel split supplied',
+  },
+];
+
+export const ADVERTISING_2026_STUB: ChannelRow[] = [
+  { channel: 'Amazon', value: 99000, provenance: 'pnl', note: 'Seller-confirmed spend, to 20 Aug' },
+  {
+    channel: 'Non-Amazon (Meta, Google, other)',
+    value: 117016,
+    provenance: 'derived',
+    note: 'P&L advertising line less Amazon spend; no channel split supplied',
+  },
+];
+
+/**
+ * The seller's materials describe Amazon as ~55% of company revenue. On the two
+ * channels we have been shown, Amazon is 68.3% of 2025 revenue and 55.9% of the
+ * 2026 stub - so the ~55% is the 2026 mix, or there is revenue in neither
+ * column. Held as a question, not a finding.
+ */
+export const SELLER_AMAZON_SHARE_CLAIM = 55;
+
+export const channelTotal = (rows: ChannelRow[]): number => rows.reduce((a, r) => a + r.value, 0);
+
+export interface CostStack {
+  gross: number;
+  promoRebates: number;
+  refunds: number;
+  sellingFees: number;
+  fbaFees: number;
+  netDeposits: number;
+  adSpend: number;
+  contributionBeforeCogs: number;
+}
+
+/** The Amazon channel's own economics, straight out of the settlement file. */
+export function costStack(year: '2025' | '2026', adSpend: number): CostStack {
+  const rows = perfectImage.monthly.filter((m) => m.month.startsWith(year));
+  const gross = sum(rows.map((m) => m.gross_sales));
+  const netDeposits = sum(rows.map((m) => m.net_deposit_basis));
+  return {
+    gross,
+    promoRebates: Math.abs(sum(rows.map((m) => m.promo_rebates))),
+    refunds: Math.abs(sum(rows.map((m) => m.refunds))),
+    sellingFees: Math.abs(sum(rows.map((m) => m.selling_fees))),
+    fbaFees: Math.abs(sum(rows.map((m) => m.fba_fees))),
+    netDeposits,
+    adSpend,
+    contributionBeforeCogs: netDeposits - adSpend,
+  };
+}
+
+/** Company-level facts that appear in the seller's materials but are not evidenced here. */
+export const NOT_SUPPLIED = [
+  'P&L and general ledger by month, any channel',
+  'Meta, Google and other non-Amazon spend, split by platform',
+  'Shopify order, session or repeat-purchase data',
+  'Balance sheet, inventory on hand and aging',
+  'Payroll, owner compensation and the SDE add-back schedule',
+  'Any channel beyond Amazon and Shopify - wholesale, other marketplaces, retail',
+];
 
 // --- Formatters ----------------------------------------------------------
 

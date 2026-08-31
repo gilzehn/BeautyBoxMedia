@@ -311,6 +311,43 @@ export function StackedSplit({ columns }: { columns: StackedColumn[] }) {
 }
 
 // -------------------------------------------------------------------------
+// 100% mix bar - channel share of revenue or of spend.
+// -------------------------------------------------------------------------
+
+export interface MixSegment {
+  label: string;
+  value: number;
+  color: string;
+}
+
+export function MixBar({ segments, total }: { segments: MixSegment[]; total: number }) {
+  return (
+    <div className={styles.mixBar}>
+      <div className={styles.mixTrack}>
+        {segments.map((sg) => (
+          <div
+            key={sg.label}
+            className={styles.mixSeg}
+            style={{ width: `${(sg.value / total) * 100}%`, background: sg.color }}
+            title={`${sg.label}: ${((sg.value / total) * 100).toFixed(1)}%`}
+          >
+            <span>{((sg.value / total) * 100).toFixed(1)}%</span>
+          </div>
+        ))}
+      </div>
+      <div className={styles.mixKeys}>
+        {segments.map((sg) => (
+          <span key={sg.label}>
+            <i style={{ background: sg.color }} />
+            {sg.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------------------------------
 // Waterfall: FY2025 -> removals -> declines -> growth -> run rate.
 // -------------------------------------------------------------------------
 

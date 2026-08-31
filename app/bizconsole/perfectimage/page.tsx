@@ -7,9 +7,9 @@
  * behind the console sign-in, so it can be opened in a meeting or sent as a
  * link without provisioning an account for the reader.
  *
- * The dashboard argues rather than lists. Section order is
- * what happened -> where -> what broke -> why -> what breaks next ->
- * what the physical evidence confirms -> so what.
+ * Presentation is neutral: figures, their basis, and their source. Notes are
+ * tagged by what they are - reconciled, measured, unconfirmed basis, superseded
+ * or not supplied - never by whose case they help.
  */
 
 import { Fragment, useMemo, useState } from 'react';
@@ -31,8 +31,17 @@ import {
   pct,
   num,
   sum,
+  REVENUE_2025,
+  REVENUE_2026_STUB,
+  ADVERTISING_2025,
+  ADVERTISING_2026_STUB,
+  ChannelRow,
+  Provenance,
+  channelTotal,
+  costStack,
+  NOT_SUPPLIED,
+  SELLER_AMAZON_SHARE_CLAIM,
   AD_SPEND_2026_ANNUALIZED,
-  AD_SPEND_2026_CALENDAR,
   UNDERLYING_DETERIORATION,
   EXPOSED_RUN_RATE,
   EXPOSED_SHARE,
@@ -45,14 +54,6 @@ import {
   ASP_2026,
 } from '@/lib/perfectImage';
 import {
-  Comment,
-  SECTIONS,
-  SectionId,
-  Stance,
-  STANCE_LABEL,
-  comments as allComments,
-} from '@/lib/perfectImageComments';
-import {
   MonthlyBarLine,
   StackedSplit,
   Waterfall,
@@ -62,12 +63,24 @@ import {
   Timeline,
   TimelineEvent,
   EventBars,
+  MixBar,
   BUCKET_COLORS,
 } from './charts';
 
 // -------------------------------------------------------------------------
 // Static labels
 // -------------------------------------------------------------------------
+
+const SECTIONS = [
+  { id: 'company', n: 0, title: 'Company context: income and spend by platform' },
+  { id: 'headline', n: 1, title: 'Headline: sales, spend, organic' },
+  { id: 'products', n: 2, title: 'Product breakdown, 2026 vs 2025' },
+  { id: 'removed', n: 3, title: 'Products removed' },
+  { id: 'enforcement', n: 4, title: 'Enforcement: notifications and account health' },
+  { id: 'danger', n: 5, title: 'Run rate by exposure' },
+  { id: 'inventory', n: 6, title: 'Inventory: liquidations and disposals' },
+  { id: 'conclusions', n: 7, title: 'Summary and open items' },
+] as const;
 
 const STATUS_LABEL: Record<ProductStatus, string> = {
   clean: 'Clean',
@@ -98,16 +111,6 @@ const FILTERS = [
 type FilterId = (typeof FILTERS)[number]['id'];
 
 type SortKey = 'product' | 'fy2025' | 'y2026_to_20aug' | 'run_rate' | 'delta' | 'status';
-
-const LENSES: { id: Stance | 'all'; label: string }[] = [
-  { id: 'all', label: 'All commentary' },
-  { id: 'buyer', label: STANCE_LABEL.buyer },
-  { id: 'seller', label: STANCE_LABEL.seller },
-  { id: 'flag', label: STANCE_LABEL.flag },
-  { id: 'verified', label: STANCE_LABEL.verified },
-  { id: 'ask', label: STANCE_LABEL.ask },
-  { id: 'withdrawn', label: STANCE_LABEL.withdrawn },
-];
 
 // -------------------------------------------------------------------------
 // Small presentational pieces
@@ -156,18 +159,65 @@ function Kpi({
   );
 }
 
-function CommentCard({ c }: { c: Comment }) {
+const PROV_LABEL: Record<Provenance, string> = {
+  settlement: 'settlement',
+  pnl: 'P&L',
+  derived: 'derived',
+};
+
+const PROV_CLASS: Record<Provenance, string> = {
+  settlement: styles.provSettlement,
+  pnl: styles.provPnl,
+  derived: styles.provDerived,
+};
+
+function Prov({ p }: { p: Provenance }) {
+  return <span className={`${styles.prov} ${PROV_CLASS[p]}`}>{PROV_LABEL[p]}</span>;
+}
+
+/** Channel table shared by the revenue and advertising mixes. */
+function ChannelTable({
+  rows,
+  label,
+  totalLabel,
+}: {
+  rows: ChannelRow[];
+  label: string;
+  totalLabel: string;
+}) {
+  const total = channelTotal(rows);
   return (
-    <article className={`${styles.comment} ${styles[`stance_${c.stance}`]}`}>
-      <header className={styles.commentHead}>
-        <span className={styles.stanceTag}>{STANCE_LABEL[c.stance]}</span>
-        {c.figure && <span className={styles.commentFigure}>{c.figure}</span>}
-        {c.internal && <span className={styles.internalTag}>Internal</span>}
-      </header>
-      <h4 className={styles.commentTitle}>{c.title}</h4>
-      <p className={styles.commentBody}>{c.body}</p>
-      {c.evidence && <p className={styles.commentEvidence}>{c.evidence}</p>}
-    </article>
+    <table className={styles.dataTable}>
+      <thead>
+        <tr>
+          <th>{label}</th>
+          <th className={styles.numCol}>Amount</th>
+          <th className={styles.numCol}>Share</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr key={r.channel}>
+            <td>{r.channel}</td>
+            <td className={styles.numCol}>{usd(r.value)}</td>
+            <td className={styles.numCol}>{((r.value / total) * 100).toFixed(1)}%</td>
+            <td className={styles.muted}>
+              {r.note}
+              <Prov p={r.provenance} />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>{totalLabel}</td>
+          <td className={styles.numCol}>{usd(total)}</td>
+          <td className={styles.numCol}>100%</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
   );
 }
 
@@ -188,8 +238,6 @@ function SectionHead({ n, title, answers }: { n: number; title: string; answers:
 // -------------------------------------------------------------------------
 
 export default function PerfectImageDashboard() {
-  const [lens, setLens] = useState<Stance | 'all'>('all');
-  const [redacted, setRedacted] = useState(false);
   const [filter, setFilter] = useState<FilterId>('all');
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('fy2025');
@@ -203,15 +251,6 @@ export default function PerfectImageDashboard() {
 
   const checks = useMemo(() => acceptanceChecks(), []);
   const checksPass = checks.every((c) => c.ok);
-
-  const visibleComments = useMemo(
-    () =>
-      allComments.filter(
-        (c) => (lens === 'all' || c.stance === lens) && !(redacted && c.internal)
-      ),
-    [lens, redacted]
-  );
-  const notes = (section: SectionId) => visibleComments.filter((c) => c.section === section);
 
   // --- Section 1 series ---------------------------------------------------
   const monthlyPoints = useMemo(
@@ -227,6 +266,19 @@ export default function PerfectImageDashboard() {
   );
 
   const ad = D.ad_spend;
+
+  // --- Section 0: company context ----------------------------------------
+  const rev25 = channelTotal(REVENUE_2025);
+  const rev26 = channelTotal(REVENUE_2026_STUB);
+  const adTotal25 = channelTotal(ADVERTISING_2025);
+  const adTotal26 = channelTotal(ADVERTISING_2026_STUB);
+  const amazonShare25 = (REVENUE_2025[0].value / rev25) * 100;
+  const amazonShare26 = (REVENUE_2026_STUB[0].value / rev26) * 100;
+  const impliedTotalIncome = REVENUE_2025[0].value / (SELLER_AMAZON_SHARE_CLAIM / 100);
+  const unaccounted = impliedTotalIncome - rev25;
+  const stack25 = costStack('2025', ad.ad_spend_2025);
+  const stack26 = costStack('2026', ad.ad_spend_2026_to_aug);
+  const CHANNEL_COLORS = ['#5b8bb5', '#4f8f6d', '#c98a2e'];
 
   /** Jan-Jul, the one clean like-for-like window: seven full months in both years. */
   const janJul = useMemo(() => {
@@ -401,25 +453,17 @@ export default function PerfectImageDashboard() {
       <header className={styles.masthead}>
         <div className={styles.mastheadTop}>
           <div>
-            <p className={styles.eyebrow}>Buy-side diligence · Amazon channel</p>
+            <p className={styles.eyebrow}>Amazon channel · settlement and account records</p>
             <h1 className={styles.title}>Perfect Image LLC</h1>
             <p className={styles.subtitle}>
-              Settlement window {D.meta.settlement_window} · analysis {D.meta.generated} · every
-              figure reconciles to Amazon&apos;s own settlement data
+              Settlement window {D.meta.settlement_window} · prepared {D.meta.generated} · figures
+              reconciled to Amazon settlement data unless a source tag says otherwise
             </p>
           </div>
           <div className={styles.mastheadActions}>
             <Link href="/bizconsole" className={styles.backLink}>
               ← Business Console
             </Link>
-            <label className={styles.switch}>
-              <input
-                type="checkbox"
-                checked={redacted}
-                onChange={(e) => setRedacted(e.target.checked)}
-              />
-              <span>Seller-facing view</span>
-            </label>
             <button type="button" className={styles.printBtn} onClick={() => window.print()}>
               Print / PDF
             </button>
@@ -435,17 +479,6 @@ export default function PerfectImageDashboard() {
         </nav>
 
         <div className={styles.lensBar}>
-          <span className={styles.lensLabel}>Commentary lens</span>
-          {LENSES.map((l) => (
-            <button
-              key={l.id}
-              type="button"
-              className={`${styles.lensChip} ${lens === l.id ? styles.lensChipOn : ''}`}
-              onClick={() => setLens(l.id)}
-            >
-              {l.label}
-            </button>
-          ))}
           <button
             type="button"
             className={`${styles.checkBadge} ${checksPass ? styles.checkPass : styles.checkFail}`}
@@ -471,19 +504,260 @@ export default function PerfectImageDashboard() {
           </ul>
         )}
 
-        {redacted && (
-          <p className={styles.redactedNote}>
-            Seller-facing view: our own price working and negotiating posture are hidden. Every
-            finding drawn from the seller&apos;s own account data stays on the page.
-          </p>
-        )}
       </header>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* 0. Company context                                                */}
+      {/* ---------------------------------------------------------------- */}
+      <section id="company" className={styles.section}>
+        <SectionHead
+          n={0}
+          title="Company context: income and spend by platform"
+          answers="What sits around the Amazon channel"
+        />
+
+        <div className={styles.splitGrid}>
+          <div className={styles.card}>
+            <div className={styles.cardHead}>
+              <h3>Income by platform — FY2025</h3>
+              <span className={styles.stamp}>{usd(rev25)} disclosed</span>
+            </div>
+            <MixBar
+              segments={REVENUE_2025.map((r, i) => ({
+                label: r.channel,
+                value: r.value,
+                color: CHANNEL_COLORS[i],
+              }))}
+              total={rev25}
+            />
+            <ChannelTable rows={REVENUE_2025} label="Channel" totalLabel="Disclosed revenue" />
+          </div>
+
+          <div className={styles.card}>
+            <div className={styles.cardHead}>
+              <h3>Income by platform — 2026 stub</h3>
+              <span className={styles.stamp}>{usd(rev26)} disclosed</span>
+            </div>
+            <MixBar
+              segments={REVENUE_2026_STUB.map((r, i) => ({
+                label: r.channel,
+                value: r.value,
+                color: CHANNEL_COLORS[i],
+              }))}
+              total={rev26}
+            />
+            <ChannelTable rows={REVENUE_2026_STUB} label="Channel" totalLabel="Disclosed revenue" />
+            <p className={styles.caption}>
+              The P&amp;L labels this column seven months. Its Amazon line equals six months of
+              settlement trading, so the mix is internally consistent but the period is not what it
+              says it is.
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.card}>
+          <div className={styles.cardHead}>
+            <h3>Amazon&apos;s share of disclosed revenue against the seller&apos;s framing</h3>
+          </div>
+          <div className={styles.reconcileRow}>
+            <div>
+              <strong>{amazonShare25.toFixed(1)}%</strong>
+              <span>Amazon share of FY2025 disclosed revenue, on the two channels supplied.</span>
+            </div>
+            <div>
+              <strong>{amazonShare26.toFixed(1)}%</strong>
+              <span>Amazon share of the 2026 stub — where the seller&apos;s &ldquo;~55%&rdquo; lands almost exactly.</span>
+            </div>
+            <div>
+              <strong className={styles.warn}>{usd(unaccounted)}</strong>
+              <span>
+                of 2025 revenue in neither column at a {SELLER_AMAZON_SHARE_CLAIM}% Amazon share,
+                which implies {usd(impliedTotalIncome)} of total income. The P&amp;L by channel
+                resolves which reading applies.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.splitGrid}>
+          <div className={styles.card}>
+            <div className={styles.cardHead}>
+              <h3>Advertising spend by platform — 2025</h3>
+              <span className={styles.stamp}>{usd(adTotal25)} total</span>
+            </div>
+            <MixBar
+              segments={ADVERTISING_2025.map((r, i) => ({
+                label: r.channel,
+                value: r.value,
+                color: CHANNEL_COLORS[i],
+              }))}
+              total={adTotal25}
+            />
+            <ChannelTable rows={ADVERTISING_2025} label="Channel" totalLabel="P&L advertising line" />
+          </div>
+
+          <div className={styles.card}>
+            <div className={styles.cardHead}>
+              <h3>Advertising spend by platform — 2026 stub</h3>
+              <span className={styles.stamp}>{usd(adTotal26)} total</span>
+            </div>
+            <MixBar
+              segments={ADVERTISING_2026_STUB.map((r, i) => ({
+                label: r.channel,
+                value: r.value,
+                color: CHANNEL_COLORS[i],
+              }))}
+              total={adTotal26}
+            />
+            <ChannelTable
+              rows={ADVERTISING_2026_STUB}
+              label="Channel"
+              totalLabel="P&L advertising line"
+            />
+            <p className={styles.caption}>
+              The non-Amazon line is a residual of the P&amp;L advertising line less Amazon spend. No
+              split between Meta, Google or other platforms has been supplied for either year.
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.card}>
+          <div className={styles.cardHead}>
+            <h3>Cost of revenue per dollar, by platform</h3>
+          </div>
+          <table className={styles.dataTable}>
+            <thead>
+              <tr>
+                <th>Advertising cost per revenue dollar</th>
+                <th className={styles.numCol}>2025</th>
+                <th className={styles.numCol}>2026 stub</th>
+                <th>Basis</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Amazon (TACOS)</td>
+                <td className={styles.numCol}>{ad.tacos_2025}%</td>
+                <td className={`${styles.numCol} ${styles.bad}`}>{ad.tacos_2026}%</td>
+                <td className={styles.muted}>
+                  Confirmed spend over settlement gross
+                  <Prov p="settlement" />
+                </td>
+              </tr>
+              <tr>
+                <td>Shopify (implied)</td>
+                <td className={`${styles.numCol} ${styles.warn}`}>{ad.implied_shopify_tacos_2025}%</td>
+                <td className={`${styles.numCol} ${styles.warn}`}>{ad.implied_shopify_tacos_2026}%</td>
+                <td className={styles.muted}>
+                  Residual advertising over Shopify revenue
+                  <Prov p="derived" />
+                </td>
+              </tr>
+              <tr className={styles.rowEmphasis}>
+                <td>Blended, all disclosed revenue</td>
+                <td className={styles.numCol}>{((adTotal25 / rev25) * 100).toFixed(1)}%</td>
+                <td className={`${styles.numCol} ${styles.bad}`}>
+                  {((adTotal26 / rev26) * 100).toFixed(1)}%
+                </td>
+                <td className={styles.muted}>
+                  P&amp;L advertising over disclosed revenue
+                  <Prov p="derived" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p className={styles.callout}>
+            Absolute advertising fell 9.6%, $238,869 to $216,016. Against disclosed revenue in the
+            same period the ratio rose from {((adTotal25 / rev25) * 100).toFixed(1)}% to{' '}
+            {((adTotal26 / rev26) * 100).toFixed(1)}%.
+          </p>
+        </div>
+
+        <div className={styles.card}>
+          <div className={styles.cardHead}>
+            <h3>Where an Amazon dollar goes — settlement, both periods</h3>
+            <span className={styles.stamp}>verified line by line</span>
+          </div>
+          <table className={styles.dataTable}>
+            <thead>
+              <tr>
+                <th></th>
+                <th className={styles.numCol}>FY2025</th>
+                <th className={styles.numCol}>% of gross</th>
+                <th className={styles.numCol}>2026 to 20 Aug</th>
+                <th className={styles.numCol}>% of gross</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(
+                [
+                  ['Gross sales', 'gross'],
+                  ['Promotional rebates', 'promoRebates'],
+                  ['Refunds', 'refunds'],
+                  ['Amazon selling fees', 'sellingFees'],
+                  ['FBA fees', 'fbaFees'],
+                  ['Net deposits', 'netDeposits'],
+                  ['Amazon advertising', 'adSpend'],
+                  ['Contribution before COGS', 'contributionBeforeCogs'],
+                ] as [string, keyof typeof stack25][]
+              ).map(([label, key]) => {
+                const emph = key === 'netDeposits' || key === 'contributionBeforeCogs';
+                return (
+                  <tr key={key} className={emph ? styles.rowEmphasis : ''}>
+                    <td>{label}</td>
+                    <td className={styles.numCol}>{usd(stack25[key])}</td>
+                    <td className={styles.numCol}>
+                      {((stack25[key] / stack25.gross) * 100).toFixed(1)}%
+                    </td>
+                    <td className={styles.numCol}>{usd(stack26[key])}</td>
+                    <td
+                      className={`${styles.numCol} ${
+                        key === 'adSpend' || key === 'contributionBeforeCogs' ? styles.bad : ''
+                      }`}
+                    >
+                      {((stack26[key] / stack26.gross) * 100).toFixed(1)}%
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <p className={styles.caption}>
+            Platform cost is flat to a tenth of a point across both periods; the 6.5-point movement
+            in contribution before COGS is in the advertising line. COGS is not in the settlement
+            file and is not evidenced elsewhere in the material supplied.
+          </p>
+        </div>
+
+        <div className={styles.card}>
+          <div className={styles.cardHead}>
+            <h3>Not supplied at company level</h3>
+          </div>
+          <ul className={styles.notSupplied}>
+            {NOT_SUPPLIED.map((n) => (
+              <li key={n}>{n}</li>
+            ))}
+          </ul>
+          <div className={styles.provKey}>
+            <span>
+              <Prov p="settlement" /> reconciled to Amazon&apos;s own data
+            </span>
+            <span>
+              <Prov p="pnl" /> seller-supplied, unverified
+            </span>
+            <span>
+              <Prov p="derived" /> arithmetic on the other two
+            </span>
+          </div>
+        </div>
+
+      </section>
 
       {/* ---------------------------------------------------------------- */}
       {/* 1. Headline                                                       */}
       {/* ---------------------------------------------------------------- */}
       <section id="headline" className={styles.section}>
-        <SectionHead n={1} title="Headline: total sales, ad spend, organic" answers="What happened at the top line" />
+        <SectionHead n={1} title="Headline: sales, ad spend, organic" answers="Top-line figures and their bases" />
 
         <div className={styles.kpiGrid}>
           <Kpi
@@ -492,7 +766,7 @@ export default function PerfectImageDashboard() {
             y2026={usd(y2026Total)}
             change={`Run rate ${usd(runRateTotal)} · ${pct(-7.0)} vs FY2025`}
             changeTone="down"
-            note="Different period lengths. Compare on run rate or like-for-like, never head to head."
+            note="Different period lengths. Comparisons use run rate or like-for-like, stated per chart."
           />
           <Kpi
             label="Ad-attributed (PPC) sales"
@@ -500,7 +774,7 @@ export default function PerfectImageDashboard() {
             y2026={usd(ad.ppc_sales_2026_to_aug)}
             change={`31.9% → 46.9% of gross`}
             changeTone="down"
-            note="Seller-supplied, both years. Nearly half of Amazon revenue is now bought."
+            note="Seller-supplied, both years. 46.9% of 2026 gross carries ad attribution."
           />
           <Kpi
             label="Organic sales"
@@ -518,7 +792,7 @@ export default function PerfectImageDashboard() {
             y2026={num(units2026)}
             change={`Jan–Jul like-for-like ${pct(-13.8)}`}
             changeTone="down"
-            note={`ASP $${ASP_2025.toFixed(2)} → $${ASP_2026.toFixed(2)} (${pct(9.1)}). Price is holding the line, not demand.`}
+            note={`Average selling price $${ASP_2025.toFixed(2)} → $${ASP_2026.toFixed(2)} (${pct(9.1)}) over the full periods.`}
           />
         </div>
 
@@ -557,21 +831,6 @@ export default function PerfectImageDashboard() {
           </div>
         </div>
 
-        <div className={styles.restated}>
-          <h4>Restated 31 Aug 2026, on the seller&apos;s confirmation</h4>
-          <p>{ad.resolved}</p>
-          <ul>
-            {ad.withdrawn.map((w) => (
-              <li key={w}>{w}</li>
-            ))}
-          </ul>
-          <p className={styles.restatedFoot}>
-            A calendar annualization of the $99,000 over 7.65 months gives ~{usd(AD_SPEND_2026_CALENDAR)} (+72%);
-            the {usd(AD_SPEND_2026_ANNUALIZED)} above carries the 15.7% TACOS onto the May–Jul run
-            rate, which is the basis every other annualized figure here uses.
-          </p>
-        </div>
-
         <div className={styles.card}>
           <div className={styles.cardHead}>
             <h3>Monthly gross sales and units, Jan 2025 – Aug 2026</h3>
@@ -599,6 +858,7 @@ export default function PerfectImageDashboard() {
                 <span className={styles.legPaid}>Ad-attributed</span>
               </div>
             </div>
+            <div className={styles.chartNarrow}>
             <StackedSplit
               columns={[
                 {
@@ -615,10 +875,11 @@ export default function PerfectImageDashboard() {
                 },
               ]}
             />
+            </div>
             <p className={styles.caption}>
-              Organic = gross − ad-attributed sales, measured on both years. The paid block grows
-              in absolute dollars on a smaller top line: $294,966 of 2026 gross is bought, against
-              $311,000 out of a year half as long again in 2025.
+              Organic = gross − ad-attributed sales, stated for both years. Ad-attributed sales
+              are $294,966 of $629,356 in 2026 to 20 Aug, against $311,000 of $973,484 across all
+              of 2025.
             </p>
           </div>
 
@@ -705,8 +966,7 @@ export default function PerfectImageDashboard() {
               </tbody>
             </table>
             <p className={styles.caption}>
-              Units are falling at twice the rate of revenue. Price, not demand, is holding the
-              revenue line.
+              Units fell 13.8% against revenue down 6.0%, with average selling price up 9.1%.
             </p>
           </div>
         </div>
@@ -748,30 +1008,21 @@ export default function PerfectImageDashboard() {
             </tbody>
           </table>
           <p className={styles.callout}>
-            On confirmed Amazon spend the non-Amazon line is {usd(ad.non_amazon_ad_2026)} against{' '}
-            {usd(ad.shopify_revenue_2026_stub)} of Shopify revenue — an implied{' '}
-            {ad.implied_shopify_tacos_2026}% TACOS, down from {ad.implied_shopify_tacos_2025}% and
-            no longer the ~47.6% the inferred figure produced. Shopify acquisition cost is roughly
-            flat. Amazon&apos;s moved: {ad.tacos_2025}% to {ad.tacos_2026}% TACOS. Both channels are
-            now inside a comparable band, and the one that deteriorated is the one being bought as
-            the stable, efficient half of this business.
+            Non-Amazon advertising is the P&amp;L line less Amazon spend: {usd(ad.non_amazon_ad_2026)}{' '}
+            against {usd(ad.shopify_revenue_2026_stub)} of Shopify revenue, an implied{' '}
+            {ad.implied_shopify_tacos_2026}% against {ad.implied_shopify_tacos_2025}% in 2025. The
+            Amazon ratio over the same period moved from {ad.tacos_2025}% to {ad.tacos_2026}%. No
+            platform split has been supplied for the non-Amazon figure in either year.
           </p>
         </div>
 
-        <div className={styles.commentGrid}>{notes('headline').map((c) => <CommentCard key={c.id} c={c} />)}</div>
       </section>
 
       {/* ---------------------------------------------------------------- */}
       {/* 2. Product breakdown                                              */}
       {/* ---------------------------------------------------------------- */}
       <section id="products" className={styles.section}>
-        <SectionHead n={2} title="Product breakdown, 2026 vs 2025" answers="Where it happened" />
-
-        <p className={styles.calloutBox}>
-          Strip out Glycolic 70% and Salicylic 30% — the only two products growing — and the rest
-          of the Amazon catalogue is down roughly 15% year over year. Both sit exactly on
-          Amazon&apos;s published concentration caps.
-        </p>
+        <SectionHead n={2} title="Product breakdown, 2026 vs 2025" answers="The same figures by ASIN" />
 
         <div className={styles.tableControls}>
           <div className={styles.chipRow}>
@@ -892,14 +1143,13 @@ export default function PerfectImageDashboard() {
           </table>
         </div>
 
-        <div className={styles.commentGrid}>{notes('products').map((c) => <CommentCard key={c.id} c={c} />)}</div>
       </section>
 
       {/* ---------------------------------------------------------------- */}
       {/* 3. What changed                                                   */}
       {/* ---------------------------------------------------------------- */}
       <section id="removed" className={styles.section}>
-        <SectionHead n={3} title="What changed: products removed" answers="What broke" />
+        <SectionHead n={3} title="Products removed" answers="Revenue at zero, and when it stopped" />
 
         <div className={styles.card}>
           <div className={styles.cardHead}>
@@ -925,8 +1175,8 @@ export default function PerfectImageDashboard() {
             <p className={styles.leadNumber}>
               {usd(REMOVED_FY2025_REVENUE)}
               <span>
-                of FY2025 revenue — {REMOVED_SHARE_OF_CHANNEL}% of the Amazon channel — is now zero,
-                and every dollar of it was removed by enforcement, not lost to competition.
+                of FY2025 revenue — {REMOVED_SHARE_OF_CHANNEL}% of the Amazon channel — now records
+                no sales. Each of the five ASINs carries a policy notice dated before its last sale.
               </span>
             </p>
             <table className={styles.dataTable}>
@@ -992,14 +1242,12 @@ export default function PerfectImageDashboard() {
               </tbody>
             </table>
             <p className={styles.caption}>
-              Recovery on this platform is possible, and it is not full. Ask for the remediation
-              record: what was submitted, and whether the same path is open for the two SKUs with
-              final rulings.
+              The remediation record for the relisting has not been supplied, nor whether the same
+              route applies to the two SKUs with completed evaluations.
             </p>
           </div>
         </div>
 
-        <div className={styles.commentGrid}>{notes('removed').map((c) => <CommentCard key={c.id} c={c} />)}</div>
       </section>
 
       {/* ---------------------------------------------------------------- */}
@@ -1008,8 +1256,8 @@ export default function PerfectImageDashboard() {
       <section id="enforcement" className={styles.section}>
         <SectionHead
           n={4}
-          title="Enforcement review: notifications and account health"
-          answers="Why it broke"
+          title="Enforcement: notifications and account health"
+          answers="The policy record behind the removals"
         />
 
         <div className={styles.card}>
@@ -1036,10 +1284,10 @@ export default function PerfectImageDashboard() {
             ]}
           />
           <p className={styles.callout}>
-            Amazon enforces in sweeps, by ingredient and claim pattern, not one listing at a time.{' '}
-            {octoberSweep.length} ASINs were cited on the same three days in October 2024 — the
-            cluster on the left of this chart. Four of them are still selling{' '}
-            {usd(101498)} of run rate on citations that were never resolved.
+            Citations group by ingredient and claim pattern rather than by individual listing:{' '}
+            {octoberSweep.length} ASINs were cited across three days in October 2024 — the cluster
+            on the left of this chart. Four of them still record {usd(101498)} of run rate with
+            those citations unresolved in the material supplied.
           </p>
         </div>
 
@@ -1093,8 +1341,8 @@ export default function PerfectImageDashboard() {
                 <td colSpan={2}>Amazon&apos;s at-risk total</td>
                 <td className={styles.numCol}>{usd(AMAZON_AT_RISK_TOTAL)}</td>
                 <td colSpan={3} className={styles.muted}>
-                  Cited ASINs only. Our exposure figure adds the SKUs at the caps with no citation
-                  yet — see section 5.
+                  Cited ASINs only. The exposure figure in section 5 adds the SKUs at the caps with
+                  no citation.
                 </td>
               </tr>
             </tfoot>
@@ -1105,47 +1353,45 @@ export default function PerfectImageDashboard() {
           <div className={styles.fact}>
             <strong>0.6%</strong>
             <span>
-              Amazon&apos;s $28,308 at-risk figure on B007004PZO against our computed $28,471. Our
-              numbers agree with Amazon&apos;s own.
+              variance between Amazon&apos;s $28,308 at-risk figure on B007004PZO and $28,471
+              computed from settlement.
             </span>
           </div>
           <div className={styles.fact}>
             <strong>{usd(48296)}</strong>
             <span>
-              of trailing sales already ruled on and lost — two rows read &ldquo;evaluation
-              complete&rdquo; with the listings still removed.
+              of trailing sales on the two rows reading &ldquo;evaluation complete&rdquo; with the
+              listings still removed.
             </span>
           </div>
           <div className={styles.fact}>
             <strong>3 unfiled</strong>
             <span>
-              appeals sitting at &ldquo;submission required&rdquo;, the oldest over a month old,
-              one of them carrying $28,308 of trailing sales.
+              appeals at &ldquo;submission required&rdquo;, the oldest over a month old, one
+              carrying $28,308 of trailing sales.
             </span>
           </div>
           <div className={styles.fact}>
             <strong>27 Aug 2026</strong>
             <span>
-              a thirteenth violation, after every file the seller sent. The export was stale on
-              arrival.
+              a thirteenth violation, dated after the violations export ends (07 Aug 2026).
             </span>
           </div>
         </div>
 
-        <div className={styles.commentGrid}>{notes('enforcement').map((c) => <CommentCard key={c.id} c={c} />)}</div>
       </section>
 
       {/* ---------------------------------------------------------------- */}
       {/* 5. Still in danger                                                */}
       {/* ---------------------------------------------------------------- */}
       <section id="danger" className={styles.section}>
-        <SectionHead n={5} title="Still in danger, and why" answers="What breaks next" />
+        <SectionHead n={5} title="Run rate by exposure" answers="Live revenue on paths already used" />
 
         <p className={styles.leadNumber}>
           {usd(EXPOSED_RUN_RATE)}
           <span>
-            — {EXPOSED_SHARE}% of the Amazon run rate, roughly 15% of company revenue — is exposed
-            to enforcement paths that already have a body.
+            — {EXPOSED_SHARE}% of the Amazon run rate, roughly 15% of company revenue — sits on the
+            four enforcement paths already used against this account.
           </span>
         </p>
 
@@ -1189,8 +1435,8 @@ export default function PerfectImageDashboard() {
               <h3>Scenario: which buckets go to zero</h3>
             </div>
             <p className={styles.caption}>
-              Defaults to the at-cap bucket alone — the only bucket where a single lab number
-              decides the outcome. SDE at ~50% contribution, value at 2.5x.
+              Applies a total loss to the selected buckets. Defaults to the at-cap bucket.
+              Contribution at 50% and the 2.5x capitalisation are stated assumptions.
             </p>
             <ul className={styles.scenarioList}>
               {buckets.map((b) => (
@@ -1213,11 +1459,11 @@ export default function PerfectImageDashboard() {
                 <strong className={styles.bad}>{usd(lostRevenue)}</strong>
               </div>
               <div>
-                <span>SDE impact @ 50%</span>
+                <span>Contribution @ 50%</span>
                 <strong className={styles.bad}>{usd(sdeImpact)}</strong>
               </div>
               <div>
-                <span>Value @ 2.5x</span>
+                <span>Capitalised @ 2.5x</span>
                 <strong className={styles.bad}>{usd(valueImpact)}</strong>
               </div>
               <div>
@@ -1226,8 +1472,8 @@ export default function PerfectImageDashboard() {
               </div>
             </div>
             <p className={styles.caption}>
-              If Glycolic 70% alone goes, {usd(104602)} of run rate — the entire 2026 Amazon growth
-              story — goes with it.
+              Glycolic 70% alone is {usd(104602)} of run rate, and accounts for the whole of the
+              2026 run-rate growth.
             </p>
           </div>
         </div>
@@ -1270,21 +1516,20 @@ export default function PerfectImageDashboard() {
             <div>
               <strong>{usd(AMAZON_AT_RISK_TOTAL)}</strong>
               <span>
-                Amazon&apos;s dashboard total. Counts only ASINs that already carry a live
-                violation — realized and pending damage the platform itself acknowledges.
+                Amazon&apos;s dashboard total: trailing sales on the ASINs that already carry a
+                live violation.
               </span>
             </div>
             <div>
               <strong>{usd(EXPOSED_RUN_RATE)}</strong>
               <span>
-                Ours. Adds the two SKUs sitting exactly at the caps with no citation yet
-                ({usd(148852)}), which Amazon has no reason to flag until it acts.
+                Adds the two SKUs at the concentration caps with no citation ({usd(148852)}), which
+                would not appear on Amazon&apos;s figure until action is taken.
               </span>
             </div>
           </div>
         </div>
 
-        <div className={styles.commentGrid}>{notes('danger').map((c) => <CommentCard key={c.id} c={c} />)}</div>
       </section>
 
       {/* ---------------------------------------------------------------- */}
@@ -1294,7 +1539,7 @@ export default function PerfectImageDashboard() {
         <SectionHead
           n={6}
           title="Inventory: liquidations and disposals"
-          answers="What the physical evidence confirms"
+          answers="Physical stock movements"
         />
 
         <div className={styles.splitGrid}>
@@ -1367,8 +1612,7 @@ export default function PerfectImageDashboard() {
             </table>
             <p className={styles.caption}>
               Storage of {usd(storageFees)} across twenty months on $1.6M of throughput, against a
-              1–2% norm. Reimbursements are non-operating income if they have been booked to
-              revenue.
+              1–2% category norm. Reimbursements are non-operating income if booked to revenue.
             </p>
           </div>
         </div>
@@ -1382,24 +1626,26 @@ export default function PerfectImageDashboard() {
           </div>
           <EventBars data={removalMonths} markers={REMOVAL_MARKERS.map((m) => m.month)} />
           <p className={styles.caption}>
-            The events cluster on the enforcement dates — 171 in January 2026 alone, the month
-            after the Lactic 50% removal. Disposals here are a compliance consequence, not routine
-            housekeeping.
+            The events cluster on the enforcement dates: 171 in January 2026, the month after the
+            Lactic 50% removal, against a 20-month median of 27.
           </p>
         </div>
 
-        <div className={styles.commentGrid}>{notes('inventory').map((c) => <CommentCard key={c.id} c={c} />)}</div>
       </section>
 
       {/* ---------------------------------------------------------------- */}
       {/* 7. Conclusions                                                    */}
       {/* ---------------------------------------------------------------- */}
       <section id="conclusions" className={styles.section}>
-        <SectionHead n={7} title="Conclusions" answers="So what" />
+        <SectionHead
+          n={7}
+          title="Summary and open items"
+          answers="What reconciles, what does not, what is missing"
+        />
 
         <div className={styles.conclusionGrid}>
           <div className={`${styles.card} ${styles.holdsUp}`}>
-            <h3>What holds up</h3>
+            <h3>Reconciled to source data</h3>
             <ul className={styles.tickList}>
               <li>2025 revenue ties: $973,484 settlement vs $973,364 P&amp;L, 0.01% variance</li>
               <li>Buy box 96–99%, no hijackers, no suppression</li>
@@ -1407,45 +1653,41 @@ export default function PerfectImageDashboard() {
               <li>Conversion 10.2% blended, flagship at 9.2%</li>
               <li>One A-to-z claim and one chargeback in 20 months across ~58,000 units</li>
               <li>Account Health Rating unaffected; no suspension risk</li>
+              <li>2025 Amazon advertising: 9.2% TACOS, 3.46x ROAS, 28.9% ACOS</li>
               <li>
-                Amazon advertising was efficient in 2025: 9.2% TACOS, 3.46x ROAS, 28.9% ACOS, and
-                68% of revenue unattributed to ads
+                Spend and attributed sales are stated for both years, so organic is a subtraction
+                on each rather than an estimate
               </li>
-              <li>
-                Both sides of advertising are now disclosed for both years — spend and attributed
-                sales — so organic is measured, not modelled
-              </li>
-              <li>Shopify acquisition cost is roughly flat: implied TACOS 32.9% → 29.8%</li>
+              <li>Implied Shopify advertising ratio 32.9% → 29.8%</li>
+              <li>Amazon platform costs flat: net deposits 67.1% → 67.0% of gross</li>
               <li>August 2026 tracking +6.3% against August 2025</li>
             </ul>
           </div>
           <div className={`${styles.card} ${styles.doesNot}`}>
-            <h3>What does not</h3>
+            <h3>Unresolved at the data cutoff</h3>
             <ul className={styles.crossList}>
-              <li>Five SKUs at zero, all by enforcement — $111,678 of FY2025 revenue</li>
-              <li>$277,054 (30.6%) of run rate exposed to the same four paths</li>
+              <li>Five SKUs at zero, each with a policy notice — $111,678 of FY2025 revenue</li>
+              <li>$277,054 (30.6%) of run rate on the four enforcement paths in this account</li>
               <li>Both growth SKUs sit exactly at the concentration caps</li>
-              <li>Three appeals unfiled; two rulings already lost</li>
-              <li>Units −13.8% against revenue −6.0%; price is masking demand</li>
+              <li>Three appeals at &ldquo;submission required&rdquo;; two decided adversely</li>
+              <li>Units −13.8% against revenue −6.0%, with ASP +9.1%</li>
               <li>
                 Organic sales −25.9% like-for-like while ad-attributed sales rose 39.2%; organic
                 share 68.1% → 53.1%
               </li>
               <li>
-                Amazon advertising efficiency has deteriorated: TACOS 9.2% → 15.7%, ROAS 3.46x →
-                2.98x, ACOS 28.9% → 33.6%, spend ~+58% annualized against revenue −6%
+                Amazon TACOS 9.2% → 15.7%, ROAS 3.46x → 2.98x, ACOS 28.9% → 33.6%; spend ~+58%
+                annualized against revenue −6%
               </li>
               <li>ASIN concentration 60.7% in a single glycolic variation family</li>
               <li>
-                Inventory drawdown $154,537 against an $82,360 SDE improvement — underlying
-                performance deteriorated ~{usd(Math.abs(UNDERLYING_DETERIORATION))}, with no
-                ad-cost saving left to explain it
+                Inventory drawdown $154,537 against an $82,360 SDE improvement — a difference of{' '}
+                {usd(Math.abs(UNDERLYING_DETERIORATION))}, with no advertising saving offsetting it
               </li>
             </ul>
           </div>
         </div>
 
-        <div className={styles.commentGrid}>{notes('conclusions').map((c) => <CommentCard key={c.id} c={c} />)}</div>
       </section>
 
       <footer className={styles.footer}>
