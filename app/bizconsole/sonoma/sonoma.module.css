@@ -25,8 +25,9 @@
 
 .masthead {
   border-bottom: 1px solid var(--s-line);
-  /* Clears the site's fixed navbar, which otherwise sits over the eyebrow. */
-  padding: calc(var(--nav-height) + 40px) 0 28px;
+  /* The site navbar and footer both bow out under /bizconsole, so this page
+     opens straight onto the masthead and needs no clearance for them. */
+  padding: 52px 0 28px;
   margin-bottom: 40px;
 }
 
