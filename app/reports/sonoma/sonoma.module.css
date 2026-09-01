@@ -1,0 +1,542 @@
+/* Sonoma 2026 performance report.
+   Reads as a document, not a console: generous measure, restrained rules, and
+   colour used only where it carries meaning. Prints to PDF without surprises. */
+
+.page {
+  --s-line: #262626;
+  --s-card: #141414;
+  --s-card-2: #101010;
+  --s-sales: #3987e5;
+  --s-spend: #d95926;
+  --s-organic: #199e70;
+
+  background: #0a0a0a;
+  color: var(--text-primary);
+  padding: 0 0 96px;
+}
+
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+/* --- Masthead ---------------------------------------------------------- */
+
+.masthead {
+  border-bottom: 1px solid var(--s-line);
+  /* Clears the site's fixed navbar, which otherwise sits over the eyebrow. */
+  padding: calc(var(--nav-height) + 40px) 0 28px;
+  margin-bottom: 40px;
+}
+
+.eyebrow {
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  margin-bottom: 14px;
+}
+
+.standfirst {
+  font-size: 1.06rem;
+  color: var(--text-secondary);
+  max-width: 640px;
+}
+
+.stamp {
+  margin-top: 20px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+/* --- The question ------------------------------------------------------ */
+
+.question {
+  border-left: 2px solid var(--accent);
+  padding: 4px 0 4px 20px;
+  margin-bottom: 40px;
+}
+
+.questionText {
+  font-size: 1.12rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+
+.questionWho {
+  margin-top: 10px;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+
+/* --- Sections ---------------------------------------------------------- */
+
+.section {
+  margin-bottom: 64px;
+  scroll-margin-top: 24px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  border-bottom: 1px solid var(--s-line);
+  padding-bottom: 10px;
+  margin-bottom: 24px;
+}
+
+.sectionNum {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+.sectionTitle {
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.lede {
+  font-size: 1.02rem;
+  color: var(--text-secondary);
+  max-width: 680px;
+  margin-bottom: 26px;
+}
+
+.body {
+  font-size: 0.98rem;
+  color: var(--text-secondary);
+  max-width: 680px;
+  margin-bottom: 16px;
+}
+
+.body strong,
+.lede strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* --- KPI row ----------------------------------------------------------- */
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.kpi {
+  background: var(--s-card);
+  border: 1px solid var(--s-line);
+  border-radius: 10px;
+  padding: 18px 18px 16px;
+}
+
+.kpiLabel {
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.kpiValue {
+  font-size: 1.72rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.kpiNote {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.up {
+  color: #4ea87a;
+}
+
+/* --- Charts ------------------------------------------------------------ */
+
+.card {
+  background: var(--s-card);
+  border: 1px solid var(--s-line);
+  border-radius: 12px;
+  padding: 22px 22px 18px;
+  margin-bottom: 22px;
+}
+
+.cardHead {
+  font-size: 0.96rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.cardNote {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+
+.panelFig {
+  margin: 0 0 6px;
+}
+
+.panelCaption {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  padding-left: 6px;
+  margin-top: 2px;
+  margin-bottom: 14px;
+}
+
+.chartWrap {
+  position: relative;
+  width: 100%;
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.axisText {
+  fill: #898781;
+  font-size: 15px;
+  font-family: var(--font-sans);
+}
+
+.axisTitle {
+  fill: #898781;
+  font-size: 15px;
+  font-family: var(--font-sans);
+  letter-spacing: 0.04em;
+}
+
+.dotLabel {
+  fill: #c3c2b7;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  /* Halo in the card colour so a month label stays readable where it crosses
+     the fitted line or a neighbouring dot. */
+  paint-order: stroke fill;
+  stroke: #141414;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.tooltip {
+  position: absolute;
+  transform: translate(-50%, -118%);
+  background: #000;
+  border: 1px solid #3a3a3a;
+  border-radius: 7px;
+  padding: 8px 11px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.84rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+.tooltip strong {
+  font-weight: 600;
+}
+
+.tooltip span {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltip em {
+  font-style: normal;
+  color: #e0955f;
+  font-size: 0.8rem;
+}
+
+/* --- Legend ------------------------------------------------------------ */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-bottom: 16px;
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* --- Phase cards ------------------------------------------------------- */
+
+.phaseGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.phaseCard {
+  background: var(--s-card);
+  border: 1px solid var(--s-line);
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.phaseCardLead {
+  border-color: #3d5f36;
+}
+
+.phaseSpan {
+  font-size: 0.76rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.phaseName {
+  font-size: 1.04rem;
+  font-weight: 600;
+  margin: 6px 0 14px;
+}
+
+.phaseRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 7px 0;
+  border-top: 1px solid #1f1f1f;
+  font-size: 0.9rem;
+}
+
+.phaseRowLabel {
+  color: var(--text-muted);
+}
+
+.phaseRowValue {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.phaseNote {
+  margin-top: 14px;
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* --- Callout ----------------------------------------------------------- */
+
+.callout {
+  background: #101a12;
+  border: 1px solid #2c4a33;
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin: 26px 0;
+}
+
+.calloutTitle {
+  font-size: 0.98rem;
+  font-weight: 650;
+  margin-bottom: 8px;
+}
+
+.calloutBody {
+  font-size: 0.94rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.caution {
+  background: #191207;
+  border-color: #4d3612;
+}
+
+/* --- Table ------------------------------------------------------------- */
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--s-line);
+  border-radius: 10px;
+  background: var(--s-card);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  min-width: 720px;
+}
+
+.table th {
+  text-align: right;
+  padding: 12px 16px;
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 500;
+  border-bottom: 1px solid var(--s-line);
+  white-space: nowrap;
+}
+
+.table th:first-child,
+.table td:first-child {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: var(--s-card);
+}
+
+.table td {
+  text-align: right;
+  padding: 11px 16px;
+  border-bottom: 1px solid #1c1c1c;
+  font-variant-numeric: tabular-nums;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.rowTotal td {
+  border-top: 1px solid var(--s-line);
+  font-weight: 650;
+  background: var(--s-card-2);
+}
+
+.rowTotal td:first-child {
+  background: var(--s-card-2);
+}
+
+.splitCell {
+  min-width: 120px;
+}
+
+.splitTrack {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.splitPaid,
+.splitOrganic {
+  height: 100%;
+}
+
+/* --- Read-this list ---------------------------------------------------- */
+
+.readList {
+  list-style: none;
+  counter-reset: read;
+  max-width: 720px;
+}
+
+.readItem {
+  counter-increment: read;
+  position: relative;
+  padding-left: 40px;
+  margin-bottom: 20px;
+  font-size: 0.98rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.readItem::before {
+  content: counter(read);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 25px;
+  height: 25px;
+  border: 1px solid var(--s-line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.readItem strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* --- Footer ------------------------------------------------------------ */
+
+.footer {
+  border-top: 1px solid var(--s-line);
+  padding-top: 22px;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  max-width: 720px;
+}
+
+.footer p + p {
+  margin-top: 10px;
+}
+
+/* --- Responsive -------------------------------------------------------- */
+
+@media (max-width: 860px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .phaseGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .wrap {
+    padding: 0 18px;
+  }
+}
+
+@media print {
+  .page {
+    background: #fff;
+  }
+}
