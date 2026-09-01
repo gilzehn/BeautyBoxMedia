@@ -42,7 +42,6 @@ import {
   NOT_SUPPLIED,
   SELLER_AMAZON_SHARE_CLAIM,
   AD_SPEND_2026_ANNUALIZED,
-  UNDERLYING_DETERIORATION,
   EXPOSED_RUN_RATE,
   EXPOSED_SHARE,
   AMAZON_AT_RISK_TOTAL,
@@ -62,7 +61,6 @@ import {
   Donut,
   Timeline,
   TimelineEvent,
-  EventBars,
   MixBar,
   BUCKET_COLORS,
 } from './charts';
@@ -72,14 +70,13 @@ import {
 // -------------------------------------------------------------------------
 
 const SECTIONS = [
-  { id: 'company', n: 0, title: 'Company context: income and spend by platform' },
-  { id: 'headline', n: 1, title: 'Headline: sales, spend, organic' },
-  { id: 'products', n: 2, title: 'Product breakdown, 2026 vs 2025' },
+  { id: 'company', n: 0, title: 'Company context' },
+  { id: 'headline', n: 1, title: 'Amazon summary' },
+  { id: 'products', n: 2, title: 'Product breakdown' },
   { id: 'removed', n: 3, title: 'Products removed' },
-  { id: 'enforcement', n: 4, title: 'Enforcement: notifications and account health' },
+  { id: 'enforcement', n: 4, title: 'Enforcement' },
   { id: 'danger', n: 5, title: 'Run rate by exposure' },
-  { id: 'inventory', n: 6, title: 'Inventory: liquidations and disposals' },
-  { id: 'conclusions', n: 7, title: 'Summary and open items' },
+  { id: 'conclusions', n: 6, title: 'Summary and open items' },
 ] as const;
 
 const STATUS_LABEL: Record<ProductStatus, string> = {
@@ -426,27 +423,6 @@ export default function PerfectImageDashboard() {
   const toggleBucket = (b: string) =>
     setLostBuckets((prev) => (prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b]));
 
-  // --- Section 6 ----------------------------------------------------------
-  const liquidationTotals = useMemo(
-    () => ({
-      events: sum(D.liquidations.map((l) => l.events)),
-      units: sum(D.liquidations.map((l) => l.units)),
-      proceeds: sum(D.liquidations.map((l) => l.proceeds)),
-    }),
-    []
-  );
-  const disposalFee = D.fba_fees.find((f) => f.item === 'FBA Removal Order: Disposal Fee')!;
-  const returnFee = D.fba_fees.find((f) => f.item === 'FBA Removal Order: Return Fee')!;
-  const storageFees = sum(
-    D.fba_fees.filter((f) => /storage/i.test(f.item)).map((f) => Math.abs(f.amount))
-  );
-  const reimbursements = sum(D.adjustments.map((a) => a.amount));
-  const removalMonths = D.removal_orders_by_month.map((r) => ({
-    month: r.month,
-    label: MONTH_LABEL[r.month] ?? r.month,
-    value: r.events,
-  }));
-
   return (
     <div className={styles.page}>
       {/* ---------------------------------------------------------------- */}
@@ -456,8 +432,8 @@ export default function PerfectImageDashboard() {
             <p className={styles.eyebrow}>Amazon channel · settlement and account records</p>
             <h1 className={styles.title}>Perfect Image LLC</h1>
             <p className={styles.subtitle}>
-              Settlement window {D.meta.settlement_window} · prepared {D.meta.generated} · figures
-              reconciled to Amazon settlement data unless a source tag says otherwise
+              Settlement window {D.meta.settlement_window} · prepared {D.meta.generated} · source
+              tagged per figure
             </p>
           </div>
           <div className={styles.mastheadActions}>
@@ -476,9 +452,7 @@ export default function PerfectImageDashboard() {
               <span>{String(s.n).padStart(2, '0')}</span> {s.title}
             </a>
           ))}
-        </nav>
-
-        <div className={styles.lensBar}>
+          <div className={styles.lensBar}>
           <button
             type="button"
             className={`${styles.checkBadge} ${checksPass ? styles.checkPass : styles.checkFail}`}
@@ -488,7 +462,8 @@ export default function PerfectImageDashboard() {
               ? `${checks.length}/${checks.length} reconciliation checks pass`
               : 'RECONCILIATION FAILED'}
           </button>
-        </div>
+          </div>
+        </nav>
 
         {showChecks && (
           <ul className={styles.checkList}>
@@ -509,255 +484,242 @@ export default function PerfectImageDashboard() {
       {/* ---------------------------------------------------------------- */}
       {/* 0. Company context                                                */}
       {/* ---------------------------------------------------------------- */}
-      <section id="company" className={styles.section}>
+      <section id="company" className={`${styles.section} ${styles.compactSection}`}>
         <SectionHead
           n={0}
           title="Company context: income and spend by platform"
-          answers="What sits around the Amazon channel"
+          answers="Both channels, both periods, on one screen"
         />
 
-        <div className={styles.splitGrid}>
-          <div className={styles.card}>
-            <div className={styles.cardHead}>
-              <h3>Income by platform — FY2025</h3>
-              <span className={styles.stamp}>{usd(rev25)} disclosed</span>
-            </div>
-            <MixBar
-              segments={REVENUE_2025.map((r, i) => ({
-                label: r.channel,
-                value: r.value,
-                color: CHANNEL_COLORS[i],
-              }))}
-              total={rev25}
-            />
-            <ChannelTable rows={REVENUE_2025} label="Channel" totalLabel="Disclosed revenue" />
+        <div className={styles.tileRow}>
+          <div className={styles.tile}>
+            <span>Revenue FY2025</span>
+            <strong>{usd(rev25)}</strong>
+            <em>Amazon + Shopify</em>
+          </div>
+          <div className={styles.tile}>
+            <span>Revenue 2026 stub</span>
+            <strong>{usd(rev26)}</strong>
+            <em>P&amp;L stub column</em>
+          </div>
+          <div className={styles.tile}>
+            <span>Amazon share</span>
+            <strong>
+              {amazonShare25.toFixed(1)}% <i>→ {amazonShare26.toFixed(1)}%</i>
+            </strong>
+            <em>of disclosed revenue</em>
+          </div>
+          <div className={styles.tile}>
+            <span>Advertising</span>
+            <strong>
+              {usd(adTotal25)} <i>→ {usd(adTotal26)}</i>
+            </strong>
+            <em>P&amp;L line</em>
+          </div>
+          <div className={styles.tile}>
+            <span>Blended ad ratio</span>
+            <strong>
+              {((adTotal25 / rev25) * 100).toFixed(1)}%{' '}
+              <i className={styles.bad}>→ {((adTotal26 / rev26) * 100).toFixed(1)}%</i>
+            </strong>
+            <em>of disclosed revenue</em>
+          </div>
+          <div className={styles.tile}>
+            <span>Amazon contribution</span>
+            <strong>
+              {((stack25.contributionBeforeCogs / stack25.gross) * 100).toFixed(1)}%{' '}
+              <i className={styles.bad}>
+                → {((stack26.contributionBeforeCogs / stack26.gross) * 100).toFixed(1)}%
+              </i>
+            </strong>
+            <em>of gross, before COGS</em>
+          </div>
+        </div>
+
+        <div className={styles.compactRow}>
+          <div className={styles.panel}>
+            <h3>Income by platform</h3>
+            {[
+              { label: 'FY2025', rows: REVENUE_2025, total: rev25 },
+              { label: '2026 stub', rows: REVENUE_2026_STUB, total: rev26 },
+            ].map((g) => (
+              <div key={g.label} className={styles.mixRow}>
+                <span className={styles.mixLabel}>
+                  {g.label}
+                  <i>{usd(g.total)}</i>
+                </span>
+                <div className={styles.mixCompact}>
+                  <MixBar
+                    segments={g.rows.map((r, i) => ({
+                      label: `${r.channel} ${usd(r.value)}`,
+                      value: r.value,
+                      color: CHANNEL_COLORS[i],
+                    }))}
+                    total={g.total}
+                  />
+                </div>
+              </div>
+            ))}
+            <p className={styles.panelNote}>
+              Amazon FY2025 is settlement gross, tying to the P&amp;L to 0.01%; the rest are P&amp;L
+              lines. The stub is labelled seven months but its Amazon line is six.
+            </p>
           </div>
 
-          <div className={styles.card}>
-            <div className={styles.cardHead}>
-              <h3>Income by platform — 2026 stub</h3>
-              <span className={styles.stamp}>{usd(rev26)} disclosed</span>
-            </div>
-            <MixBar
-              segments={REVENUE_2026_STUB.map((r, i) => ({
-                label: r.channel,
-                value: r.value,
-                color: CHANNEL_COLORS[i],
-              }))}
-              total={rev26}
-            />
-            <ChannelTable rows={REVENUE_2026_STUB} label="Channel" totalLabel="Disclosed revenue" />
-            <p className={styles.caption}>
-              The P&amp;L labels this column seven months. Its Amazon line equals six months of
-              settlement trading, so the mix is internally consistent but the period is not what it
-              says it is.
+          <div className={styles.panel}>
+            <h3>Advertising by platform</h3>
+            {[
+              { label: '2025', rows: ADVERTISING_2025, total: adTotal25 },
+              { label: '2026 stub', rows: ADVERTISING_2026_STUB, total: adTotal26 },
+            ].map((g) => (
+              <div key={g.label} className={styles.mixRow}>
+                <span className={styles.mixLabel}>
+                  {g.label}
+                  <i>{usd(g.total)}</i>
+                </span>
+                <div className={styles.mixCompact}>
+                  <MixBar
+                    segments={g.rows.map((r, i) => ({
+                      label: `${i === 0 ? 'Amazon' : 'Non-Amazon'} ${usd(r.value)}`,
+                      value: r.value,
+                      color: CHANNEL_COLORS[i],
+                    }))}
+                    total={g.total}
+                  />
+                </div>
+              </div>
+            ))}
+            <p className={styles.panelNote}>
+              Non-Amazon is the P&amp;L line less confirmed Amazon spend. No platform split has been
+              supplied for either year.
             </p>
           </div>
         </div>
 
-        <div className={styles.card}>
-          <div className={styles.cardHead}>
-            <h3>Amazon&apos;s share of disclosed revenue against the seller&apos;s framing</h3>
+        <div className={styles.compactRow3}>
+          <div className={styles.panel}>
+            <h3>Where an Amazon dollar goes</h3>
+            <table className={styles.compactTable}>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th className={styles.numCol}>FY2025</th>
+                  <th className={styles.numCol}>2026</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(
+                  [
+                    ['Gross sales', 'gross'],
+                    ['Promotional rebates', 'promoRebates'],
+                    ['Refunds', 'refunds'],
+                    ['Selling fees', 'sellingFees'],
+                    ['FBA fees', 'fbaFees'],
+                    ['Net deposits', 'netDeposits'],
+                    ['Advertising', 'adSpend'],
+                    ['Contribution before COGS', 'contributionBeforeCogs'],
+                  ] as [string, keyof typeof stack25][]
+                ).map(([label, key]) => {
+                  const emph = key === 'netDeposits' || key === 'contributionBeforeCogs';
+                  return (
+                    <tr key={key} className={emph ? styles.rowEmphasis : ''}>
+                      <td>{label}</td>
+                      <td className={styles.numCol}>
+                        {((stack25[key] / stack25.gross) * 100).toFixed(1)}%
+                      </td>
+                      <td
+                        className={`${styles.numCol} ${
+                          key === 'adSpend' || key === 'contributionBeforeCogs' ? styles.bad : ''
+                        }`}
+                      >
+                        {((stack26[key] / stack26.gross) * 100).toFixed(1)}%
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <p className={styles.panelNote}>Settlement, % of gross.</p>
           </div>
-          <div className={styles.reconcileRow}>
-            <div>
-              <strong>{amazonShare25.toFixed(1)}%</strong>
-              <span>Amazon share of FY2025 disclosed revenue, on the two channels supplied.</span>
-            </div>
-            <div>
-              <strong>{amazonShare26.toFixed(1)}%</strong>
-              <span>Amazon share of the 2026 stub — where the seller&apos;s &ldquo;~55%&rdquo; lands almost exactly.</span>
-            </div>
-            <div>
-              <strong className={styles.warn}>{usd(unaccounted)}</strong>
+
+          <div className={styles.panel}>
+            <h3>Advertising per revenue dollar</h3>
+            <table className={styles.compactTable}>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th className={styles.numCol}>2025</th>
+                  <th className={styles.numCol}>2026</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    Amazon <Prov p="settlement" />
+                  </td>
+                  <td className={styles.numCol}>{ad.tacos_2025}%</td>
+                  <td className={`${styles.numCol} ${styles.bad}`}>{ad.tacos_2026}%</td>
+                </tr>
+                <tr>
+                  <td>
+                    Shopify <Prov p="derived" />
+                  </td>
+                  <td className={styles.numCol}>{ad.implied_shopify_tacos_2025}%</td>
+                  <td className={styles.numCol}>{ad.implied_shopify_tacos_2026}%</td>
+                </tr>
+                <tr className={styles.rowEmphasis}>
+                  <td>
+                    Blended <Prov p="derived" />
+                  </td>
+                  <td className={styles.numCol}>{((adTotal25 / rev25) * 100).toFixed(1)}%</td>
+                  <td className={`${styles.numCol} ${styles.bad}`}>
+                    {((adTotal26 / rev26) * 100).toFixed(1)}%
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p className={styles.panelNote}>
+              Absolute advertising fell 9.6%; the ratio rose 7.4 points.
+            </p>
+            <p className={styles.panelFlag}>
+              The seller&apos;s materials put Amazon at ~{SELLER_AMAZON_SHARE_CLAIM}% of company
+              revenue. That matches the 2026 stub ({amazonShare26.toFixed(1)}%); against FY2025 it
+              implies {usd(impliedTotalIncome)} of total income and {usd(unaccounted)} in neither
+              channel shown.
+            </p>
+          </div>
+
+          <div className={styles.panel}>
+            <h3>Not supplied at company level</h3>
+            <ul className={styles.notSupplied}>
+              {NOT_SUPPLIED.map((n) => (
+                <li key={n}>{n}</li>
+              ))}
+            </ul>
+            <div className={styles.provKey}>
               <span>
-                of 2025 revenue in neither column at a {SELLER_AMAZON_SHARE_CLAIM}% Amazon share,
-                which implies {usd(impliedTotalIncome)} of total income. The P&amp;L by channel
-                resolves which reading applies.
+                <Prov p="settlement" /> reconciled to Amazon data
+              </span>
+              <span>
+                <Prov p="pnl" /> seller-supplied
+              </span>
+              <span>
+                <Prov p="derived" /> arithmetic on the two
               </span>
             </div>
           </div>
         </div>
-
-        <div className={styles.splitGrid}>
-          <div className={styles.card}>
-            <div className={styles.cardHead}>
-              <h3>Advertising spend by platform — 2025</h3>
-              <span className={styles.stamp}>{usd(adTotal25)} total</span>
-            </div>
-            <MixBar
-              segments={ADVERTISING_2025.map((r, i) => ({
-                label: r.channel,
-                value: r.value,
-                color: CHANNEL_COLORS[i],
-              }))}
-              total={adTotal25}
-            />
-            <ChannelTable rows={ADVERTISING_2025} label="Channel" totalLabel="P&L advertising line" />
-          </div>
-
-          <div className={styles.card}>
-            <div className={styles.cardHead}>
-              <h3>Advertising spend by platform — 2026 stub</h3>
-              <span className={styles.stamp}>{usd(adTotal26)} total</span>
-            </div>
-            <MixBar
-              segments={ADVERTISING_2026_STUB.map((r, i) => ({
-                label: r.channel,
-                value: r.value,
-                color: CHANNEL_COLORS[i],
-              }))}
-              total={adTotal26}
-            />
-            <ChannelTable
-              rows={ADVERTISING_2026_STUB}
-              label="Channel"
-              totalLabel="P&L advertising line"
-            />
-            <p className={styles.caption}>
-              The non-Amazon line is a residual of the P&amp;L advertising line less Amazon spend. No
-              split between Meta, Google or other platforms has been supplied for either year.
-            </p>
-          </div>
-        </div>
-
-        <div className={styles.card}>
-          <div className={styles.cardHead}>
-            <h3>Cost of revenue per dollar, by platform</h3>
-          </div>
-          <table className={styles.dataTable}>
-            <thead>
-              <tr>
-                <th>Advertising cost per revenue dollar</th>
-                <th className={styles.numCol}>2025</th>
-                <th className={styles.numCol}>2026 stub</th>
-                <th>Basis</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Amazon (TACOS)</td>
-                <td className={styles.numCol}>{ad.tacos_2025}%</td>
-                <td className={`${styles.numCol} ${styles.bad}`}>{ad.tacos_2026}%</td>
-                <td className={styles.muted}>
-                  Confirmed spend over settlement gross
-                  <Prov p="settlement" />
-                </td>
-              </tr>
-              <tr>
-                <td>Shopify (implied)</td>
-                <td className={`${styles.numCol} ${styles.warn}`}>{ad.implied_shopify_tacos_2025}%</td>
-                <td className={`${styles.numCol} ${styles.warn}`}>{ad.implied_shopify_tacos_2026}%</td>
-                <td className={styles.muted}>
-                  Residual advertising over Shopify revenue
-                  <Prov p="derived" />
-                </td>
-              </tr>
-              <tr className={styles.rowEmphasis}>
-                <td>Blended, all disclosed revenue</td>
-                <td className={styles.numCol}>{((adTotal25 / rev25) * 100).toFixed(1)}%</td>
-                <td className={`${styles.numCol} ${styles.bad}`}>
-                  {((adTotal26 / rev26) * 100).toFixed(1)}%
-                </td>
-                <td className={styles.muted}>
-                  P&amp;L advertising over disclosed revenue
-                  <Prov p="derived" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <p className={styles.callout}>
-            Absolute advertising fell 9.6%, $238,869 to $216,016. Against disclosed revenue in the
-            same period the ratio rose from {((adTotal25 / rev25) * 100).toFixed(1)}% to{' '}
-            {((adTotal26 / rev26) * 100).toFixed(1)}%.
-          </p>
-        </div>
-
-        <div className={styles.card}>
-          <div className={styles.cardHead}>
-            <h3>Where an Amazon dollar goes — settlement, both periods</h3>
-            <span className={styles.stamp}>verified line by line</span>
-          </div>
-          <table className={styles.dataTable}>
-            <thead>
-              <tr>
-                <th></th>
-                <th className={styles.numCol}>FY2025</th>
-                <th className={styles.numCol}>% of gross</th>
-                <th className={styles.numCol}>2026 to 20 Aug</th>
-                <th className={styles.numCol}>% of gross</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(
-                [
-                  ['Gross sales', 'gross'],
-                  ['Promotional rebates', 'promoRebates'],
-                  ['Refunds', 'refunds'],
-                  ['Amazon selling fees', 'sellingFees'],
-                  ['FBA fees', 'fbaFees'],
-                  ['Net deposits', 'netDeposits'],
-                  ['Amazon advertising', 'adSpend'],
-                  ['Contribution before COGS', 'contributionBeforeCogs'],
-                ] as [string, keyof typeof stack25][]
-              ).map(([label, key]) => {
-                const emph = key === 'netDeposits' || key === 'contributionBeforeCogs';
-                return (
-                  <tr key={key} className={emph ? styles.rowEmphasis : ''}>
-                    <td>{label}</td>
-                    <td className={styles.numCol}>{usd(stack25[key])}</td>
-                    <td className={styles.numCol}>
-                      {((stack25[key] / stack25.gross) * 100).toFixed(1)}%
-                    </td>
-                    <td className={styles.numCol}>{usd(stack26[key])}</td>
-                    <td
-                      className={`${styles.numCol} ${
-                        key === 'adSpend' || key === 'contributionBeforeCogs' ? styles.bad : ''
-                      }`}
-                    >
-                      {((stack26[key] / stack26.gross) * 100).toFixed(1)}%
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <p className={styles.caption}>
-            Platform cost is flat to a tenth of a point across both periods; the 6.5-point movement
-            in contribution before COGS is in the advertising line. COGS is not in the settlement
-            file and is not evidenced elsewhere in the material supplied.
-          </p>
-        </div>
-
-        <div className={styles.card}>
-          <div className={styles.cardHead}>
-            <h3>Not supplied at company level</h3>
-          </div>
-          <ul className={styles.notSupplied}>
-            {NOT_SUPPLIED.map((n) => (
-              <li key={n}>{n}</li>
-            ))}
-          </ul>
-          <div className={styles.provKey}>
-            <span>
-              <Prov p="settlement" /> reconciled to Amazon&apos;s own data
-            </span>
-            <span>
-              <Prov p="pnl" /> seller-supplied, unverified
-            </span>
-            <span>
-              <Prov p="derived" /> arithmetic on the other two
-            </span>
-          </div>
-        </div>
-
       </section>
 
       {/* ---------------------------------------------------------------- */}
       {/* 1. Headline                                                       */}
       {/* ---------------------------------------------------------------- */}
       <section id="headline" className={styles.section}>
-        <SectionHead n={1} title="Headline: sales, ad spend, organic" answers="Top-line figures and their bases" />
+        <SectionHead
+          n={1}
+          title="Amazon summary"
+          answers="The Amazon channel: sales, units, advertising and organic"
+        />
 
         <div className={styles.kpiGrid}>
           <Kpi
@@ -1533,112 +1495,11 @@ export default function PerfectImageDashboard() {
       </section>
 
       {/* ---------------------------------------------------------------- */}
-      {/* 6. Inventory                                                      */}
-      {/* ---------------------------------------------------------------- */}
-      <section id="inventory" className={styles.section}>
-        <SectionHead
-          n={6}
-          title="Inventory: liquidations and disposals"
-          answers="Physical stock movements"
-        />
-
-        <div className={styles.splitGrid}>
-          <div className={styles.card}>
-            <div className={styles.cardHead}>
-              <h3>Liquidations</h3>
-              <span className={styles.stamp}>
-                {liquidationTotals.events} events · {usd(liquidationTotals.proceeds, { cents: true })} recovered
-              </span>
-            </div>
-            <table className={styles.dataTable}>
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th className={styles.numCol}>Events</th>
-                  <th className={styles.numCol}>Units</th>
-                  <th className={styles.numCol}>Proceeds</th>
-                </tr>
-              </thead>
-              <tbody>
-                {D.liquidations.map((l) => (
-                  <tr key={l.product}>
-                    <td>{l.product.length > 52 ? `${l.product.slice(0, 51)}…` : l.product}</td>
-                    <td className={styles.numCol}>{l.events}</td>
-                    <td className={styles.numCol}>{l.units}</td>
-                    <td className={styles.numCol}>{usd(l.proceeds, { cents: true })}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td>Total</td>
-                  <td className={styles.numCol}>{liquidationTotals.events}</td>
-                  <td className={styles.numCol}>{liquidationTotals.units}</td>
-                  <td className={`${styles.numCol} ${styles.bad}`}>
-                    {usd(liquidationTotals.proceeds, { cents: true })}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-
-          <div className={styles.card}>
-            <div className={styles.cardHead}>
-              <h3>FBA fee profile, 20 months</h3>
-            </div>
-            <table className={styles.dataTable}>
-              <tbody>
-                <tr>
-                  <td>Disposal fees</td>
-                  <td className={styles.numCol}>{disposalFee.count} events</td>
-                  <td className={styles.numCol}>{usd(Math.abs(disposalFee.amount), { cents: true })}</td>
-                </tr>
-                <tr>
-                  <td>Removal — return fees</td>
-                  <td className={styles.numCol}>{returnFee.count} events</td>
-                  <td className={styles.numCol}>{usd(Math.abs(returnFee.amount), { cents: true })}</td>
-                </tr>
-                <tr className={styles.rowEmphasis}>
-                  <td>Storage fees, all types</td>
-                  <td className={styles.numCol}>0.03% of revenue</td>
-                  <td className={styles.numCol}>{usd(storageFees, { cents: true })}</td>
-                </tr>
-                <tr>
-                  <td>Net FBA reimbursements</td>
-                  <td className={styles.numCol}>~{usd(reimbursements / 20 * 12)}/yr</td>
-                  <td className={`${styles.numCol} ${styles.up}`}>{usd(reimbursements, { cents: true })}</td>
-                </tr>
-              </tbody>
-            </table>
-            <p className={styles.caption}>
-              Storage of {usd(storageFees)} across twenty months on $1.6M of throughput, against a
-              1–2% category norm. Reimbursements are non-operating income if booked to revenue.
-            </p>
-          </div>
-        </div>
-
-        <div className={styles.card}>
-          <div className={styles.cardHead}>
-            <h3>Removal and disposal events by month</h3>
-            <div className={styles.legend}>
-              <span className={styles.legMark}>Removal months</span>
-            </div>
-          </div>
-          <EventBars data={removalMonths} markers={REMOVAL_MARKERS.map((m) => m.month)} />
-          <p className={styles.caption}>
-            The events cluster on the enforcement dates: 171 in January 2026, the month after the
-            Lactic 50% removal, against a 20-month median of 27.
-          </p>
-        </div>
-
-      </section>
-
-      {/* ---------------------------------------------------------------- */}
       {/* 7. Conclusions                                                    */}
       {/* ---------------------------------------------------------------- */}
       <section id="conclusions" className={styles.section}>
         <SectionHead
-          n={7}
+          n={6}
           title="Summary and open items"
           answers="What reconciles, what does not, what is missing"
         />
@@ -1670,20 +1531,6 @@ export default function PerfectImageDashboard() {
               <li>$277,054 (30.6%) of run rate on the four enforcement paths in this account</li>
               <li>Both growth SKUs sit exactly at the concentration caps</li>
               <li>Three appeals at &ldquo;submission required&rdquo;; two decided adversely</li>
-              <li>Units −13.8% against revenue −6.0%, with ASP +9.1%</li>
-              <li>
-                Organic sales −25.9% like-for-like while ad-attributed sales rose 39.2%; organic
-                share 68.1% → 53.1%
-              </li>
-              <li>
-                Amazon TACOS 9.2% → 15.7%, ROAS 3.46x → 2.98x, ACOS 28.9% → 33.6%; spend ~+58%
-                annualized against revenue −6%
-              </li>
-              <li>ASIN concentration 60.7% in a single glycolic variation family</li>
-              <li>
-                Inventory drawdown $154,537 against an $82,360 SDE improvement — a difference of{' '}
-                {usd(Math.abs(UNDERLYING_DETERIORATION))}, with no advertising saving offsetting it
-              </li>
             </ul>
           </div>
         </div>

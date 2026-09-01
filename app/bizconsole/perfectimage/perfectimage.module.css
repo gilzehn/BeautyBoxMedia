@@ -28,7 +28,7 @@
   background: rgba(10, 10, 10, 0.96);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--pi-line);
-  padding: 22px 32px 12px;
+  padding: 12px 32px 10px;
 }
 
 .mastheadTop {
@@ -108,9 +108,10 @@
 
 .sectionNav {
   display: flex;
-  gap: 6px;
-  margin-top: 16px;
+  gap: 5px;
+  margin-top: 10px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .navChip {
@@ -137,8 +138,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 12px;
-  flex-wrap: wrap;
+  margin-left: auto;
 }
 
 .lensLabel {
@@ -417,6 +417,200 @@
 
 .splitGrid .card {
   margin-top: 14px;
+}
+
+/* --- Compact one-screen block (section 00) ----------------------------- */
+
+.compactSection {
+  font-size: 15px;
+  padding-top: 4px;
+  padding-bottom: 0;
+}
+
+.compactSection .sectionTitle {
+  font-size: 1.15rem;
+}
+
+.compactSection .sectionHead {
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.compactSection .sectionAnswers {
+  font-size: 12px;
+}
+
+.tileRow {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.tile {
+  background: var(--pi-card);
+  border: 1px solid var(--pi-line);
+  border-radius: 8px;
+  padding: 7px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.tile > span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.tile strong {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.tile strong i {
+  font-style: normal;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.tile em {
+  font-style: normal;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.compactRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.compactRow3 {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.panel {
+  background: var(--pi-card);
+  border: 1px solid var(--pi-line);
+  border-radius: 8px;
+  padding: 10px 13px 11px;
+  min-width: 0;
+}
+
+.panel h3 {
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.panelNote {
+  margin-top: 7px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.panelFlag {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid var(--pi-line);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #e0b268;
+}
+
+.mixRow {
+  margin-bottom: 6px;
+}
+
+.mixLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.mixLabel i {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.mixCompact .mixTrack {
+  height: 22px;
+}
+
+.mixCompact .mixSeg {
+  font-size: 11.5px;
+}
+
+.mixCompact .mixKeys {
+  font-size: 11.5px;
+  gap: 12px;
+}
+
+.mixCompact .mixBar {
+  gap: 5px;
+}
+
+.compactTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.compactTable th {
+  text-align: left;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  font-weight: 500;
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--pi-line);
+}
+
+.compactTable td {
+  padding: 1.5px 6px;
+  border-bottom: 1px solid #1c1c1c;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.compactTable tr:last-child td {
+  border-bottom: none;
+}
+
+.compactSection .notSupplied {
+  font-size: 12px;
+  gap: 4px;
+  line-height: 1.35;
+}
+
+.compactSection .provKey {
+  margin-top: 8px;
+  font-size: 11px;
+  gap: 10px;
+}
+
+@media (max-width: 1180px) {
+  .tileRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .compactRow,
+  .compactRow3 {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* --- Legends / captions ------------------------------------------------ */
