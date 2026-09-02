@@ -1,5 +1,5 @@
 /**
- * Sonoma Syrup Co on Amazon — our advertising investment against brand income.
+ * Sonoma Syrup Co on Amazon: our advertising investment against brand income.
  *
  * Framing note: the advertising is *ours*. Beauty Box Media runs and funds the
  * Sonoma campaigns on the THE Boutique US account; Sonoma contributes co-op
@@ -13,7 +13,7 @@
  *   Income / units
  *     sellercentral_salesandtrafficbychildasin_report, restricted to the 29
  *     child ASINs carrying brand_name = 'Sonoma Syrup Co' in
- *     catalog_item_summary. "Income" is `ordered_product_sales_amt` — total
+ *     catalog_item_summary. "Income" is `ordered_product_sales_amt`: total
  *     ordered product sales, every order, advertised or not.
  *
  *   Spend / ad-attributed income
@@ -23,7 +23,7 @@
  *     Attribution is Amazon's 14-day click window.
  *
  * Pulled and re-verified 2026-09-02. Complete through 2026-08-30, so August
- * 2026 is one day short of a full month while August 2025 is whole — a small
+ * 2026 is one day short of a full month while August 2025 is whole, a small
  * bias against the current year in that row.
  */
 
@@ -34,7 +34,7 @@ export interface MonthRow {
   label: string;
   /** Our advertising investment. */
   spend: number;
-  /** Total ordered product sales — advertised and organic. */
+  /** Total ordered product sales, advertised and organic. */
   income: number;
   /** Total units ordered. */
   units: number;
@@ -79,7 +79,7 @@ export const MONTHS_2026: MonthRow[] = [
   row(8, 4739.61, 85871.64, 3304, 21827.34),
 ];
 
-/** How many months of 2026 are in hand — the like-for-like window. */
+/** How many months of 2026 are in hand: the like-for-like window. */
 export const MONTHS_ELAPSED = MONTHS_2026.length;
 
 // --- Totals -------------------------------------------------------------
@@ -109,9 +109,9 @@ export function total(rows: MonthRow[]): Totals {
   };
 }
 
-/** Jan–Aug 2026. */
+/** Jan to Aug 2026. */
 export const YTD_2026 = total(MONTHS_2026);
-/** Jan–Aug 2025 — the like-for-like window. */
+/** Jan to Aug 2025, the like-for-like window. */
 export const YTD_2025 = total(MONTHS_2025.slice(0, MONTHS_ELAPSED));
 /** All twelve months of 2025, for context on what a full year looks like. */
 export const FY_2025 = total(MONTHS_2025);
@@ -151,9 +151,9 @@ export const PAIRED: PairedMonth[] = MONTHS_2026.map((now) => {
  * closest thing the account has to a controlled test.
  */
 export const PHASES = [
-  { name: 'Baseline', span: 'Jan – Mar', months: MONTHS_2026.slice(0, 3) },
-  { name: 'Investment push', span: 'Apr – May', months: MONTHS_2026.slice(3, 5) },
-  { name: 'Pull-back', span: 'Jun – Aug', months: MONTHS_2026.slice(5) },
+  { name: 'Baseline', span: 'Jan to Mar', months: MONTHS_2026.slice(0, 3) },
+  { name: 'Investment push', span: 'Apr to May', months: MONTHS_2026.slice(3, 5) },
+  { name: 'Pull-back', span: 'Jun to Aug', months: MONTHS_2026.slice(5) },
 ];
 
 export function phaseAvg(p: (typeof PHASES)[number]) {

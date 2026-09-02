@@ -1,21 +1,22 @@
 'use client';
 
 /**
- * Sonoma Syrup Co — our 2026 advertising investment against brand income.
+ * Sonoma Syrup Co: our 2026 advertising investment against brand income.
  *
  * The voice matters here and is deliberate: Beauty Box Media funds and runs the
  * Sonoma advertising, so the page says "we invested", never "Sonoma spent".
  * The brand's stake in it is the co-op, which is what the conversation this
  * report feeds is actually about.
  *
- * Two sections: the headline figures for Jan–Aug 2026 against the same months
+ * Two sections: the headline figures for Jan to Aug 2026 against the same months
  * of 2025, then the month-by-month breakdown behind them. Figures cover the
  * whole Sonoma catalogue, and "income" is total ordered product sales rather
- * than ad-attributed sales alone — what happened to the business, not what the
+ * than ad-attributed sales alone: what happened to the business, not what the
  * ad platform claimed credit for.
  */
 
 import styles from './sonoma.module.css';
+import { GroupedBars, Legend } from './charts';
 import {
   PAIRED,
   PHASES,
@@ -143,8 +144,8 @@ export default function SonomaReport() {
             We roughly doubled the investment and income rose with it:{' '}
             <strong>{usd(YTD_2026.income - YTD_2025.income)}</strong> more income on{' '}
             <strong>{usd(YTD_2026.spend - YTD_2025.spend)}</strong> more advertising, with every one
-            of the eight months ahead of its 2025 counterpart. Not all of that growth is bought —
-            advertising is one input among several — but the paid contribution grew too: income
+            of the eight months ahead of its 2025 counterpart. Not all of that growth is bought,
+            since advertising is one input among several, but the paid contribution grew too: income
             attributed to our ads went from {usd(YTD_2025.adIncome)} to {usd(YTD_2026.adIncome)},
             and the return on it improved from {YTD_2025.roas.toFixed(2)}× to{' '}
             {YTD_2026.roas.toFixed(2)}×. The ad cost of income rose from{' '}
@@ -154,10 +155,10 @@ export default function SonomaReport() {
           </p>
 
           <p className={styles.body}>
-            The clearest evidence sits inside 2026. The April–May push raised monthly income{' '}
-            {signedPct((push.income / base.income - 1) * 100)} over the January–March baseline, and
+            The clearest evidence sits inside 2026. The April to May push raised monthly income{' '}
+            {signedPct((push.income / base.income - 1) * 100)} over the January to March baseline, and
             when we cut the budget back {signedPct((hold.spend / push.spend - 1) * 100)} in June the
-            higher level held — Jun–Aug is still running{' '}
+            higher level held. Jun to Aug is still running{' '}
             {signedPct((hold.income / base.income - 1) * 100)} on income. The investment bought rank
             and sales velocity that outlasted the spend itself, which is why the run rate did not
             fall back when the budget did.
@@ -168,61 +169,55 @@ export default function SonomaReport() {
         <section className={styles.section}>
           <SectionHead {...SECTIONS[1]} />
           <p className={styles.lede}>
-            Every month of 2026 against the same month a year earlier. Income is total ordered
-            product sales across all 29 Sonoma ASINs — advertised and organic together.
+            Each pair of bars is one month: 2025 beside 2026. Investment and income are drawn on
+            separate panels because they sit on very different scales, one axis each, so the
+            comparison is shaped by the data rather than by where the axes were pinned. Income is
+            total ordered product sales across all 29 Sonoma ASINs, advertised and organic together.
           </p>
 
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th rowSpan={2} className={styles.thMonth}>
-                    Month
-                  </th>
-                  <th colSpan={2} className={styles.thGroup}>
-                    Our ad investment
-                  </th>
-                  <th colSpan={3} className={`${styles.thGroup} ${styles.thGroupEdge}`}>
-                    Total income
-                  </th>
-                </tr>
-                <tr>
-                  <th>2025</th>
-                  <th>2026</th>
-                  <th className={styles.thEdge}>2025</th>
-                  <th>2026</th>
-                  <th>YoY</th>
-                </tr>
-              </thead>
-              <tbody>
-                {PAIRED.map((p) => (
-                  <tr key={p.label}>
-                    <td>{p.label}</td>
-                    <td className={styles.dim}>{usd(p.before.spend)}</td>
-                    <td>{usd(p.now.spend)}</td>
-                    <td className={`${styles.dim} ${styles.tdEdge}`}>{usd(p.before.income)}</td>
-                    <td>{usd(p.now.income)}</td>
-                    <td className={p.incomeYoY >= 0 ? styles.up : styles.down}>
-                      {signedPct(p.incomeYoY)}
-                    </td>
-                  </tr>
-                ))}
-                <tr className={styles.rowTotal}>
-                  <td>Jan–Aug</td>
-                  <td className={styles.dim}>{usd(YTD_2025.spend)}</td>
-                  <td>{usd(YTD_2026.spend)}</td>
-                  <td className={`${styles.dim} ${styles.tdEdge}`}>{usd(YTD_2025.income)}</td>
-                  <td>{usd(YTD_2026.income)}</td>
-                  <td className={YOY.income >= 0 ? styles.up : styles.down}>
-                    {signedPct(YOY.income)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <Legend beforeLabel="2025" nowLabel="2026" />
+
+          <div className={styles.card}>
+            <div className={styles.cardHead}>Our ad investment</div>
+            <GroupedBars
+              data={PAIRED.map((p) => ({
+                label: p.label,
+                before: p.before.spend,
+                now: p.now.spend,
+                change: p.spendYoY,
+              }))}
+              caption="Monthly advertising investment, 2026 against 2025"
+              beforeLabel="2025"
+              nowLabel="2026"
+            />
+          </div>
+
+          <div className={styles.card}>
+            <div className={styles.cardHead}>Total income</div>
+            <GroupedBars
+              data={PAIRED.map((p) => ({
+                label: p.label,
+                before: p.before.income,
+                now: p.now.income,
+                change: p.incomeYoY,
+              }))}
+              caption="Monthly brand income, 2026 against 2025"
+              beforeLabel="2025"
+              nowLabel="2026"
+            />
           </div>
 
           <p className={styles.body}>
-            For scale: the whole of 2025 — twelve months — brought{' '}
+            Every month of 2026 clears its 2025 counterpart on income, by between{' '}
+            {signedPct(Math.min(...PAIRED.map((p) => p.incomeYoY)))} and{' '}
+            {signedPct(Math.max(...PAIRED.map((p) => p.incomeYoY)))}. Across the eight months
+            together income is <strong>{signedPct(YOY.income)}</strong>, on{' '}
+            <strong>{usd(YTD_2026.spend)}</strong> of investment against{' '}
+            <strong>{usd(YTD_2025.spend)}</strong> a year earlier.
+          </p>
+
+          <p className={styles.body}>
+            For scale: the whole of 2025, twelve months, brought{' '}
             <strong>{usd(FY_2025.income)}</strong> of income on{' '}
             <strong>{usd(FY_2025.spend)}</strong> of investment. Eight months of 2026 have already
             passed the full prior year on income, and Q4, the strongest quarter of Sonoma&apos;s year,
@@ -242,7 +237,7 @@ export default function SonomaReport() {
           </p>
           <p>
             Data pulled 2 September 2026 and complete through 30 August 2026, so August 2026 is one
-            day short of a full month while August 2025 is whole — a small understatement of the
+            day short of a full month while August 2025 is whole, a small understatement of the
             current year in that row. Spend figures differ by about 0.5% from the summary sent on 30
             July because Amazon restates attribution for several days after the fact; the figures
             here are the later and more accurate ones.
