@@ -163,6 +163,16 @@
   line-height: 1.1;
 }
 
+.kpiPrior {
+  margin-top: 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .kpiNote {
   margin-top: 8px;
   font-size: 0.8rem;
@@ -171,6 +181,15 @@
 
 .up {
   color: #4ea87a;
+}
+
+.down {
+  color: #d07a72;
+}
+
+/* Prior-year figures sit behind the current year without competing with it. */
+.dim {
+  color: var(--text-muted);
 }
 
 /* --- Charts ------------------------------------------------------------ */
@@ -422,6 +441,25 @@
   background: var(--s-card);
 }
 
+.thMonth {
+  vertical-align: bottom;
+}
+
+.thGroup {
+  text-align: center !important;
+  border-bottom: 1px solid #232323;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary) !important;
+}
+
+/* A single rule divides the two measures, so the eye does not have to count
+   columns to tell investment from income. */
+.thGroupEdge,
+.thEdge,
+.tdEdge {
+  border-left: 1px solid var(--s-line);
+}
+
 .table td {
   text-align: right;
   padding: 11px 16px;
@@ -441,23 +479,6 @@
 
 .rowTotal td:first-child {
   background: var(--s-card-2);
-}
-
-.splitCell {
-  min-width: 120px;
-}
-
-.splitTrack {
-  display: flex;
-  height: 8px;
-  border-radius: 4px;
-  overflow: hidden;
-  gap: 2px;
-}
-
-.splitPaid,
-.splitOrganic {
-  height: 100%;
 }
 
 /* --- Read-this list ---------------------------------------------------- */

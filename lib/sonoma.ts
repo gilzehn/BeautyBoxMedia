@@ -1,164 +1,166 @@
 /**
- * Sonoma Syrup Co — 2026 advertising investment vs. total sales.
+ * Sonoma Syrup Co on Amazon — our advertising investment against brand income.
+ *
+ * Framing note: the advertising is *ours*. Beauty Box Media runs and funds the
+ * Sonoma campaigns on the THE Boutique US account; Sonoma contributes co-op
+ * against it. So "spend" throughout is our investment in the brand, not the
+ * brand's own outlay, and the copy on the page says so.
  *
  * Source: Amazon Selling Partner + Advertising data warehoused in BigQuery
  * (project `amzbi-418608`, dataset `amazon_source_data`), account
  * "THE Boutique Seller US" (account_id 1614400).
  *
- *   Sales / units / sessions
+ *   Income / units
  *     sellercentral_salesandtrafficbychildasin_report, restricted to the 29
  *     child ASINs carrying brand_name = 'Sonoma Syrup Co' in
- *     catalog_item_summary. `ordered_product_sales_amt` is total ordered
- *     product sales — every order, advertised or not.
+ *     catalog_item_summary. "Income" is `ordered_product_sales_amt` — total
+ *     ordered product sales, every order, advertised or not.
  *
- *   Ad spend / ad-attributed sales
- *     ad_sponsoredproducts_campaign_report + the Sponsored Brands and
- *     Sponsored Display equivalents, restricted to campaigns whose name
- *     matches '%sonoma%' (six live campaigns, all "iComm | Sonoma - Syrups").
+ *   Spend / ad-attributed income
+ *     ad_sponsoredproducts_campaign_report plus the Sponsored Brands and
+ *     Sponsored Display equivalents, restricted to campaigns matching
+ *     '%sonoma%' (six campaigns, all "iComm | Sonoma - Syrups").
  *     Attribution is Amazon's 14-day click window.
  *
- * Pulled 2026-09-01. Data is complete through 2026-08-30; August is therefore
- * one day short of the full month. Spend here differs by ~0.5% from the sheet
- * mailed to the brand on 2026-07-30 because Amazon restates attribution for a
- * few days after the fact — the later figure is the accurate one.
+ * Pulled and re-verified 2026-09-02. Complete through 2026-08-30, so August
+ * 2026 is one day short of a full month while August 2025 is whole — a small
+ * bias against the current year in that row.
  */
 
 export interface MonthRow {
-  /** ISO year-month. */
-  month: string;
-  /** Short axis label. */
+  /** Calendar month, 1-12. */
+  m: number;
+  /** Short axis/column label. */
   label: string;
-  /** Total advertising cost, all ad types. */
+  /** Our advertising investment. */
   spend: number;
-  /** Total ordered product sales for the brand — advertised and organic. */
-  sales: number;
+  /** Total ordered product sales — advertised and organic. */
+  income: number;
   /** Total units ordered. */
   units: number;
-  /** Sales Amazon attributes to an ad click within 14 days. */
-  adSales: number;
-  /** Units Amazon attributes to an ad click within 14 days. */
-  adUnits: number;
+  /** Income Amazon attributes to an ad click within 14 days. */
+  adIncome: number;
 }
+
+const L = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+const row = (m: number, spend: number, income: number, units: number, adIncome: number): MonthRow => ({
+  m,
+  label: L[m - 1],
+  spend,
+  income,
+  units,
+  adIncome,
+});
+
+export const MONTHS_2025: MonthRow[] = [
+  row(1, 352.27, 46306.41, 1774, 469.0),
+  row(2, 880.87, 32971.43, 1268, 3358.95),
+  row(3, 2026.77, 34239.69, 1327, 5547.52),
+  row(4, 5450.32, 61207.58, 2429, 20500.41),
+  row(5, 4233.55, 52968.38, 2116, 15841.3),
+  row(6, 2402.37, 49167.26, 1938, 9034.74),
+  row(7, 2644.85, 47034.98, 1999, 10364.48),
+  row(8, 3209.63, 46791.46, 1825, 11385.96),
+  row(9, 3048.36, 58475.56, 2264, 11057.09),
+  row(10, 3780.99, 62747.49, 2590, 13079.97),
+  row(11, 3173.42, 59636.95, 2228, 10723.65),
+  row(12, 3565.85, 74289.53, 2920, 17566.67),
+];
 
 export const MONTHS_2026: MonthRow[] = [
-  { month: '2026-01', label: 'Jan', spend: 3345.69, sales: 70720.95, units: 2719, adSales: 17471.23, adUnits: 730 },
-  { month: '2026-02', label: 'Feb', spend: 2716.67, sales: 62381.1, units: 2356, adSales: 14171.64, adUnits: 589 },
-  { month: '2026-03', label: 'Mar', spend: 3312.87, sales: 71998.02, units: 2902, adSales: 18887.93, adUnits: 847 },
-  { month: '2026-04', label: 'Apr', spend: 7329.58, sales: 85368.34, units: 3408, adSales: 30174.7, adUnits: 1307 },
-  { month: '2026-05', label: 'May', spend: 10695.4, sales: 85656.13, units: 3328, adSales: 26324.46, adUnits: 1107 },
-  { month: '2026-06', label: 'Jun', spend: 5400.37, sales: 82163.69, units: 3128, adSales: 24339.3, adUnits: 991 },
-  { month: '2026-07', label: 'Jul', spend: 4355.88, sales: 83092.81, units: 3179, adSales: 19284.35, adUnits: 816 },
-  { month: '2026-08', label: 'Aug', spend: 4739.61, sales: 85871.64, units: 3304, adSales: 21827.34, adUnits: 913 },
+  row(1, 3345.69, 70720.95, 2719, 17471.23),
+  row(2, 2716.67, 62381.1, 2356, 14171.64),
+  row(3, 3312.87, 71998.02, 2902, 18887.93),
+  row(4, 7329.58, 85368.34, 3408, 30174.7),
+  row(5, 10695.4, 85656.13, 3328, 26324.46),
+  row(6, 5400.37, 82163.69, 3128, 24339.3),
+  row(7, 4355.88, 83092.81, 3179, 19284.35),
+  row(8, 4739.61, 85871.64, 3304, 21827.34),
 ];
 
-/** Same eight months of 2025, for the year-on-year anchor only. */
-export const PRIOR_YEAR_JAN_AUG = {
-  spend: 21200.63,
-  sales: 370687.19,
-  units: 14676,
-  adSales: 76502.36,
-};
+/** How many months of 2026 are in hand — the like-for-like window. */
+export const MONTHS_ELAPSED = MONTHS_2026.length;
 
-// --- Derived ------------------------------------------------------------
+// --- Totals -------------------------------------------------------------
 
-export function sum(rows: MonthRow[], key: keyof Omit<MonthRow, 'month' | 'label'>): number {
-  return rows.reduce((t, r) => t + r[key], 0);
+export interface Totals {
+  spend: number;
+  income: number;
+  units: number;
+  adIncome: number;
+  /** Our ad spend as a share of total income. */
+  adCostOfIncome: number;
+  /** Return on ad spend, on attributed income only. */
+  roas: number;
 }
 
-export const YTD = {
-  spend: sum(MONTHS_2026, 'spend'),
-  sales: sum(MONTHS_2026, 'sales'),
-  units: sum(MONTHS_2026, 'units'),
-  adSales: sum(MONTHS_2026, 'adSales'),
-};
-
-/** Advertising cost as a share of *total* sales — the number that matters to a brand. */
-export const YTD_TACOS = (YTD.spend / YTD.sales) * 100;
-/** Return on ad spend, on Amazon-attributed sales only. */
-export const YTD_ROAS = YTD.adSales / YTD.spend;
-
-export const YOY = {
-  spend: (YTD.spend / PRIOR_YEAR_JAN_AUG.spend - 1) * 100,
-  sales: (YTD.sales / PRIOR_YEAR_JAN_AUG.sales - 1) * 100,
-  units: (YTD.units / PRIOR_YEAR_JAN_AUG.units - 1) * 100,
-};
-
-/**
- * The year splits into three natural spending regimes. Comparing them is the
- * closest thing to a controlled test the account has: budget moved sharply in
- * both directions while everything else about the catalogue stayed put.
- */
-export interface Phase {
-  id: string;
-  name: string;
-  span: string;
-  note: string;
-  months: MonthRow[];
-}
-
-export const PHASES: Phase[] = [
-  {
-    id: 'base',
-    name: 'Baseline',
-    span: 'Jan – Mar',
-    note: 'Spend held near $3K a month.',
-    months: MONTHS_2026.slice(0, 3),
-  },
-  {
-    id: 'push',
-    name: 'Investment push',
-    span: 'Apr – May',
-    note: 'Budget raised sharply, peaking at $10.7K in May.',
-    months: MONTHS_2026.slice(3, 5),
-  },
-  {
-    id: 'hold',
-    name: 'Pull-back',
-    span: 'Jun – Aug',
-    note: 'Budget cut back by nearly half. Sales did not follow it down.',
-    months: MONTHS_2026.slice(5),
-  },
-];
-
-export function phaseAvg(p: Phase) {
-  const n = p.months.length;
-  const spend = sum(p.months, 'spend') / n;
-  const sales = sum(p.months, 'sales') / n;
-  const adSales = sum(p.months, 'adSales') / n;
+export function total(rows: MonthRow[]): Totals {
+  const spend = rows.reduce((t, r) => t + r.spend, 0);
+  const income = rows.reduce((t, r) => t + r.income, 0);
+  const adIncome = rows.reduce((t, r) => t + r.adIncome, 0);
   return {
     spend,
-    sales,
-    units: sum(p.months, 'units') / n,
-    tacos: (spend / sales) * 100,
-    roas: adSales / spend,
+    income,
+    units: rows.reduce((t, r) => t + r.units, 0),
+    adIncome,
+    adCostOfIncome: (spend / income) * 100,
+    roas: adIncome / spend,
   };
 }
 
-/** Pearson correlation coefficient. */
-export function pearson(x: number[], y: number[]): number {
-  const n = x.length;
-  const mx = x.reduce((a, b) => a + b, 0) / n;
-  const my = y.reduce((a, b) => a + b, 0) / n;
-  let num = 0;
-  let dx = 0;
-  let dy = 0;
-  for (let i = 0; i < n; i++) {
-    num += (x[i] - mx) * (y[i] - my);
-    dx += (x[i] - mx) ** 2;
-    dy += (y[i] - my) ** 2;
-  }
-  return num / Math.sqrt(dx * dy);
+/** Jan–Aug 2026. */
+export const YTD_2026 = total(MONTHS_2026);
+/** Jan–Aug 2025 — the like-for-like window. */
+export const YTD_2025 = total(MONTHS_2025.slice(0, MONTHS_ELAPSED));
+/** All twelve months of 2025, for context on what a full year looks like. */
+export const FY_2025 = total(MONTHS_2025);
+
+/** Percentage change, 2026 against the same months of 2025. */
+export const yoy = (now: number, before: number) => (now / before - 1) * 100;
+
+export const YOY = {
+  spend: yoy(YTD_2026.spend, YTD_2025.spend),
+  income: yoy(YTD_2026.income, YTD_2025.income),
+  units: yoy(YTD_2026.units, YTD_2025.units),
+};
+
+/** The two years' rows paired up month by month, for the comparison table. */
+export interface PairedMonth {
+  label: string;
+  now: MonthRow;
+  before: MonthRow;
+  incomeYoY: number;
+  spendYoY: number;
 }
 
-export const R_SPEND_SALES = pearson(
-  MONTHS_2026.map((m) => m.spend),
-  MONTHS_2026.map((m) => m.sales),
-);
+export const PAIRED: PairedMonth[] = MONTHS_2026.map((now) => {
+  const before = MONTHS_2025[now.m - 1];
+  return {
+    label: now.label,
+    now,
+    before,
+    incomeYoY: yoy(now.income, before.income),
+    spendYoY: yoy(now.spend, before.spend),
+  };
+});
 
-export const R_SPEND_UNITS = pearson(
-  MONTHS_2026.map((m) => m.spend),
-  MONTHS_2026.map((m) => m.units),
-);
+/**
+ * 2026 split into its three spending regimes. Budget moved hard in both
+ * directions while the catalogue stayed put, which makes the comparison the
+ * closest thing the account has to a controlled test.
+ */
+export const PHASES = [
+  { name: 'Baseline', span: 'Jan – Mar', months: MONTHS_2026.slice(0, 3) },
+  { name: 'Investment push', span: 'Apr – May', months: MONTHS_2026.slice(3, 5) },
+  { name: 'Pull-back', span: 'Jun – Aug', months: MONTHS_2026.slice(5) },
+];
+
+export function phaseAvg(p: (typeof PHASES)[number]) {
+  const n = p.months.length;
+  const t = total(p.months);
+  return { spend: t.spend / n, income: t.income / n, units: t.units / n };
+}
 
 // --- Formatting ---------------------------------------------------------
 
