@@ -13,6 +13,10 @@
  * whole Sonoma catalogue, and "income" is total ordered product sales rather
  * than ad-attributed sales alone: what happened to the business, not what the
  * ad platform claimed credit for.
+ *
+ * The source-and-method paragraph was removed from the footer on request. The
+ * provenance of every figure is documented at the top of lib/sonoma.ts, which
+ * is where it needs to stay accurate.
  */
 
 import styles from './sonoma.module.css';
@@ -227,14 +231,6 @@ export default function SonomaReport() {
 
         {/* ---------------------------------------------------------------- */}
         <footer className={styles.footer}>
-          <p>
-            <strong>Source and method.</strong> Amazon Selling Partner and Advertising data for the
-            THE Boutique US account, warehoused in BigQuery. Income and units come from the Sales
-            &amp; Traffic by Child ASIN report, restricted to the 29 child ASINs carrying the Sonoma
-            Syrup Co brand; income is total ordered product sales. Ad investment and attributed
-            income come from the Sponsored Products, Sponsored Brands and Sponsored Display campaign
-            reports for the six Sonoma campaigns, on Amazon&apos;s 14-day click attribution.
-          </p>
           <p>
             Data pulled 2 September 2026 and complete through 30 August 2026, so August 2026 is one
             day short of a full month while August 2025 is whole, a small understatement of the
