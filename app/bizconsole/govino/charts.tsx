@@ -642,9 +642,10 @@ export const COMBO = {
 /**
  * Two line-end labels can land on top of each other when the years finish
  * close together. Nudge them apart around their midpoint rather than letting
- * them overlap; 26 units is the smallest gap that stays readable at this size.
+ * them overlap. The gap clears the phone breakpoint's larger label size, since
+ * the nudge is computed in viewBox units and cannot know which size renders.
  */
-function spread(a: number, b: number, min = 26): [number, number] {
+function spread(a: number, b: number, min = 38): [number, number] {
   const gap = Math.abs(a - b);
   if (gap >= min) return [a, b];
   const mid = (a + b) / 2;
@@ -761,7 +762,7 @@ export function SalesSpendChart({
 
   const step = plotW2 / data.length;
   const barW = Math.min(step * 0.2, 44);
-  const barGap = 4;
+  const barGap = 6;
   const cx = (i: number) => padL + i * step + step / 2;
   const barX = (i: number, prior: boolean) =>
     prior ? cx(i) - barW / 2 - barGap / 2 - barW / 2 : cx(i) + barW / 2 + barGap / 2 - barW / 2;

@@ -210,12 +210,16 @@ function Score({
 }
 
 export default function GovinoReport() {
-  // All three series drawn by default; a chip takes one off the chart.
-  const [shown, setShown] = useState({ sales: true, spend: true, tacos: true });
+  // Total sales alone by default: it is the figure the brand opens on, and the
+  // chart reads cleanest with one series. Spend and TACOS are a click away.
+  const [shown, setShown] = useState({ sales: true, spend: false, tacos: false });
   const toggle = (k: 'sales' | 'spend' | 'tacos') =>
     setShown((prev) => ({ ...prev, [k]: !prev[k] }));
 
   const partialQ = PAIRED_QUARTERS.find((q) => q.partial);
+  // The card should name what is actually drawn, not what it can draw.
+  const moneyChartTitle =
+    shown.sales && shown.spend ? 'Total sales and ad spend' : shown.sales ? 'Total sales' : 'Ad spend';
   const quarterData = PAIRED_QUARTERS.map((q) => ({
     label: q.partial ? `${q.label} (${q.span})` : q.label,
     sales: q.now.gross,
@@ -241,7 +245,17 @@ export default function GovinoReport() {
               priority
             />
             <span className={styles.brandRule} />
-            <span className={styles.eyebrow}>Beauty Box Media · Monthly report</span>
+            <span className={styles.eyebrow}>Monthly report</span>
+            {/* The client's brand leads and the agency mark closes the row: this
+                is govino's report, prepared by us, not the other way round. */}
+            <Image
+              src="/logo.svg"
+              alt="Beauty Box Media"
+              width={216}
+              height={48}
+              className={styles.agencyMark}
+              priority
+            />
           </div>
           <div className={styles.accentBar} />
           <h1 className={styles.srOnly}>govino on Amazon, January to August 2026</h1>
@@ -322,11 +336,11 @@ export default function GovinoReport() {
                   spend line reads directly against the bars it paid for. */}
               {(shown.sales || shown.spend) && (
                 <div className={styles.card}>
-                  <div className={styles.cardHead}>Sales and ad spend</div>
+                  <div className={styles.cardHead}>{moneyChartTitle}</div>
                   <SalesSpendChart
                     data={quarterData}
                     show={{ sales: shown.sales, spend: shown.spend }}
-                    caption="Total sales and ad spend by quarter, 2026 against 2025"
+                    caption={`${moneyChartTitle} by quarter, 2026 against 2025`}
                   />
                 </div>
               )}

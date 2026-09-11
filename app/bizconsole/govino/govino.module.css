@@ -33,7 +33,8 @@
 .brandRow {
   display: flex;
   align-items: center;
-  gap: 18px;
+  flex-wrap: wrap;
+  gap: 14px 18px;
   margin-bottom: 20px;
 }
 
@@ -46,6 +47,15 @@
   width: 1px;
   height: 26px;
   background: var(--g-line);
+}
+
+/* Set smaller than the client's mark and pushed to the end of the row: the
+   report belongs to govino, we only prepared it. */
+.agencyMark {
+  height: 28px;
+  width: auto;
+  margin-left: auto;
+  opacity: 0.92;
 }
 
 .eyebrow {
@@ -402,8 +412,11 @@
   font-family: var(--font-sans);
 }
 
+/* Sits under a bar roughly 44 units wide with 6 between the pair, so the label
+   has to stay narrower than that or the two years run together. At 15px "2025"
+   measures about 33 units, leaving a clear gap. */
 .barYear {
-  font-size: 19px;
+  font-size: 15px;
   font-weight: 600;
   font-family: var(--font-sans);
 }
@@ -742,6 +755,12 @@
 
   .standfirst {
     font-size: 1.2rem;
+  }
+
+  /* The row wraps on a phone, so the auto margin would strand the mark on a
+     line of its own, hard right. Let it sit with the rest. */
+  .agencyMark {
+    margin-left: 0;
   }
 
   .lede {
