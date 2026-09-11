@@ -58,10 +58,11 @@ const MONTH_NAMES = [
 const TABS = ['Dashboard', 'Insights'] as const;
 type Tab = (typeof TABS)[number];
 
-function SectionHead({ n, title }: { n: string; title: string }) {
+/** `n` is omitted where a tab has only one section and a lone "01" would be noise. */
+function SectionHead({ n, title }: { n?: string; title: string }) {
   return (
     <div className={styles.sectionHead}>
-      <span className={styles.sectionNum}>{n}</span>
+      {n && <span className={styles.sectionNum}>{n}</span>}
       <h2 className={styles.sectionTitle}>{title}</h2>
     </div>
   );
@@ -196,7 +197,7 @@ export default function GovinoReport() {
         {tab === 'Dashboard' && (
           <>
             <section className={styles.section}>
-              <SectionHead n="01" title="At a glance" />
+              <SectionHead title="At a glance" />
 
               <div className={styles.periodBar}>
                 <label className={styles.periodLabel} htmlFor="period">
@@ -286,6 +287,38 @@ export default function GovinoReport() {
                 />
               </div>
 
+              <Legend
+                items={[
+                  { label: '2025', color: C.before },
+                  { label: '2026', color: C.now },
+                ]}
+              />
+
+              <div className={styles.card}>
+                <div className={styles.cardHead}>Monthly revenue, 2026 against 2025</div>
+                <div className={styles.cardSub}>
+                  Every month of the year so far, whichever period the cards are showing. Hover a
+                  month for both years and the change between them.
+                </div>
+                <GroupedBars
+                  data={PAIRED.map((p) => ({
+                    label: p.label,
+                    before: p.before.gross,
+                    now: p.now.gross,
+                    change: p.grossYoY,
+                  }))}
+                  caption={`Ordered product sales across all ${ASIN_COUNT} govino ASINs`}
+                  beforeLabel="2025"
+                  nowLabel="2026"
+                />
+              </div>
+
+              <p className={styles.body}>
+                Every month of 2026 clears its 2025 counterpart, by between{' '}
+                {signedPct(Math.min(...PAIRED.map((p) => p.grossYoY)))} and{' '}
+                {signedPct(Math.max(...PAIRED.map((p) => p.grossYoY)))}.
+              </p>
+
               {isYtd ? (
                 <p className={styles.lede}>
                   Revenue is up <strong>{signedPct(YOY.gross)}</strong> on the same eight months of
@@ -307,45 +340,6 @@ export default function GovinoReport() {
               )}
             </section>
 
-            {/* --- 02 ----------------------------------------------------- */}
-            <section className={styles.section}>
-              <SectionHead n="02" title="Revenue, 2026 against 2025" />
-              <p className={styles.body}>
-                Each pair of bars is one month, 2025 beside 2026. Hover a month for both years and
-                the change between them.
-              </p>
-
-              <Legend
-                items={[
-                  { label: '2025', color: C.before },
-                  { label: '2026', color: C.now },
-                ]}
-              />
-
-              <div className={styles.card}>
-                <div className={styles.cardHead}>Total revenue</div>
-                <div className={styles.cardSub}>
-                  Ordered product sales across all {ASIN_COUNT} govino ASINs
-                </div>
-                <GroupedBars
-                  data={PAIRED.map((p) => ({
-                    label: p.label,
-                    before: p.before.gross,
-                    now: p.now.gross,
-                    change: p.grossYoY,
-                  }))}
-                  caption="Monthly revenue, 2026 against 2025"
-                  beforeLabel="2025"
-                  nowLabel="2026"
-                />
-              </div>
-
-              <p className={styles.body}>
-                Revenue clears its 2025 counterpart in every one of the eight months, by between{' '}
-                {signedPct(Math.min(...PAIRED.map((p) => p.grossYoY)))} and{' '}
-                {signedPct(Math.max(...PAIRED.map((p) => p.grossYoY)))}.
-              </p>
-            </section>
           </>
         )}
 
