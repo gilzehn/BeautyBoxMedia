@@ -30,6 +30,7 @@ import {
   MONTHS_2026,
   total,
   PAIRED,
+  PAIRED_QUARTERS,
   SPLIT_2026,
   BRANDED,
   GENERIC,
@@ -129,8 +130,9 @@ function Score({
 
 export default function GovinoReport() {
   const [tab, setTab] = useState<Tab>('Dashboard');
-  // -1 is the whole Jan-Aug window; 0-7 select a single month.
-  const [period, setPeriod] = useState<number>(-1);
+  // -1 is the whole Jan-Aug window; 0-7 select a single month. Defaults to the
+  // latest complete month, which is what the brand asks about first.
+  const [period, setPeriod] = useState<number>(MONTHS_2026.length - 1);
 
   // Scorecard figures follow the dropdown. `total()` takes any set of months,
   // so a single month and the whole window compute identically — including the
@@ -141,6 +143,7 @@ export default function GovinoReport() {
   const periodLabel = isYtd ? 'Jan–Aug 2026' : `${MONTHS_2026[period].label} 2026`;
   const priorLabel = isYtd ? '2025' : `${MONTHS_2026[period].label} 2025`;
   const d = (a: number, b: number) => ((a - b) / b) * 100;
+  const partialQ = PAIRED_QUARTERS.find((q) => q.partial);
   const brandedShare = (BRANDED.spend / SPLIT_TOTAL_SPEND) * 100;
   const genericShare = (GENERIC.spend / SPLIT_TOTAL_SPEND) * 100;
   // What the generic half would have returned at the branded half's efficiency.
@@ -166,9 +169,10 @@ export default function GovinoReport() {
           <div className={styles.accentBar} />
           <h1 className={styles.srOnly}>govino on Amazon, January to August 2026</h1>
           <p className={styles.standfirst}>
-            Revenue, advertising and where the two meet, month by month, set against the same eight
-            months of 2025. Revenue is total ordered product sales across the govino catalogue,
-            advertised and organic together.
+            Revenue, advertising and where the two meet, set against the same period of 2025. Pick
+            a month for the headline figures; the chart below carries the year so far by quarter.
+            Revenue is total ordered product sales across the govino catalogue, advertised and
+            organic together.
           </p>
           <div className={styles.stamp}>
             <span>Account: The Beauty Box (US)</span>
@@ -295,17 +299,18 @@ export default function GovinoReport() {
               />
 
               <div className={styles.card}>
-                <div className={styles.cardHead}>Monthly revenue, 2026 against 2025</div>
+                <div className={styles.cardHead}>Quarterly revenue, 2026 against 2025</div>
                 <div className={styles.cardSub}>
-                  Every month of the year so far, whichever period the cards are showing. Hover a
-                  month for both years and the change between them.
+                  {partialQ
+                    ? `${partialQ.label} covers ${partialQ.span} only, on both sides, since September is not yet complete — so every pair compares the same months.`
+                    : 'Each pair compares the same months on both sides.'}
                 </div>
                 <GroupedBars
-                  data={PAIRED.map((p) => ({
-                    label: p.label,
-                    before: p.before.gross,
-                    now: p.now.gross,
-                    change: p.grossYoY,
+                  data={PAIRED_QUARTERS.map((q) => ({
+                    label: q.partial ? `${q.label} (${q.span})` : q.label,
+                    before: q.before.gross,
+                    now: q.now.gross,
+                    change: q.grossYoY,
                   }))}
                   caption={`Ordered product sales across all ${ASIN_COUNT} govino ASINs`}
                   beforeLabel="2025"
@@ -314,9 +319,9 @@ export default function GovinoReport() {
               </div>
 
               <p className={styles.body}>
-                Every month of 2026 clears its 2025 counterpart, by between{' '}
-                {signedPct(Math.min(...PAIRED.map((p) => p.grossYoY)))} and{' '}
-                {signedPct(Math.max(...PAIRED.map((p) => p.grossYoY)))}.
+                Every quarter of 2026 clears its 2025 counterpart, by between{' '}
+                {signedPct(Math.min(...PAIRED_QUARTERS.map((q) => q.grossYoY)))} and{' '}
+                {signedPct(Math.max(...PAIRED_QUARTERS.map((q) => q.grossYoY)))}.
               </p>
 
               {isYtd ? (

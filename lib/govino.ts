@@ -201,6 +201,55 @@ export const PAIRED: PairedMonth[] = MONTHS_2026.map((now) => {
   };
 });
 
+// --- Quarters ------------------------------------------------------------
+
+/**
+ * Calendar quarters, paired year on year.
+ *
+ * Q3 is the awkward one: 2026 only has July and August in hand, so a plain
+ * Jul-Sep quarter would set two months against 2025's three and understate the
+ * current year by about a third. Each quarter is therefore built from the
+ * months actually available on the 2026 side, and the 2025 side is restricted
+ * to those same months — so every bar pair compares like with like. `partial`
+ * marks the quarter that is short so the chart can say so.
+ */
+export interface PairedQuarter {
+  label: string;
+  /** Which calendar months the pair covers, e.g. "Jul-Aug". */
+  span: string;
+  partial: boolean;
+  now: Totals;
+  before: Totals;
+  grossYoY: number;
+  spendYoY: number;
+}
+
+const QUARTER_DEFS = [
+  { label: 'Q1', months: [1, 2, 3] },
+  { label: 'Q2', months: [4, 5, 6] },
+  { label: 'Q3', months: [7, 8, 9] },
+  { label: 'Q4', months: [10, 11, 12] },
+];
+
+export const PAIRED_QUARTERS: PairedQuarter[] = QUARTER_DEFS.flatMap((q) => {
+  const have = MONTHS_2026.filter((r) => q.months.includes(r.m));
+  if (have.length === 0) return [];
+  const months = have.map((r) => r.m);
+  const now = total(have);
+  const before = total(MONTHS_2025.filter((r) => months.includes(r.m)));
+  return [
+    {
+      label: q.label,
+      span: `${L[months[0] - 1]}-${L[months[months.length - 1] - 1]}`,
+      partial: have.length < q.months.length,
+      now,
+      before,
+      grossYoY: yoy(now.gross, before.gross),
+      spendYoY: yoy(now.spend, before.spend),
+    },
+  ];
+});
+
 /** Per-month derived rates, for the trend panels. */
 export const TREND_2026 = MONTHS_2026.map((r) => ({
   label: r.label,
