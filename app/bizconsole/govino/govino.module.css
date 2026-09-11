@@ -49,12 +49,13 @@
   background: var(--g-line);
 }
 
-/* Set smaller than the client's mark and pushed to the end of the row: the
-   report belongs to govino, we only prepared it. */
+/* Top left, on its own line above the client's mark. Set smaller than govino's
+   logo: the report belongs to the brand, we only prepared it. */
 .agencyMark {
-  height: 28px;
+  display: block;
+  height: 26px;
   width: auto;
-  margin-left: auto;
+  margin-bottom: 26px;
   opacity: 0.92;
 }
 
@@ -757,10 +758,9 @@
     font-size: 1.2rem;
   }
 
-  /* The row wraps on a phone, so the auto margin would strand the mark on a
-     line of its own, hard right. Let it sit with the rest. */
   .agencyMark {
-    margin-left: 0;
+    height: 22px;
+    margin-bottom: 20px;
   }
 
   .lede {

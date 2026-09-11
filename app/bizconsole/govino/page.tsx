@@ -235,6 +235,16 @@ export default function GovinoReport() {
       <div className={styles.wrap}>
         {/* ---------------------------------------------------------------- */}
         <header className={styles.masthead}>
+          {/* Our mark sits above, in the corner: the page is prepared by us, and
+              govino's own logo leads the report itself on the line below. */}
+          <Image
+            src="/logo.svg"
+            alt="Beauty Box Media"
+            width={216}
+            height={48}
+            className={styles.agencyMark}
+            priority
+          />
           <div className={styles.brandRow}>
             <Image
               src="/logos/govino.svg"
@@ -246,16 +256,6 @@ export default function GovinoReport() {
             />
             <span className={styles.brandRule} />
             <span className={styles.eyebrow}>Monthly report</span>
-            {/* The client's brand leads and the agency mark closes the row: this
-                is govino's report, prepared by us, not the other way round. */}
-            <Image
-              src="/logo.svg"
-              alt="Beauty Box Media"
-              width={216}
-              height={48}
-              className={styles.agencyMark}
-              priority
-            />
           </div>
           <div className={styles.accentBar} />
           <h1 className={styles.srOnly}>govino on Amazon, January to August 2026</h1>
