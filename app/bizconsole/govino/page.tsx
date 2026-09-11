@@ -341,22 +341,17 @@ export default function GovinoReport() {
             <div className={styles.insight}>
               <div className={styles.insightNum}>01</div>
               <div>
-                <h3 className={styles.insightTitle}>
-                  We bought the growth on purpose
-                </h3>
+                <h3 className={styles.insightTitle}>We bought the growth on purpose</h3>
                 <p className={styles.insightBody}>
-                  Sales for January to August are{' '}
-                  <strong>{usd(YTD_2026.gross)}</strong>, up{' '}
+                  Sales for January to August are <strong>{usd(YTD_2026.gross)}</strong>, up{' '}
                   <strong>{signedPct(YOY.gross)}</strong> on the same eight months of 2025, on{' '}
-                  <strong>{num(YTD_2026.units)} units</strong> ({signedPct(YOY.units)}). That did
-                  not happen on its own: we put <strong>{usd(YTD_2026.spend)}</strong> behind the
-                  brand against {usd(YTD_2025.spend)} last year, an increase of{' '}
-                  <strong>{signedPct(YOY.spend)}</strong>. It was a deliberately aggressive
-                  position, taken to win rank and sales velocity on the core stemless range while
-                  the category was still winnable, and it worked — Q1 and Q2 both grew more than
-                  50% year on year. The cost of that choice is visible in the same numbers: TACOS
-                  ran {pct(YTD_2026.tacos)} across the eight months against {pct(YTD_2025.tacos)} a
-                  year earlier. Growth of this shape is bought, and we were the ones buying it.
+                  <strong>{num(YTD_2026.units)} units</strong>. That growth was bought: we put{' '}
+                  <strong>{usd(YTD_2026.spend)}</strong> behind the brand against{' '}
+                  {usd(YTD_2025.spend)} last year, an increase of{' '}
+                  <strong>{signedPct(YOY.spend)}</strong>. The aggression was deliberate, taken to
+                  win rank on the core stemless range while the category was still winnable, and
+                  Q1 and Q2 both grew more than 50%. The cost of it shows in TACOS, which ran{' '}
+                  {pct(YTD_2026.tacos)} against {pct(YTD_2025.tacos)} a year earlier.
                 </p>
               </div>
             </div>
@@ -365,20 +360,18 @@ export default function GovinoReport() {
               <div className={styles.insightNum}>02</div>
               <div>
                 <h3 className={styles.insightTitle}>
-                  August was the month we started looking for the balance
+                  August is where we started finding the balance
                 </h3>
                 <p className={styles.insightBody}>
-                  Having established position, August was the first month we pulled back to test
-                  what the brand holds without full support. Spend came in at{' '}
-                  <strong>{usd(AUG_2026.spend)}</strong> and sales still grew{' '}
+                  August was the first month we pulled back to test what the brand holds without
+                  full support. Spend came in at <strong>{usd(AUG_2026.spend)}</strong>, sales
+                  still grew{' '}
                   <strong>{signedPct(((AUG_2026.gross - AUG_2025.gross) / AUG_2025.gross) * 100)}</strong>{' '}
                   year on year, at {pct(AUG_2026.acos)} ACOS and {pct(AUG_2026.tacos)} TACOS. The
-                  early September read is the more encouraging one:{' '}
-                  <strong>{pct(SEP_MTD.acos)} ACOS</strong> and{' '}
-                  <strong>{pct(SEP_MTD.tacos)} TACOS</strong> across {SEP_MTD.label}, on{' '}
-                  {usd(SEP_MTD.gross)} of sales. Both are the best efficiency the brand has seen
-                  since April. That is only {SEP_MTD.days} days and it can move, so we would not
-                  bank it yet — but it points the way we hoped it would.
+                  early September read is better still: <strong>{pct(SEP_MTD.acos)} ACOS</strong>{' '}
+                  and <strong>{pct(SEP_MTD.tacos)} TACOS</strong> across {SEP_MTD.label}. That is
+                  only {SEP_MTD.days} days, so we would not bank it yet, but it points the way we
+                  hoped it would.
                 </p>
               </div>
             </div>
@@ -386,20 +379,15 @@ export default function GovinoReport() {
             <div className={styles.insight}>
               <div className={styles.insightNum}>03</div>
               <div>
-                <h3 className={styles.insightTitle}>
-                  The decision we need to make together
-                </h3>
+                <h3 className={styles.insightTitle}>The decision we need to make together</h3>
                 <p className={styles.insightBody}>
-                  There are two honest paths from here and they lead to different places, so we
-                  would like to put a meeting in the diary and choose one deliberately rather than
-                  drift into it. <strong>Invest significantly more</strong> and we push for another
-                  step change in share through Q4, the strongest quarter of govino&apos;s year —
-                  faster growth, thinner margin, and it needs stock behind it.{' '}
-                  <strong>Hold the sustainable balance</strong> we have been finding since August
-                  and growth slows to something steadier, but it comes with profit attached rather
-                  than being spent back into the channel. Neither is the wrong answer. The choice
-                  depends on what govino wants this brand to be worth in twelve months, which is
-                  yours to make, not ours — and it is easier to make now than in November.
+                  There are two honest paths from here and they lead to different places.{' '}
+                  <strong>Invest significantly more</strong> and we push for another step change
+                  through Q4, the strongest quarter of govino&apos;s year: faster growth, thinner
+                  margin, and it needs stock behind it. <strong>Hold the balance</strong> we have
+                  been finding since August and growth slows to something steadier, but it comes
+                  with profit attached. Neither is the wrong answer. We would like to put a meeting
+                  in the diary and choose deliberately rather than drift into it.
                 </p>
               </div>
             </div>
