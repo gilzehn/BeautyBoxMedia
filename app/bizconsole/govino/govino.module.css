@@ -49,14 +49,15 @@
   background: var(--g-line);
 }
 
-/* Top left, on its own line above the client's mark. Set smaller than govino's
-   logo: the report belongs to the brand, we only prepared it. */
+/* Top left, on its own line above the client's mark, and set large: it is the
+   first thing on the page and carries the letterhead. Full opacity now that it
+   leads rather than sits in a corner. */
 .agencyMark {
   display: block;
-  height: 26px;
+  height: 58px;
   width: auto;
-  margin-bottom: 26px;
-  opacity: 0.92;
+  margin-bottom: 30px;
+  opacity: 1;
 }
 
 .eyebrow {
@@ -759,8 +760,8 @@
   }
 
   .agencyMark {
-    height: 22px;
-    margin-bottom: 20px;
+    height: 38px;
+    margin-bottom: 22px;
   }
 
   .lede {
