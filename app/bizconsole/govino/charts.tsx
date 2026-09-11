@@ -596,28 +596,22 @@ export function IndexLines({
   );
 }
 
-// --- Sales / spend / TACOS combo, two years ------------------------------
+// --- Quarter charts ------------------------------------------------------
 
 /**
- * Total sales as a pair of bars per quarter, with ad spend and TACOS each drawn
- * twice: this year solid, last year dashed.
+ * Two charts rather than one.
  *
- * The bars carry the year in colour, blue for last year and green for this one,
- * with position reinforcing it: last year is always the left bar. The lines
- * carry the year in the mark instead, dashed against solid, because a second
- * hue each for spend and TACOS would need four more colours this palette does
- * not have room for. A second set of hues for 2025
- * would mean reading colour twice for different things, so the year is carried
- * by the mark: dashed with hollow markers for last year, solid and filled for
- * this one. That is a secondary encoding rather than colour alone, and it needs
- * no extra hues, which matters because darker variants of these three fail 3:1
- * against this surface and lighter ones would make last year the louder mark.
+ * Sales and spend are both dollars, so they belong together on one y-axis and
+ * the spend line reads directly against the bars it paid for. TACOS is a rate
+ * and gets its own chart underneath: on a scale reaching $105,000 it would lie
+ * flat on the floor, and a second y-axis would let the crossings be decided by
+ * where the axes were pinned rather than by the data.
  *
- * Sales and spend are both dollars and share the upper plot and one y-axis.
- * TACOS is a rate and gets its own shorter plot beneath, sharing the quarters
- * and the crosshair. Giving it a second y-axis against the dollar scale would
- * let the crossings between the lines be decided by where the two axes were
- * pinned rather than by the data.
+ * The year is carried differently by each mark, because the palette has room
+ * for it in one place and not the other. Bars get their own hue, blue for last
+ * year against green for this one, with last year always the left bar so
+ * position reinforces it. The lines keep dashed against solid, since a second
+ * hue each for spend and TACOS would need colours this palette cannot spare.
  */
 export interface ComboPoint {
   label: string;
@@ -632,17 +626,13 @@ export interface ComboPoint {
 export const COMBO = {
   sales: '#199e70',
   /**
-   * Last year's sales bar. A fourth hue that clears green, purple and amber all
-   * at once does not exist on this surface: every candidate collides with one
-   * of them, and steps of the same green sit under ΔE 10 for normal vision,
-   * which is not a difference anyone can read. So the pair that has to separate
-   * is the one that gets the budget. Blue against green is ΔE 20.9 for normal
-   * vision and 19.6 under deuteranopia, comfortably clear.
-   *
-   * It shares a hue family with the purple spend line, which a strict
-   * all-pairs check would flag. That pair is fine in practice: one is a filled
-   * bar and the other a 2.5px stroke, so mark shape separates them before
-   * colour is asked to, and the two never sit side by side the way the bars do.
+   * Last year's sales bar. No fourth hue clears green, purple and amber at
+   * once on this surface, and steps of the same green sit under ΔE 10 for
+   * normal vision, which is not a difference anyone can read. So the budget
+   * goes to the pair that has to separate: blue against green is ΔE 20.9 for
+   * normal vision and 19.6 under deuteranopia. It shares a hue family with the
+   * purple spend line, which a strict all-pairs check flags, but a filled bar
+   * and a 2.5px stroke are never confused and the two never sit edge to edge.
    */
   salesPrior: '#3987e5',
   spend: '#9b6ef3',
@@ -652,91 +642,87 @@ export const COMBO = {
 const pctChange = (now: number, before: number) => (before ? (now / before - 1) * 100 : 0);
 const signed = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(0)}%`;
 
-export function ComboChart({
+/** Dashed with hollow markers for last year, solid and filled for this one. */
+function YearLine({
+  pts,
+  color,
+  prior,
+  hover,
+}: {
+  pts: { x: number; y: number }[];
+  color: string;
+  prior: boolean;
+  hover: number | null;
+}) {
+  return (
+    <g>
+      <path
+        d={pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')}
+        fill="none"
+        stroke={color}
+        strokeWidth={2.5}
+        strokeDasharray={prior ? '7 5' : undefined}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      {pts.map((p, i) => (
+        <circle
+          key={i}
+          cx={p.x}
+          cy={p.y}
+          r={hover === i ? 7 : 5}
+          fill={prior ? '#141414' : color}
+          stroke={color}
+          strokeWidth={2}
+        />
+      ))}
+    </g>
+  );
+}
+
+// --- Sales and spend, in dollars -----------------------------------------
+
+export function SalesSpendChart({
   data,
   caption,
   show,
 }: {
   data: ComboPoint[];
   caption: string;
-  show: { sales: boolean; spend: boolean; tacos: boolean };
+  show: { sales: boolean; spend: boolean };
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const clipId = useId();
 
-  const HC = 440;
-  const gapY = 36;
-  const lowerH = show.tacos ? 104 : 0;
-  const upperTop = padT;
-  const upperH = HC - padT - padB - (show.tacos ? lowerH + gapY : 0);
-  const lowerTop = upperTop + upperH + gapY;
-
-  const moneyVals = [
+  const H2 = 340;
+  const plotH2 = H2 - padT - padB;
+  const vals = [
     ...(show.sales ? data.flatMap((d) => [d.sales, d.salesPrior]) : []),
     ...(show.spend ? data.flatMap((d) => [d.spend, d.spendPrior]) : []),
   ];
-  const dollarTicks = niceTicks(Math.max(1, ...moneyVals) * 1.08, 4);
-  const dMax = dollarTicks[dollarTicks.length - 1];
-  const yD = (v: number) => upperTop + upperH - (v / dMax) * upperH;
-
-  const pctTicks = niceTicks(Math.max(...data.flatMap((d) => [d.tacos, d.tacosPrior])) * 1.15, 2);
-  const pMax = pctTicks[pctTicks.length - 1];
-  const yP = (v: number) => lowerTop + lowerH - (v / pMax) * lowerH;
+  const ticks = niceTicks(Math.max(1, ...vals) * 1.08, 4);
+  const max = ticks[ticks.length - 1];
+  const y = (v: number) => padT + plotH2 - (v / max) * plotH2;
 
   const step = plotW / data.length;
-  const barW = Math.min(step * 0.2, 40);
+  const barW = Math.min(step * 0.2, 44);
   const barGap = 4;
   const cx = (i: number) => padL + i * step + step / 2;
-
-  /** 2025 line: same hue, dashed, hollow markers. 2026: solid, filled. */
-  const lineFor = (
-    key: 'spend' | 'tacos',
-    prior: boolean,
-    yFn: (v: number) => number,
-    color: string,
-  ) => {
-    const val = (d: ComboPoint) =>
-      key === 'spend' ? (prior ? d.spendPrior : d.spend) : prior ? d.tacosPrior : d.tacos;
-    return (
-      <g key={`${key}-${prior ? 'p' : 'n'}`}>
-        <path
-          d={data.map((d, i) => `${i === 0 ? 'M' : 'L'}${cx(i)},${yFn(val(d))}`).join(' ')}
-          fill="none"
-          stroke={color}
-          strokeWidth={2.5}
-          strokeDasharray={prior ? '7 5' : undefined}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-        {data.map((d, i) => (
-          <circle
-            key={i}
-            cx={cx(i)}
-            cy={yFn(val(d))}
-            r={hover === i ? 7 : 5}
-            fill={prior ? '#141414' : color}
-            stroke={color}
-            strokeWidth={2}
-          />
-        ))}
-      </g>
-    );
-  };
 
   return (
     <figure className={styles.panelFig}>
       <div className={styles.chartWrap} onMouseLeave={() => setHover(null)}>
-        <svg viewBox={`0 0 ${W} ${HC}`} className={styles.svg} role="img" aria-label={caption}>
+        <svg viewBox={`0 0 ${W} ${H2}`} className={styles.svg} role="img" aria-label={caption}>
           <defs>
             <clipPath id={clipId}>
-              <rect x={0} y={0} width={W} height={yD(0)} />
+              <rect x={0} y={0} width={W} height={y(0)} />
             </clipPath>
           </defs>
 
-          {dollarTicks.map((v, i) => (
+          {ticks.map((v, i) => (
             <g key={i}>
-              <line x1={padL} x2={W - padR} y1={yD(v)} y2={yD(v)} stroke={C.grid} strokeWidth={1} />
-              <text x={padL - 14} y={yD(v) + 7} textAnchor="end" className={styles.axisText}>
+              <line x1={padL} x2={W - padR} y1={y(v)} y2={y(v)} stroke={C.grid} strokeWidth={1} />
+              <text x={padL - 14} y={y(v) + 7} textAnchor="end" className={styles.axisText}>
                 {money(v)}
               </text>
             </g>
@@ -746,22 +732,19 @@ export function ComboChart({
             <g clipPath={`url(#${clipId})`}>
               {data.map((d, i) => (
                 <g key={d.label}>
-                  {/* Last year always on the left, this year always on the
-                      right, with a surface gap between: position carries the
-                      year as well as colour does. */}
                   <rect
                     x={cx(i) - barW - barGap / 2}
-                    y={yD(d.salesPrior)}
+                    y={y(d.salesPrior)}
                     width={barW}
-                    height={yD(0) - yD(d.salesPrior) + 8}
+                    height={y(0) - y(d.salesPrior) + 8}
                     rx={4}
                     fill={COMBO.salesPrior}
                   />
                   <rect
                     x={cx(i) + barGap / 2}
-                    y={yD(d.sales)}
+                    y={y(d.sales)}
                     width={barW}
-                    height={yD(0) - yD(d.sales) + 8}
+                    height={y(0) - y(d.sales) + 8}
                     rx={4}
                     fill={COMBO.sales}
                   />
@@ -770,52 +753,43 @@ export function ComboChart({
             </g>
           )}
 
-          {show.spend && lineFor('spend', true, yD, COMBO.spend)}
-          {show.spend && lineFor('spend', false, yD, COMBO.spend)}
-
-          <line x1={padL} x2={W - padR} y1={yD(0)} y2={yD(0)} stroke={C.axis} strokeWidth={1} />
-
-          {show.tacos && (
+          {show.spend && (
             <>
-              {pctTicks.map((v, i) => (
-                <g key={i}>
-                  <line x1={padL} x2={W - padR} y1={yP(v)} y2={yP(v)} stroke={C.grid} strokeWidth={1} />
-                  <text x={padL - 14} y={yP(v) + 7} textAnchor="end" className={styles.axisText}>
-                    {`${Math.round(v)}%`}
-                  </text>
-                </g>
-              ))}
-              {lineFor('tacos', true, yP, COMBO.tacos)}
-              {lineFor('tacos', false, yP, COMBO.tacos)}
-              <line x1={padL} x2={W - padR} y1={yP(0)} y2={yP(0)} stroke={C.axis} strokeWidth={1} />
+              <YearLine
+                pts={data.map((d, i) => ({ x: cx(i), y: y(d.spendPrior) }))}
+                color={COMBO.spend}
+                prior
+                hover={hover}
+              />
+              <YearLine
+                pts={data.map((d, i) => ({ x: cx(i), y: y(d.spend) }))}
+                color={COMBO.spend}
+                prior={false}
+                hover={hover}
+              />
             </>
           )}
 
           {hover !== null && (
-            <line
-              x1={cx(hover)}
-              x2={cx(hover)}
-              y1={upperTop}
-              y2={show.tacos ? lowerTop + lowerH : yD(0)}
-              stroke={C.axis}
-              strokeWidth={1}
-            />
+            <line x1={cx(hover)} x2={cx(hover)} y1={padT} y2={y(0)} stroke={C.axis} strokeWidth={1} />
           )}
 
           {data.map((d, i) => (
             <rect
               key={d.label}
               x={cx(i) - step / 2}
-              y={upperTop}
+              y={padT}
               width={step}
-              height={(show.tacos ? lowerTop + lowerH : yD(0)) - upperTop}
+              height={plotH2}
               fill="transparent"
               onMouseEnter={() => setHover(i)}
             />
           ))}
 
+          <line x1={padL} x2={W - padR} y1={y(0)} y2={y(0)} stroke={C.axis} strokeWidth={1} />
+
           {data.map((d, i) => (
-            <text key={d.label} x={cx(i)} y={HC - 14} textAnchor="middle" className={styles.axisText}>
+            <text key={d.label} x={cx(i)} y={H2 - 14} textAnchor="middle" className={styles.axisText}>
               {d.label}
             </text>
           ))}
@@ -824,10 +798,7 @@ export function ComboChart({
         {hover !== null && (
           <div
             className={`${styles.tooltip} ${styles.tooltipBelow}`}
-            style={{
-              left: `${((cx(hover) - padL) / plotW) * 84 + 8}%`,
-              top: `${(upperTop / HC) * 100}%`,
-            }}
+            style={{ left: `${((cx(hover) - padL) / plotW) * 84 + 8}%`, top: `${(padT / H2) * 100}%` }}
           >
             <strong>{data[hover].label}</strong>
             {show.sales && (
@@ -835,7 +806,8 @@ export function ComboChart({
                 <i className={styles.tipDot} style={{ background: COMBO.sales }} /> Total Sales{' '}
                 <em>{exact(data[hover].sales)}</em>
                 <small className={styles.tipPrior}>
-                  from {exact(data[hover].salesPrior)} · {signed(pctChange(data[hover].sales, data[hover].salesPrior))}
+                  from {exact(data[hover].salesPrior)} ·{' '}
+                  {signed(pctChange(data[hover].sales, data[hover].salesPrior))}
                 </small>
               </span>
             )}
@@ -844,19 +816,8 @@ export function ComboChart({
                 <i className={styles.tipDot} style={{ background: COMBO.spend }} /> Ad Spend{' '}
                 <em>{exact(data[hover].spend)}</em>
                 <small className={styles.tipPrior}>
-                  from {exact(data[hover].spendPrior)} · {signed(pctChange(data[hover].spend, data[hover].spendPrior))}
-                </small>
-              </span>
-            )}
-            {show.tacos && (
-              <span>
-                <i className={styles.tipDot} style={{ background: COMBO.tacos }} /> TACOS{' '}
-                <em>{data[hover].tacos.toFixed(1)}%</em>
-                <small className={styles.tipPrior}>
-                  from {data[hover].tacosPrior.toFixed(1)}% ·{' '}
-                  {`${data[hover].tacos - data[hover].tacosPrior >= 0 ? '+' : ''}${(
-                    data[hover].tacos - data[hover].tacosPrior
-                  ).toFixed(1)} pts`}
+                  from {exact(data[hover].spendPrior)} ·{' '}
+                  {signed(pctChange(data[hover].spend, data[hover].spendPrior))}
                 </small>
               </span>
             )}
@@ -868,7 +829,96 @@ export function ComboChart({
   );
 }
 
-/** Says what dashed versus solid means on the lines, since the year is not a hue. */
+// --- TACOS, its own chart and its own scale ------------------------------
+
+export function TacosChart({ data, caption }: { data: ComboPoint[]; caption: string }) {
+  const [hover, setHover] = useState<number | null>(null);
+
+  const H2 = 280;
+  const plotH2 = H2 - padT - padB;
+  const ticks = niceTicks(Math.max(...data.flatMap((d) => [d.tacos, d.tacosPrior])) * 1.15, 3);
+  const max = ticks[ticks.length - 1];
+  const y = (v: number) => padT + plotH2 - (v / max) * plotH2;
+
+  const step = plotW / data.length;
+  const cx = (i: number) => padL + i * step + step / 2;
+
+  return (
+    <figure className={styles.panelFig}>
+      <div className={styles.chartWrap} onMouseLeave={() => setHover(null)}>
+        <svg viewBox={`0 0 ${W} ${H2}`} className={styles.svg} role="img" aria-label={caption}>
+          {ticks.map((v, i) => (
+            <g key={i}>
+              <line x1={padL} x2={W - padR} y1={y(v)} y2={y(v)} stroke={C.grid} strokeWidth={1} />
+              <text x={padL - 14} y={y(v) + 7} textAnchor="end" className={styles.axisText}>
+                {`${Math.round(v)}%`}
+              </text>
+            </g>
+          ))}
+
+          <YearLine
+            pts={data.map((d, i) => ({ x: cx(i), y: y(d.tacosPrior) }))}
+            color={COMBO.tacos}
+            prior
+            hover={hover}
+          />
+          <YearLine
+            pts={data.map((d, i) => ({ x: cx(i), y: y(d.tacos) }))}
+            color={COMBO.tacos}
+            prior={false}
+            hover={hover}
+          />
+
+          {hover !== null && (
+            <line x1={cx(hover)} x2={cx(hover)} y1={padT} y2={y(0)} stroke={C.axis} strokeWidth={1} />
+          )}
+
+          {data.map((d, i) => (
+            <rect
+              key={d.label}
+              x={cx(i) - step / 2}
+              y={padT}
+              width={step}
+              height={plotH2}
+              fill="transparent"
+              onMouseEnter={() => setHover(i)}
+            />
+          ))}
+
+          <line x1={padL} x2={W - padR} y1={y(0)} y2={y(0)} stroke={C.axis} strokeWidth={1} />
+
+          {data.map((d, i) => (
+            <text key={d.label} x={cx(i)} y={H2 - 14} textAnchor="middle" className={styles.axisText}>
+              {d.label}
+            </text>
+          ))}
+        </svg>
+
+        {hover !== null && (
+          <div
+            className={`${styles.tooltip} ${styles.tooltipBelow}`}
+            style={{ left: `${((cx(hover) - padL) / plotW) * 84 + 8}%`, top: `${(padT / H2) * 100}%` }}
+          >
+            <strong>{data[hover].label}</strong>
+            <span>
+              <i className={styles.tipDot} style={{ background: COMBO.tacos }} /> TACOS{' '}
+              <em>{data[hover].tacos.toFixed(1)}%</em>
+              <small className={styles.tipPrior}>
+                from {data[hover].tacosPrior.toFixed(1)}% ·{' '}
+                {`${data[hover].tacos - data[hover].tacosPrior >= 0 ? '+' : ''}${(
+                  data[hover].tacos - data[hover].tacosPrior
+                ).toFixed(1)} pts`}
+              </small>
+            </span>
+          </div>
+        )}
+      </div>
+      <figcaption className={styles.panelCaption}>{caption}</figcaption>
+    </figure>
+  );
+}
+
+/** Says what the two years look like, since the year is not one encoding. */
 export function YearKey() {
   return (
     <div className={styles.yearKey}>

@@ -27,7 +27,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import styles from './govino.module.css';
-import { ComboChart, YearKey, COMBO } from './charts';
+import { SalesSpendChart, TacosChart, YearKey, COMBO } from './charts';
 import {
   MONTHS_2025,
   MONTHS_2026,
@@ -216,6 +216,15 @@ export default function GovinoReport() {
     setShown((prev) => ({ ...prev, [k]: !prev[k] }));
 
   const partialQ = PAIRED_QUARTERS.find((q) => q.partial);
+  const quarterData = PAIRED_QUARTERS.map((q) => ({
+    label: q.partial ? `${q.label} (${q.span})` : q.label,
+    sales: q.now.gross,
+    salesPrior: q.before.gross,
+    spend: q.now.spend,
+    spendPrior: q.before.spend,
+    tacos: q.now.tacos,
+    tacosPrior: q.before.tacos,
+  }));
 
   return (
     <div className={styles.page}>
@@ -309,25 +318,35 @@ export default function GovinoReport() {
                 <YearKey />
               </div>
 
-              {/* Sales and spend are both dollars and share the upper plot. TACOS
-                  is a rate, so it gets its own plot below rather than a second
-                  y-axis, which would let the crossings be set by axis placement
-                  rather than by the data. */}
-              <div className={styles.card}>
-                <ComboChart
-                  data={PAIRED_QUARTERS.map((q) => ({
-                    label: q.partial ? `${q.label} (${q.span})` : q.label,
-                    sales: q.now.gross,
-                    salesPrior: q.before.gross,
-                    spend: q.now.spend,
-                    spendPrior: q.before.spend,
-                    tacos: q.now.tacos,
-                    tacosPrior: q.before.tacos,
-                  }))}
-                  show={shown}
-                  caption="Sales and spend in dollars above, TACOS below. Last year is the blue bar and the dashed lines."
-                />
-              </div>
+              {/* Sales and spend are both dollars, so one axis carries both and the
+                  spend line reads directly against the bars it paid for. */}
+              {(shown.sales || shown.spend) && (
+                <div className={styles.card}>
+                  <div className={styles.cardHead}>Sales and ad spend</div>
+                  <SalesSpendChart
+                    data={quarterData}
+                    show={{ sales: shown.sales, spend: shown.spend }}
+                    caption="Total sales and ad spend by quarter, 2026 against 2025"
+                  />
+                </div>
+              )}
+
+              {/* TACOS gets its own chart and its own scale. Against a dollar
+                  axis reaching $105,000 it would lie flat on the floor, and a
+                  second y-axis would let the crossings be decided by where the
+                  axes were pinned rather than by the data. */}
+              {shown.tacos && (
+                <div className={styles.card}>
+                  <div className={styles.cardHead}>TACOS</div>
+                  <div className={styles.cardSub}>
+                    Ad spend as a share of all sales. Lower is better.
+                  </div>
+                  <TacosChart
+                    data={quarterData}
+                    caption="TACOS by quarter, 2026 against 2025"
+                  />
+                </div>
+              )}
 
               {!shown.sales && !shown.spend && !shown.tacos && (
                 <p className={styles.body}>Nothing selected. Pick a series above to draw it.</p>
