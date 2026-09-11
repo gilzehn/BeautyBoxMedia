@@ -599,15 +599,14 @@ export function IndexLines({
 // --- Sales / spend / TACOS combo, two years ------------------------------
 
 /**
- * Total sales as bars for 2026, with ad spend and TACOS each drawn twice: this
- * year solid, last year dashed.
+ * Total sales as a pair of bars per quarter, with ad spend and TACOS each drawn
+ * twice: this year solid, last year dashed.
  *
- * Sales stays a single bar per quarter. Its year-on-year move is large and
- * already stated in the commentary, so drawing the prior year beside it doubled
- * the marks for little gained; the two rate lines are where the comparison
- * actually earns its place, since the whole argument is what the spend bought.
- *
- * Colour carries the metric, never the year. A second set of hues for 2025
+ * The bars carry the year in colour, blue for last year and green for this one,
+ * with position reinforcing it: last year is always the left bar. The lines
+ * carry the year in the mark instead, dashed against solid, because a second
+ * hue each for spend and TACOS would need four more colours this palette does
+ * not have room for. A second set of hues for 2025
  * would mean reading colour twice for different things, so the year is carried
  * by the mark: dashed with hollow markers for last year, solid and filled for
  * this one. That is a secondary encoding rather than colour alone, and it needs
@@ -632,6 +631,20 @@ export interface ComboPoint {
 
 export const COMBO = {
   sales: '#199e70',
+  /**
+   * Last year's sales bar. A fourth hue that clears green, purple and amber all
+   * at once does not exist on this surface: every candidate collides with one
+   * of them, and steps of the same green sit under ΔE 10 for normal vision,
+   * which is not a difference anyone can read. So the pair that has to separate
+   * is the one that gets the budget. Blue against green is ΔE 20.9 for normal
+   * vision and 19.6 under deuteranopia, comfortably clear.
+   *
+   * It shares a hue family with the purple spend line, which a strict
+   * all-pairs check would flag. That pair is fine in practice: one is a filled
+   * bar and the other a 2.5px stroke, so mark shape separates them before
+   * colour is asked to, and the two never sit side by side the way the bars do.
+   */
+  salesPrior: '#3987e5',
   spend: '#9b6ef3',
   tacos: '#c27612',
 };
@@ -659,7 +672,7 @@ export function ComboChart({
   const lowerTop = upperTop + upperH + gapY;
 
   const moneyVals = [
-    ...(show.sales ? data.map((d) => d.sales) : []),
+    ...(show.sales ? data.flatMap((d) => [d.sales, d.salesPrior]) : []),
     ...(show.spend ? data.flatMap((d) => [d.spend, d.spendPrior]) : []),
   ];
   const dollarTicks = niceTicks(Math.max(1, ...moneyVals) * 1.08, 4);
@@ -671,7 +684,8 @@ export function ComboChart({
   const yP = (v: number) => lowerTop + lowerH - (v / pMax) * lowerH;
 
   const step = plotW / data.length;
-  const barW = Math.min(step * 0.34, 64);
+  const barW = Math.min(step * 0.2, 40);
+  const barGap = 4;
   const cx = (i: number) => padL + i * step + step / 2;
 
   /** 2025 line: same hue, dashed, hollow markers. 2026: solid, filled. */
@@ -731,15 +745,27 @@ export function ComboChart({
           {show.sales && (
             <g clipPath={`url(#${clipId})`}>
               {data.map((d, i) => (
-                <rect
-                  key={d.label}
-                  x={cx(i) - barW / 2}
-                  y={yD(d.sales)}
-                  width={barW}
-                  height={yD(0) - yD(d.sales) + 8}
-                  rx={4}
-                  fill={COMBO.sales}
-                />
+                <g key={d.label}>
+                  {/* Last year always on the left, this year always on the
+                      right, with a surface gap between: position carries the
+                      year as well as colour does. */}
+                  <rect
+                    x={cx(i) - barW - barGap / 2}
+                    y={yD(d.salesPrior)}
+                    width={barW}
+                    height={yD(0) - yD(d.salesPrior) + 8}
+                    rx={4}
+                    fill={COMBO.salesPrior}
+                  />
+                  <rect
+                    x={cx(i) + barGap / 2}
+                    y={yD(d.sales)}
+                    width={barW}
+                    height={yD(0) - yD(d.sales) + 8}
+                    rx={4}
+                    fill={COMBO.sales}
+                  />
+                </g>
               ))}
             </g>
           )}
@@ -847,14 +873,16 @@ export function YearKey() {
   return (
     <div className={styles.yearKey}>
       <span className={styles.legendItem}>
-        <svg width="22" height="10" aria-hidden="true">
-          <line x1="1" y1="5" x2="21" y2="5" stroke="#ffffff" strokeWidth="2" strokeDasharray="4 3" />
+        <svg width="26" height="11" aria-hidden="true">
+          <rect x="0" y="0" width="9" height="11" rx="2" fill={COMBO.salesPrior} />
+          <line x1="13" y1="6" x2="25" y2="6" stroke="#ffffff" strokeWidth="2" strokeDasharray="4 3" />
         </svg>
         2025
       </span>
       <span className={styles.legendItem}>
-        <svg width="22" height="10" aria-hidden="true">
-          <line x1="1" y1="5" x2="21" y2="5" stroke="#ffffff" strokeWidth="2" />
+        <svg width="26" height="11" aria-hidden="true">
+          <rect x="0" y="0" width="9" height="11" rx="2" fill={COMBO.sales} />
+          <line x1="13" y1="6" x2="25" y2="6" stroke="#ffffff" strokeWidth="2" />
         </svg>
         2026
       </span>

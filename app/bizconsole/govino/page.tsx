@@ -325,7 +325,7 @@ export default function GovinoReport() {
                     tacosPrior: q.before.tacos,
                   }))}
                   show={shown}
-                  caption="Sales and spend in dollars above, TACOS below. Spend and TACOS show last year dashed."
+                  caption="Sales and spend in dollars above, TACOS below. Last year is the blue bar and the dashed lines."
                 />
               </div>
 
