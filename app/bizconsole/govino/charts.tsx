@@ -599,18 +599,20 @@ export function IndexLines({
 // --- Sales / spend / TACOS combo, two years ------------------------------
 
 /**
- * Total sales as bars, ad spend as a line, TACOS as a line, each shown for 2026
- * against 2025.
+ * Total sales as bars for 2026, with ad spend and TACOS each drawn twice: this
+ * year solid, last year dashed.
  *
- * Two encoding decisions, both load-bearing.
+ * Sales stays a single bar per quarter. Its year-on-year move is large and
+ * already stated in the commentary, so drawing the prior year beside it doubled
+ * the marks for little gained; the two rate lines are where the comparison
+ * actually earns its place, since the whole argument is what the spend bought.
  *
- * Colour carries the metric, never the year. With three measures across two
- * years there are six marks, and a second set of hues for 2025 would mean
- * reading colour twice for different things. Instead the year is carried by the
- * mark itself: 2025 is an outlined bar and a dashed line, 2026 is a solid bar
- * and a solid line. That is a secondary encoding rather than colour alone, and
- * it needs no extra hues — the darker variants of these three fail 3:1 against
- * this surface, and lighter ones would make last year louder than this year.
+ * Colour carries the metric, never the year. A second set of hues for 2025
+ * would mean reading colour twice for different things, so the year is carried
+ * by the mark: dashed with hollow markers for last year, solid and filled for
+ * this one. That is a secondary encoding rather than colour alone, and it needs
+ * no extra hues, which matters because darker variants of these three fail 3:1
+ * against this surface and lighter ones would make last year the louder mark.
  *
  * Sales and spend are both dollars and share the upper plot and one y-axis.
  * TACOS is a rate and gets its own shorter plot beneath, sharing the quarters
@@ -657,7 +659,7 @@ export function ComboChart({
   const lowerTop = upperTop + upperH + gapY;
 
   const moneyVals = [
-    ...(show.sales ? data.flatMap((d) => [d.sales, d.salesPrior]) : []),
+    ...(show.sales ? data.map((d) => d.sales) : []),
     ...(show.spend ? data.flatMap((d) => [d.spend, d.spendPrior]) : []),
   ];
   const dollarTicks = niceTicks(Math.max(1, ...moneyVals) * 1.08, 4);
@@ -669,8 +671,7 @@ export function ComboChart({
   const yP = (v: number) => lowerTop + lowerH - (v / pMax) * lowerH;
 
   const step = plotW / data.length;
-  const barW = Math.min(step * 0.2, 38);
-  const barGap = 4;
+  const barW = Math.min(step * 0.34, 64);
   const cx = (i: number) => padL + i * step + step / 2;
 
   /** 2025 line: same hue, dashed, hollow markers. 2026: solid, filled. */
@@ -730,27 +731,15 @@ export function ComboChart({
           {show.sales && (
             <g clipPath={`url(#${clipId})`}>
               {data.map((d, i) => (
-                <g key={d.label}>
-                  {/* 2025: outline only, so this year reads as the filled one. */}
-                  <rect
-                    x={cx(i) - barW - barGap / 2}
-                    y={yD(d.salesPrior)}
-                    width={barW}
-                    height={yD(0) - yD(d.salesPrior) + 8}
-                    rx={4}
-                    fill="none"
-                    stroke={COMBO.sales}
-                    strokeWidth={2}
-                  />
-                  <rect
-                    x={cx(i) + barGap / 2}
-                    y={yD(d.sales)}
-                    width={barW}
-                    height={yD(0) - yD(d.sales) + 8}
-                    rx={4}
-                    fill={COMBO.sales}
-                  />
-                </g>
+                <rect
+                  key={d.label}
+                  x={cx(i) - barW / 2}
+                  y={yD(d.sales)}
+                  width={barW}
+                  height={yD(0) - yD(d.sales) + 8}
+                  rx={4}
+                  fill={COMBO.sales}
+                />
               ))}
             </g>
           )}
@@ -853,21 +842,19 @@ export function ComboChart({
   );
 }
 
-/** Says what outlined/dashed versus solid means, since the year is not a hue. */
+/** Says what dashed versus solid means on the lines, since the year is not a hue. */
 export function YearKey() {
   return (
     <div className={styles.yearKey}>
       <span className={styles.legendItem}>
-        <svg width="26" height="12" aria-hidden="true">
-          <rect x="1" y="1" width="10" height="10" rx="2" fill="none" stroke="#ffffff" strokeWidth="2" />
-          <line x1="14" y1="6" x2="25" y2="6" stroke="#ffffff" strokeWidth="2" strokeDasharray="4 3" />
+        <svg width="22" height="10" aria-hidden="true">
+          <line x1="1" y1="5" x2="21" y2="5" stroke="#ffffff" strokeWidth="2" strokeDasharray="4 3" />
         </svg>
         2025
       </span>
       <span className={styles.legendItem}>
-        <svg width="26" height="12" aria-hidden="true">
-          <rect x="1" y="1" width="10" height="10" rx="2" fill="#ffffff" />
-          <line x1="14" y1="6" x2="25" y2="6" stroke="#ffffff" strokeWidth="2" />
+        <svg width="22" height="10" aria-hidden="true">
+          <line x1="1" y1="5" x2="21" y2="5" stroke="#ffffff" strokeWidth="2" />
         </svg>
         2026
       </span>

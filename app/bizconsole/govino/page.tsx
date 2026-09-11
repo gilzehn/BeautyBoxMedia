@@ -325,7 +325,7 @@ export default function GovinoReport() {
                     tacosPrior: q.before.tacos,
                   }))}
                   show={shown}
-                  caption="Sales and spend in dollars above, TACOS below. Each quarter compares the same months in both years."
+                  caption="Sales and spend in dollars above, TACOS below. Spend and TACOS show last year dashed."
                 />
               </div>
 
