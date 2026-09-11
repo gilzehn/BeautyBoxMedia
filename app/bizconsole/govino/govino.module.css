@@ -63,16 +63,22 @@
   margin-bottom: 18px;
 }
 
-.title {
-  font-size: clamp(2.3rem, 4.6vw, 3.1rem);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.12;
-  margin-bottom: 16px;
+/* The visible report title was removed on request. This keeps one heading in the
+   document outline so the page is not headless to a screen reader. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .standfirst {
-  font-size: 1.45rem;
+  font-size: 1.5rem;
   line-height: 1.5;
   color: #ffffff;
   max-width: 900px;
@@ -549,22 +555,6 @@
   font-weight: 650;
   margin-bottom: 8px;
   letter-spacing: 0.02em;
-}
-
-/* --- Footer ------------------------------------------------------------ */
-
-.footer {
-  border-top: 1px solid var(--g-line);
-  padding-top: 24px;
-  font-size: 1.02rem;
-  color: #ffffff;
-  opacity: 0.85;
-  line-height: 1.6;
-  max-width: 900px;
-}
-
-.footer p + p {
-  margin-top: 12px;
 }
 
 /* --- Responsive -------------------------------------------------------- */

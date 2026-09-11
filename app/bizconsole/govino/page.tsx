@@ -15,8 +15,10 @@
  * keeps StackedBars and TrendLines for when they are wanted again; they are
  * tree-shaken out of the bundle while unused.
  *
- * Provenance for every figure is documented at the top of lib/govino.ts, which
- * is where it needs to stay accurate.
+ * The source-and-method footer was removed on request, matching the Sonoma
+ * report. The provenance is not lost: it is documented in full at the top of
+ * lib/govino.ts, which is where it has to stay accurate anyway, since that is
+ * the file anyone updating the figures will open.
  */
 
 import { useState } from 'react';
@@ -41,7 +43,6 @@ import {
   Q4_2025,
   YOY,
   DATA_THROUGH,
-  PULLED_ON,
   ASIN_COUNT,
   usd,
   num,
@@ -162,7 +163,7 @@ export default function GovinoReport() {
             <span className={styles.eyebrow}>Beauty Box Media · Monthly report</span>
           </div>
           <div className={styles.accentBar} />
-          <h1 className={styles.title}>govino on Amazon — January to August 2026</h1>
+          <h1 className={styles.srOnly}>govino on Amazon, January to August 2026</h1>
           <p className={styles.standfirst}>
             Revenue, advertising and where the two meet, month by month, set against the same eight
             months of 2025. Revenue is total ordered product sales across the govino catalogue,
@@ -684,33 +685,6 @@ export default function GovinoReport() {
             </section>
           </>
         )}
-
-        {/* ---------------------------------------------------------------- */}
-        <footer className={styles.footer}>
-          <p>
-            Figures cover the {ASIN_COUNT} ASINs carrying the govino brand on the Beauty Box US
-            seller account. Revenue is ordered product sales, advertised and organic together. Ad
-            spend and ad-attributed sales are Sponsored Products plus Sponsored Display on Amazon&apos;s
-            14-day click attribution; govino ran no Sponsored Brands in either year. The branded
-            versus generic split covers Sponsored Products keyword and auto targeting, which is 92%
-            of Sponsored Products spend — product-targeting and Sponsored Display placements have no
-            customer search term to classify and are excluded from that panel only.
-          </p>
-          <p>
-            &ldquo;Not ad-attributed&rdquo; revenue is total revenue less ad-attributed sales. It is
-            the standard approximation rather than a clean split: Amazon&apos;s 14-day window can credit
-            an ad with sales of other products, so the paid share is somewhat overstated and the
-            unattributed share correspondingly understated.
-          </p>
-          <p>
-            Data pulled {PULLED_ON} and complete through {DATA_THROUGH}. September 2026 is a partial
-            month and is excluded throughout. Amazon restates attribution for several days after the
-            fact, so recent figures may move slightly. These numbers reconcile to the monthly
-            spreadsheet govino has been receiving: March through July 2026 match it to the dollar on
-            spend, ad sales and revenue.
-          </p>
-          <p>Prepared by Beauty Box Media for govino.</p>
-        </footer>
       </div>
     </div>
   );
