@@ -49,17 +49,6 @@
   background: var(--g-line);
 }
 
-/* Top left, on its own line above the client's mark, and set large: it is the
-   first thing on the page and carries the letterhead. Full opacity now that it
-   leads rather than sits in a corner. */
-.agencyMark {
-  display: block;
-  height: 58px;
-  width: auto;
-  margin-bottom: 30px;
-  opacity: 1;
-}
-
 .eyebrow {
   font-size: 0.95rem;
   letter-spacing: 0.16em;
@@ -757,11 +746,6 @@
 
   .standfirst {
     font-size: 1.2rem;
-  }
-
-  .agencyMark {
-    height: 38px;
-    margin-bottom: 22px;
   }
 
   .lede {

@@ -235,16 +235,6 @@ export default function GovinoReport() {
       <div className={styles.wrap}>
         {/* ---------------------------------------------------------------- */}
         <header className={styles.masthead}>
-          {/* Our mark sits above, in the corner: the page is prepared by us, and
-              govino's own logo leads the report itself on the line below. */}
-          <Image
-            src="/logo.svg"
-            alt="Beauty Box Media"
-            width={216}
-            height={48}
-            className={styles.agencyMark}
-            priority
-          />
           <div className={styles.brandRow}>
             <Image
               src="/logos/govino.svg"
