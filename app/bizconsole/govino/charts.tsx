@@ -639,6 +639,19 @@ export const COMBO = {
   tacos: '#c27612',
 };
 
+/**
+ * Two line-end labels can land on top of each other when the years finish
+ * close together. Nudge them apart around their midpoint rather than letting
+ * them overlap; 26 units is the smallest gap that stays readable at this size.
+ */
+function spread(a: number, b: number, min = 26): [number, number] {
+  const gap = Math.abs(a - b);
+  if (gap >= min) return [a, b];
+  const mid = (a + b) / 2;
+  const half = min / 2;
+  return a <= b ? [mid - half, mid + half] : [mid + half, mid - half];
+}
+
 const pctChange = (now: number, before: number) => (before ? (now / before - 1) * 100 : 0);
 const signed = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(0)}%`;
 
@@ -694,8 +707,14 @@ export function SalesSpendChart({
   const [hover, setHover] = useState<number | null>(null);
   const clipId = useId();
 
-  const H2 = 340;
-  const plotH2 = H2 - padT - padB;
+  // Taller than the plot needs: the extra row at the bottom carries a year
+  // under each bar, and the right margin carries a year at each line end, so
+  // the reader never has to go back to the key to know which is which.
+  const H2 = 380;
+  const padB2 = 84;
+  const padR2 = 92;
+  const plotW2 = W - padL - padR2;
+  const plotH2 = H2 - padT - padB2;
   const vals = [
     ...(show.sales ? data.flatMap((d) => [d.sales, d.salesPrior]) : []),
     ...(show.spend ? data.flatMap((d) => [d.spend, d.spendPrior]) : []),
@@ -704,10 +723,12 @@ export function SalesSpendChart({
   const max = ticks[ticks.length - 1];
   const y = (v: number) => padT + plotH2 - (v / max) * plotH2;
 
-  const step = plotW / data.length;
+  const step = plotW2 / data.length;
   const barW = Math.min(step * 0.2, 44);
   const barGap = 4;
   const cx = (i: number) => padL + i * step + step / 2;
+  const barX = (i: number, prior: boolean) =>
+    prior ? cx(i) - barW / 2 - barGap / 2 - barW / 2 : cx(i) + barW / 2 + barGap / 2 - barW / 2;
 
   return (
     <figure className={styles.panelFig}>
@@ -721,7 +742,7 @@ export function SalesSpendChart({
 
           {ticks.map((v, i) => (
             <g key={i}>
-              <line x1={padL} x2={W - padR} y1={y(v)} y2={y(v)} stroke={C.grid} strokeWidth={1} />
+              <line x1={padL} x2={W - padR2} y1={y(v)} y2={y(v)} stroke={C.grid} strokeWidth={1} />
               <text x={padL - 14} y={y(v) + 7} textAnchor="end" className={styles.axisText}>
                 {money(v)}
               </text>
@@ -767,6 +788,32 @@ export function SalesSpendChart({
                 prior={false}
                 hover={hover}
               />
+              {/* Direct labels at the line ends, so the year is readable
+                  without going back to the key. */}
+              {(() => {
+                const last = data[data.length - 1];
+                const [yNow, yPrior] = spread(y(last.spend), y(last.spendPrior));
+                return (
+                  <>
+                    <text
+                      x={cx(data.length - 1) + 14}
+                      y={yNow + 7}
+                      className={styles.seriesLabel}
+                      fill={COMBO.spend}
+                    >
+                      2026
+                    </text>
+                    <text
+                      x={cx(data.length - 1) + 14}
+                      y={yPrior + 7}
+                      className={styles.seriesLabel}
+                      fill={COMBO.spend}
+                    >
+                      2025
+                    </text>
+                  </>
+                );
+              })()}
             </>
           )}
 
@@ -786,10 +833,35 @@ export function SalesSpendChart({
             />
           ))}
 
-          <line x1={padL} x2={W - padR} y1={y(0)} y2={y(0)} stroke={C.axis} strokeWidth={1} />
+          <line x1={padL} x2={W - padR2} y1={y(0)} y2={y(0)} stroke={C.axis} strokeWidth={1} />
+
+          {/* A year under each bar, in that bar's own colour. */}
+          {show.sales &&
+            data.map((d, i) => (
+              <g key={`yr-${d.label}`}>
+                <text
+                  x={barX(i, true) + barW / 2}
+                  y={y(0) + 30}
+                  textAnchor="middle"
+                  className={styles.barYear}
+                  fill={COMBO.salesPrior}
+                >
+                  2025
+                </text>
+                <text
+                  x={barX(i, false) + barW / 2}
+                  y={y(0) + 30}
+                  textAnchor="middle"
+                  className={styles.barYear}
+                  fill={COMBO.sales}
+                >
+                  2026
+                </text>
+              </g>
+            ))}
 
           {data.map((d, i) => (
-            <text key={d.label} x={cx(i)} y={H2 - 14} textAnchor="middle" className={styles.axisText}>
+            <text key={d.label} x={cx(i)} y={H2 - 16} textAnchor="middle" className={styles.axisText}>
               {d.label}
             </text>
           ))}
@@ -798,15 +870,15 @@ export function SalesSpendChart({
         {hover !== null && (
           <div
             className={`${styles.tooltip} ${styles.tooltipBelow}`}
-            style={{ left: `${((cx(hover) - padL) / plotW) * 84 + 8}%`, top: `${(padT / H2) * 100}%` }}
+            style={{ left: `${((cx(hover) - padL) / plotW2) * 80 + 8}%`, top: `${(padT / H2) * 100}%` }}
           >
             <strong>{data[hover].label}</strong>
             {show.sales && (
               <span>
                 <i className={styles.tipDot} style={{ background: COMBO.sales }} /> Total Sales{' '}
-                <em>{exact(data[hover].sales)}</em>
+                <em>{exact(data[hover].sales)}</em> 2026
                 <small className={styles.tipPrior}>
-                  from {exact(data[hover].salesPrior)} ·{' '}
+                  2025: {exact(data[hover].salesPrior)} ·{' '}
                   {signed(pctChange(data[hover].sales, data[hover].salesPrior))}
                 </small>
               </span>
@@ -814,9 +886,9 @@ export function SalesSpendChart({
             {show.spend && (
               <span>
                 <i className={styles.tipDot} style={{ background: COMBO.spend }} /> Ad Spend{' '}
-                <em>{exact(data[hover].spend)}</em>
+                <em>{exact(data[hover].spend)}</em> 2026
                 <small className={styles.tipPrior}>
-                  from {exact(data[hover].spendPrior)} ·{' '}
+                  2025: {exact(data[hover].spendPrior)} ·{' '}
                   {signed(pctChange(data[hover].spend, data[hover].spendPrior))}
                 </small>
               </span>
@@ -835,12 +907,15 @@ export function TacosChart({ data, caption }: { data: ComboPoint[]; caption: str
   const [hover, setHover] = useState<number | null>(null);
 
   const H2 = 280;
+  // Right margin carries a year at each line end, as on the sales chart.
+  const padR2 = 92;
+  const plotW2 = W - padL - padR2;
   const plotH2 = H2 - padT - padB;
   const ticks = niceTicks(Math.max(...data.flatMap((d) => [d.tacos, d.tacosPrior])) * 1.15, 3);
   const max = ticks[ticks.length - 1];
   const y = (v: number) => padT + plotH2 - (v / max) * plotH2;
 
-  const step = plotW / data.length;
+  const step = plotW2 / data.length;
   const cx = (i: number) => padL + i * step + step / 2;
 
   return (
@@ -849,7 +924,7 @@ export function TacosChart({ data, caption }: { data: ComboPoint[]; caption: str
         <svg viewBox={`0 0 ${W} ${H2}`} className={styles.svg} role="img" aria-label={caption}>
           {ticks.map((v, i) => (
             <g key={i}>
-              <line x1={padL} x2={W - padR} y1={y(v)} y2={y(v)} stroke={C.grid} strokeWidth={1} />
+              <line x1={padL} x2={W - padR2} y1={y(v)} y2={y(v)} stroke={C.grid} strokeWidth={1} />
               <text x={padL - 14} y={y(v) + 7} textAnchor="end" className={styles.axisText}>
                 {`${Math.round(v)}%`}
               </text>
@@ -869,6 +944,31 @@ export function TacosChart({ data, caption }: { data: ComboPoint[]; caption: str
             hover={hover}
           />
 
+          {(() => {
+            const last = data[data.length - 1];
+            const [yNow, yPrior] = spread(y(last.tacos), y(last.tacosPrior));
+            return (
+              <>
+                <text
+                  x={cx(data.length - 1) + 14}
+                  y={yNow + 7}
+                  className={styles.seriesLabel}
+                  fill={COMBO.tacos}
+                >
+                  2026
+                </text>
+                <text
+                  x={cx(data.length - 1) + 14}
+                  y={yPrior + 7}
+                  className={styles.seriesLabel}
+                  fill={COMBO.tacos}
+                >
+                  2025
+                </text>
+              </>
+            );
+          })()}
+
           {hover !== null && (
             <line x1={cx(hover)} x2={cx(hover)} y1={padT} y2={y(0)} stroke={C.axis} strokeWidth={1} />
           )}
@@ -885,7 +985,7 @@ export function TacosChart({ data, caption }: { data: ComboPoint[]; caption: str
             />
           ))}
 
-          <line x1={padL} x2={W - padR} y1={y(0)} y2={y(0)} stroke={C.axis} strokeWidth={1} />
+          <line x1={padL} x2={W - padR2} y1={y(0)} y2={y(0)} stroke={C.axis} strokeWidth={1} />
 
           {data.map((d, i) => (
             <text key={d.label} x={cx(i)} y={H2 - 14} textAnchor="middle" className={styles.axisText}>
@@ -897,14 +997,14 @@ export function TacosChart({ data, caption }: { data: ComboPoint[]; caption: str
         {hover !== null && (
           <div
             className={`${styles.tooltip} ${styles.tooltipBelow}`}
-            style={{ left: `${((cx(hover) - padL) / plotW) * 84 + 8}%`, top: `${(padT / H2) * 100}%` }}
+            style={{ left: `${((cx(hover) - padL) / plotW2) * 80 + 8}%`, top: `${(padT / H2) * 100}%` }}
           >
             <strong>{data[hover].label}</strong>
             <span>
               <i className={styles.tipDot} style={{ background: COMBO.tacos }} /> TACOS{' '}
-              <em>{data[hover].tacos.toFixed(1)}%</em>
+              <em>{data[hover].tacos.toFixed(1)}%</em> 2026
               <small className={styles.tipPrior}>
-                from {data[hover].tacosPrior.toFixed(1)}% ·{' '}
+                2025: {data[hover].tacosPrior.toFixed(1)}% ·{' '}
                 {`${data[hover].tacos - data[hover].tacosPrior >= 0 ? '+' : ''}${(
                   data[hover].tacos - data[hover].tacosPrior
                 ).toFixed(1)} pts`}

@@ -401,6 +401,21 @@
   font-family: var(--font-sans);
 }
 
+/* Direct labels on the marks themselves: a year at each line end and under each
+   bar, so the reader never has to go back to the key to know which year a mark
+   belongs to. Set in the mark's own colour. */
+.seriesLabel {
+  font-size: 21px;
+  font-weight: 650;
+  font-family: var(--font-sans);
+}
+
+.barYear {
+  font-size: 19px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+}
+
 .tooltip {
   position: absolute;
   transform: translate(-50%, -112%);
