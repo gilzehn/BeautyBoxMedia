@@ -1,0 +1,555 @@
+/* govino monthly performance report.
+   Same document-not-console language as the Sonoma report: generous measure,
+   restrained rules, colour only where it carries meaning, prints to PDF without
+   surprises. Two additions here — a tab bar, because the brand owner wants the
+   numbers and the argument kept apart, and the Beauty Box pink used as the
+   masthead and active-tab accent. */
+
+.page {
+  --g-line: #262626;
+  --g-card: #141414;
+  --g-card-2: #101010;
+  --g-accent: #ff2d7b;
+
+  background: #0a0a0a;
+  color: #ffffff;
+  padding: 0 0 96px;
+  min-height: 100vh;
+}
+
+.wrap {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+/* --- Masthead ---------------------------------------------------------- */
+
+.masthead {
+  border-bottom: 1px solid var(--g-line);
+  padding: 52px 0 30px;
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.brandMark {
+  height: 34px;
+  width: auto;
+}
+
+.brandRule {
+  width: 1px;
+  height: 26px;
+  background: var(--g-line);
+}
+
+.eyebrow {
+  font-size: 0.95rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.accentBar {
+  width: 54px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--g-accent);
+  margin-bottom: 18px;
+}
+
+.title {
+  font-size: clamp(2.3rem, 4.6vw, 3.1rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  margin-bottom: 16px;
+}
+
+.standfirst {
+  font-size: 1.45rem;
+  line-height: 1.5;
+  color: #ffffff;
+  max-width: 900px;
+}
+
+.stamp {
+  margin-top: 22px;
+  font-size: 1rem;
+  color: #ffffff;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 26px;
+}
+
+/* --- Tabs -------------------------------------------------------------- */
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--g-line);
+  margin-bottom: 40px;
+  overflow-x: auto;
+}
+
+.tab {
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #ffffff;
+  font-size: 1.15rem;
+  font-weight: 500;
+  padding: 16px 20px 13px;
+  white-space: nowrap;
+  transition: border-color 0.2s, opacity 0.2s;
+  opacity: 0.62;
+}
+
+.tab:hover {
+  opacity: 1;
+}
+
+.tabActive {
+  opacity: 1;
+  font-weight: 650;
+  border-bottom-color: var(--g-accent);
+}
+
+/* --- Sections ---------------------------------------------------------- */
+
+.section {
+  margin-bottom: 64px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  border-bottom: 1px solid var(--g-line);
+  padding-bottom: 12px;
+  margin-bottom: 26px;
+}
+
+.sectionNum {
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+  letter-spacing: 0.1em;
+}
+
+.sectionTitle {
+  font-size: 1.7rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.lede {
+  font-size: 1.4rem;
+  line-height: 1.55;
+  color: #ffffff;
+  max-width: 900px;
+  margin-bottom: 28px;
+}
+
+.body {
+  font-size: 1.3rem;
+  line-height: 1.6;
+  color: #ffffff;
+  max-width: 900px;
+  margin-bottom: 18px;
+}
+
+.body strong,
+.lede strong,
+.standfirst strong {
+  font-weight: 700;
+}
+
+/* --- Scorecards -------------------------------------------------------- */
+
+.scoreGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.score {
+  background: var(--g-card);
+  border: 1px solid var(--g-line);
+  border-radius: 10px;
+  padding: 18px 18px 16px;
+}
+
+.scoreLabel {
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.scoreValue {
+  font-size: 2.1rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.scorePrior {
+  margin-top: 10px;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 9px;
+  font-size: 1.05rem;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreNote {
+  margin-top: 9px;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: #ffffff;
+}
+
+/* Direction of travel. Paired with an arrow glyph so it is never colour-alone. */
+.up {
+  color: #5cc08c;
+}
+
+.down {
+  color: #e08b83;
+}
+
+/* --- Cards & charts ---------------------------------------------------- */
+
+.card {
+  background: var(--g-card);
+  border: 1px solid var(--g-line);
+  border-radius: 12px;
+  padding: 22px 22px 18px;
+  margin-bottom: 20px;
+}
+
+.cardHead {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.cardSub {
+  font-size: 1.05rem;
+  color: #ffffff;
+  opacity: 0.78;
+  margin-bottom: 16px;
+}
+
+.panelFig {
+  margin: 0;
+}
+
+.panelCaption {
+  font-size: 1.05rem;
+  color: #ffffff;
+  opacity: 0.78;
+  padding-left: 6px;
+  margin-top: 6px;
+}
+
+.chartWrap {
+  position: relative;
+  width: 100%;
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.axisText {
+  fill: #ffffff;
+  font-size: 22px;
+  font-family: var(--font-sans);
+}
+
+.tooltip {
+  position: absolute;
+  transform: translate(-50%, -112%);
+  background: #000;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  padding: 11px 13px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 1rem;
+  color: #ffffff;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65);
+}
+
+.tooltip span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltip em {
+  font-style: normal;
+  font-weight: 600;
+}
+
+.tipDot {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* --- Legend ------------------------------------------------------------ */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  margin-bottom: 16px;
+  font-size: 1.1rem;
+  color: #ffffff;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* --- Tables ------------------------------------------------------------ */
+
+.tableWrap {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  border: 1px solid var(--g-line);
+  border-radius: 12px;
+  background: var(--g-card);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 660px;
+}
+
+.table th {
+  text-align: right;
+  font-weight: 600;
+  font-size: 0.92rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--g-line);
+  white-space: nowrap;
+}
+
+.table th:first-child,
+.table td:first-child {
+  text-align: left;
+}
+
+.table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #1e1e1e;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover td {
+  background: #1a1a1a;
+}
+
+.rowName {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rowAsin {
+  font-size: 0.9rem;
+  opacity: 0.6;
+}
+
+.flag {
+  color: #e08b83;
+  font-weight: 650;
+}
+
+.ok {
+  color: #5cc08c;
+}
+
+/* --- Action list ------------------------------------------------------- */
+
+.actions {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.action {
+  background: var(--g-card);
+  border: 1px solid var(--g-line);
+  border-left: 3px solid var(--g-accent);
+  border-radius: 10px;
+  padding: 20px 22px;
+}
+
+.actionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.actionNum {
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.actionTitle {
+  font-size: 1.3rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.actionTag {
+  margin-left: auto;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--g-line);
+  opacity: 0.85;
+}
+
+.actionBody {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: #ffffff;
+}
+
+.actionBody strong {
+  font-weight: 700;
+}
+
+/* --- Callout ----------------------------------------------------------- */
+
+.callout {
+  background: var(--g-card-2);
+  border: 1px solid var(--g-line);
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-bottom: 22px;
+  font-size: 1.2rem;
+  line-height: 1.6;
+  max-width: 900px;
+}
+
+.calloutHead {
+  font-size: 1.15rem;
+  font-weight: 650;
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+
+/* --- Footer ------------------------------------------------------------ */
+
+.footer {
+  border-top: 1px solid var(--g-line);
+  padding-top: 24px;
+  font-size: 1.02rem;
+  color: #ffffff;
+  opacity: 0.85;
+  line-height: 1.6;
+  max-width: 900px;
+}
+
+.footer p + p {
+  margin-top: 12px;
+}
+
+/* --- Responsive -------------------------------------------------------- */
+
+@media (max-width: 980px) {
+  .scoreGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .scoreGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .wrap {
+    padding: 0 18px;
+  }
+
+  .standfirst {
+    font-size: 1.2rem;
+  }
+
+  .lede {
+    font-size: 1.2rem;
+  }
+
+  .body,
+  .actionBody {
+    font-size: 1.12rem;
+  }
+
+  .axisText {
+    font-size: 30px;
+  }
+}
+
+@media print {
+  .page {
+    background: #fff;
+    color: #000;
+  }
+
+  .tabs {
+    display: none;
+  }
+}
