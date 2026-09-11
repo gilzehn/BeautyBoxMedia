@@ -184,8 +184,30 @@
 .toggleRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: 8px 16px;
   margin-bottom: 18px;
+}
+
+/* The year is carried by the mark, not a hue, so it needs saying. */
+.yearKey {
+  display: flex;
+  gap: 16px;
+  margin-left: 4px;
+  font-size: 1.02rem;
+  opacity: 0.8;
+}
+
+.yearKey svg {
+  overflow: visible;
+}
+
+.tipPrior {
+  display: block;
+  font-size: 0.9rem;
+  opacity: 0.72;
+  padding-left: 20px;
+  margin-top: 2px;
 }
 
 .toggle {
@@ -397,9 +419,16 @@
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65);
 }
 
+/* Hangs below its anchor rather than above it, for charts where the anchor sits
+   near the top of the plot and a tall mark would push the card off the figure. */
+.tooltipBelow {
+  transform: translate(-50%, 6px);
+}
+
 .tooltip span {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 9px;
   font-variant-numeric: tabular-nums;
 }

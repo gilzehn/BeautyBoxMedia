@@ -596,24 +596,36 @@ export function IndexLines({
   );
 }
 
-// --- Sales / spend / TACOS combo -----------------------------------------
+// --- Sales / spend / TACOS combo, two years ------------------------------
 
 /**
- * Total sales as bars, ad spend as a line, TACOS as a line.
+ * Total sales as bars, ad spend as a line, TACOS as a line, each shown for 2026
+ * against 2025.
  *
- * Sales and spend are both dollars, so they legitimately share one y-axis and
- * are drawn together in the upper plot. TACOS is a percentage and cannot join
- * them: on a scale that reaches $105,000 it would sit flat on the floor, and
- * giving it a second y-axis would let the crossings between the lines be set by
- * where the two axes were pinned rather than by the data. So it gets its own
- * shorter plot underneath, sharing the same quarters and the same crosshair —
- * the price-and-volume arrangement, which keeps every comparison honest.
+ * Two encoding decisions, both load-bearing.
+ *
+ * Colour carries the metric, never the year. With three measures across two
+ * years there are six marks, and a second set of hues for 2025 would mean
+ * reading colour twice for different things. Instead the year is carried by the
+ * mark itself: 2025 is an outlined bar and a dashed line, 2026 is a solid bar
+ * and a solid line. That is a secondary encoding rather than colour alone, and
+ * it needs no extra hues — the darker variants of these three fail 3:1 against
+ * this surface, and lighter ones would make last year louder than this year.
+ *
+ * Sales and spend are both dollars and share the upper plot and one y-axis.
+ * TACOS is a rate and gets its own shorter plot beneath, sharing the quarters
+ * and the crosshair. Giving it a second y-axis against the dollar scale would
+ * let the crossings between the lines be decided by where the two axes were
+ * pinned rather than by the data.
  */
 export interface ComboPoint {
   label: string;
   sales: number;
+  salesPrior: number;
   spend: number;
+  spendPrior: number;
   tacos: number;
+  tacosPrior: number;
 }
 
 export const COMBO = {
@@ -621,6 +633,9 @@ export const COMBO = {
   spend: '#9b6ef3',
   tacos: '#c27612',
 };
+
+const pctChange = (now: number, before: number) => (before ? (now / before - 1) * 100 : 0);
+const signed = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(0)}%`;
 
 export function ComboChart({
   data,
@@ -634,29 +649,64 @@ export function ComboChart({
   const [hover, setHover] = useState<number | null>(null);
   const clipId = useId();
 
-  const HC = 420;
-  const gap = 34;
-  const lowerH = show.tacos ? 96 : 0;
+  const HC = 440;
+  const gapY = 36;
+  const lowerH = show.tacos ? 104 : 0;
   const upperTop = padT;
-  const upperH = HC - padT - padB - (show.tacos ? lowerH + gap : 0);
-  const lowerTop = upperTop + upperH + gap;
+  const upperH = HC - padT - padB - (show.tacos ? lowerH + gapY : 0);
+  const lowerTop = upperTop + upperH + gapY;
 
-  // Upper plot: dollars. Both series share it because both are dollars.
   const moneyVals = [
-    ...(show.sales ? data.map((d) => d.sales) : []),
-    ...(show.spend ? data.map((d) => d.spend) : []),
+    ...(show.sales ? data.flatMap((d) => [d.sales, d.salesPrior]) : []),
+    ...(show.spend ? data.flatMap((d) => [d.spend, d.spendPrior]) : []),
   ];
   const dollarTicks = niceTicks(Math.max(1, ...moneyVals) * 1.08, 4);
   const dMax = dollarTicks[dollarTicks.length - 1];
   const yD = (v: number) => upperTop + upperH - (v / dMax) * upperH;
 
-  const pctTicks = niceTicks(Math.max(...data.map((d) => d.tacos)) * 1.15, 2);
+  const pctTicks = niceTicks(Math.max(...data.flatMap((d) => [d.tacos, d.tacosPrior])) * 1.15, 2);
   const pMax = pctTicks[pctTicks.length - 1];
   const yP = (v: number) => lowerTop + lowerH - (v / pMax) * lowerH;
 
   const step = plotW / data.length;
-  const barW = Math.min(step * 0.34, 64);
+  const barW = Math.min(step * 0.2, 38);
+  const barGap = 4;
   const cx = (i: number) => padL + i * step + step / 2;
+
+  /** 2025 line: same hue, dashed, hollow markers. 2026: solid, filled. */
+  const lineFor = (
+    key: 'spend' | 'tacos',
+    prior: boolean,
+    yFn: (v: number) => number,
+    color: string,
+  ) => {
+    const val = (d: ComboPoint) =>
+      key === 'spend' ? (prior ? d.spendPrior : d.spend) : prior ? d.tacosPrior : d.tacos;
+    return (
+      <g key={`${key}-${prior ? 'p' : 'n'}`}>
+        <path
+          d={data.map((d, i) => `${i === 0 ? 'M' : 'L'}${cx(i)},${yFn(val(d))}`).join(' ')}
+          fill="none"
+          stroke={color}
+          strokeWidth={2.5}
+          strokeDasharray={prior ? '7 5' : undefined}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        {data.map((d, i) => (
+          <circle
+            key={i}
+            cx={cx(i)}
+            cy={yFn(val(d))}
+            r={hover === i ? 7 : 5}
+            fill={prior ? '#141414' : color}
+            stroke={color}
+            strokeWidth={2}
+          />
+        ))}
+      </g>
+    );
+  };
 
   return (
     <figure className={styles.panelFig}>
@@ -668,7 +718,6 @@ export function ComboChart({
             </clipPath>
           </defs>
 
-          {/* Upper plot: dollars */}
           {dollarTicks.map((v, i) => (
             <g key={i}>
               <line x1={padL} x2={W - padR} y1={yD(v)} y2={yD(v)} stroke={C.grid} strokeWidth={1} />
@@ -681,46 +730,36 @@ export function ComboChart({
           {show.sales && (
             <g clipPath={`url(#${clipId})`}>
               {data.map((d, i) => (
-                <rect
-                  key={d.label}
-                  x={cx(i) - barW / 2}
-                  y={yD(d.sales)}
-                  width={barW}
-                  height={yD(0) - yD(d.sales) + 8}
-                  rx={4}
-                  fill={COMBO.sales}
-                />
+                <g key={d.label}>
+                  {/* 2025: outline only, so this year reads as the filled one. */}
+                  <rect
+                    x={cx(i) - barW - barGap / 2}
+                    y={yD(d.salesPrior)}
+                    width={barW}
+                    height={yD(0) - yD(d.salesPrior) + 8}
+                    rx={4}
+                    fill="none"
+                    stroke={COMBO.sales}
+                    strokeWidth={2}
+                  />
+                  <rect
+                    x={cx(i) + barGap / 2}
+                    y={yD(d.sales)}
+                    width={barW}
+                    height={yD(0) - yD(d.sales) + 8}
+                    rx={4}
+                    fill={COMBO.sales}
+                  />
+                </g>
               ))}
             </g>
           )}
 
-          {show.spend && (
-            <g>
-              <path
-                d={data.map((d, i) => `${i === 0 ? 'M' : 'L'}${cx(i)},${yD(d.spend)}`).join(' ')}
-                fill="none"
-                stroke={COMBO.spend}
-                strokeWidth={2.5}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-              {data.map((d, i) => (
-                <circle
-                  key={d.label}
-                  cx={cx(i)}
-                  cy={yD(d.spend)}
-                  r={hover === i ? 7 : 5}
-                  fill={COMBO.spend}
-                  stroke="#141414"
-                  strokeWidth={2}
-                />
-              ))}
-            </g>
-          )}
+          {show.spend && lineFor('spend', true, yD, COMBO.spend)}
+          {show.spend && lineFor('spend', false, yD, COMBO.spend)}
 
           <line x1={padL} x2={W - padR} y1={yD(0)} y2={yD(0)} stroke={C.axis} strokeWidth={1} />
 
-          {/* Lower plot: TACOS, its own scale, same quarters */}
           {show.tacos && (
             <>
               {pctTicks.map((v, i) => (
@@ -731,25 +770,8 @@ export function ComboChart({
                   </text>
                 </g>
               ))}
-              <path
-                d={data.map((d, i) => `${i === 0 ? 'M' : 'L'}${cx(i)},${yP(d.tacos)}`).join(' ')}
-                fill="none"
-                stroke={COMBO.tacos}
-                strokeWidth={2.5}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-              {data.map((d, i) => (
-                <circle
-                  key={d.label}
-                  cx={cx(i)}
-                  cy={yP(d.tacos)}
-                  r={hover === i ? 7 : 5}
-                  fill={COMBO.tacos}
-                  stroke="#141414"
-                  strokeWidth={2}
-                />
-              ))}
+              {lineFor('tacos', true, yP, COMBO.tacos)}
+              {lineFor('tacos', false, yP, COMBO.tacos)}
               <line x1={padL} x2={W - padR} y1={yP(0)} y2={yP(0)} stroke={C.axis} strokeWidth={1} />
             </>
           )}
@@ -786,17 +808,10 @@ export function ComboChart({
 
         {hover !== null && (
           <div
-            className={styles.tooltip}
-            /* Anchored to the tallest mark in the upper plot so the card sits
-               over the chart rather than over the prose above it. */
+            className={`${styles.tooltip} ${styles.tooltipBelow}`}
             style={{
-              left: `${((cx(hover) - padL) / plotW) * 88 + 6}%`,
-              top: `${(yD(
-                Math.max(
-                  show.sales ? data[hover].sales : 0,
-                  show.spend ? data[hover].spend : 0,
-                ),
-              ) / HC) * 100}%`,
+              left: `${((cx(hover) - padL) / plotW) * 84 + 8}%`,
+              top: `${(upperTop / HC) * 100}%`,
             }}
           >
             <strong>{data[hover].label}</strong>
@@ -804,18 +819,30 @@ export function ComboChart({
               <span>
                 <i className={styles.tipDot} style={{ background: COMBO.sales }} /> Total Sales{' '}
                 <em>{exact(data[hover].sales)}</em>
+                <small className={styles.tipPrior}>
+                  from {exact(data[hover].salesPrior)} · {signed(pctChange(data[hover].sales, data[hover].salesPrior))}
+                </small>
               </span>
             )}
             {show.spend && (
               <span>
                 <i className={styles.tipDot} style={{ background: COMBO.spend }} /> Ad Spend{' '}
                 <em>{exact(data[hover].spend)}</em>
+                <small className={styles.tipPrior}>
+                  from {exact(data[hover].spendPrior)} · {signed(pctChange(data[hover].spend, data[hover].spendPrior))}
+                </small>
               </span>
             )}
             {show.tacos && (
               <span>
                 <i className={styles.tipDot} style={{ background: COMBO.tacos }} /> TACOS{' '}
                 <em>{data[hover].tacos.toFixed(1)}%</em>
+                <small className={styles.tipPrior}>
+                  from {data[hover].tacosPrior.toFixed(1)}% ·{' '}
+                  {`${data[hover].tacos - data[hover].tacosPrior >= 0 ? '+' : ''}${(
+                    data[hover].tacos - data[hover].tacosPrior
+                  ).toFixed(1)} pts`}
+                </small>
               </span>
             )}
           </div>
@@ -823,5 +850,27 @@ export function ComboChart({
       </div>
       <figcaption className={styles.panelCaption}>{caption}</figcaption>
     </figure>
+  );
+}
+
+/** Says what outlined/dashed versus solid means, since the year is not a hue. */
+export function YearKey() {
+  return (
+    <div className={styles.yearKey}>
+      <span className={styles.legendItem}>
+        <svg width="26" height="12" aria-hidden="true">
+          <rect x="1" y="1" width="10" height="10" rx="2" fill="none" stroke="#ffffff" strokeWidth="2" />
+          <line x1="14" y1="6" x2="25" y2="6" stroke="#ffffff" strokeWidth="2" strokeDasharray="4 3" />
+        </svg>
+        2025
+      </span>
+      <span className={styles.legendItem}>
+        <svg width="26" height="12" aria-hidden="true">
+          <rect x="1" y="1" width="10" height="10" rx="2" fill="#ffffff" />
+          <line x1="14" y1="6" x2="25" y2="6" stroke="#ffffff" strokeWidth="2" />
+        </svg>
+        2026
+      </span>
+    </div>
   );
 }

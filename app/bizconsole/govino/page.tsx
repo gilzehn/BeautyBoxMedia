@@ -27,7 +27,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import styles from './govino.module.css';
-import { ComboChart, COMBO, SERIES_COLORS } from './charts';
+import { ComboChart, YearKey, COMBO } from './charts';
 import {
   MONTHS_2025,
   MONTHS_2026,
@@ -60,8 +60,6 @@ type MetricKey = 'gross' | 'units' | 'tacos' | 'spend' | 'ppcSales' | 'acos';
 
 interface Metric {
   key: MetricKey;
-  /** Fixed hue, assigned in order and never cycled. */
-  color: string;
   label: string;
   unit: 'usd' | 'count' | 'pct';
   lowerIsBetter?: boolean;
@@ -75,7 +73,6 @@ interface Metric {
 const METRICS: Metric[] = [
   {
     key: 'gross',
-    color: SERIES_COLORS[0],
     label: 'Total Sales',
     unit: 'usd',
     fmt: (n) => usd(n),
@@ -83,7 +80,6 @@ const METRICS: Metric[] = [
   },
   {
     key: 'units',
-    color: SERIES_COLORS[1],
     label: 'Total Units',
     unit: 'count',
     fmt: (n) => num(n),
@@ -91,7 +87,6 @@ const METRICS: Metric[] = [
   },
   {
     key: 'tacos',
-    color: SERIES_COLORS[2],
     label: 'TACOS',
     unit: 'pct',
     lowerIsBetter: true,
@@ -101,7 +96,6 @@ const METRICS: Metric[] = [
   },
   {
     key: 'spend',
-    color: SERIES_COLORS[3],
     label: 'Ad Spend',
     unit: 'usd',
     neutral: true,
@@ -110,7 +104,6 @@ const METRICS: Metric[] = [
   },
   {
     key: 'ppcSales',
-    color: SERIES_COLORS[4],
     label: 'Ad Attributed Sales',
     unit: 'usd',
     fmt: (n) => usd(n),
@@ -118,7 +111,6 @@ const METRICS: Metric[] = [
   },
   {
     key: 'acos',
-    color: SERIES_COLORS[5],
     label: 'ACOS',
     unit: 'pct',
     lowerIsBetter: true,
@@ -286,7 +278,7 @@ export default function GovinoReport() {
             </section>
 
             <section className={styles.section}>
-              <SectionHead title="2026 by quarter" />
+              <SectionHead title="By quarter, 2026 against 2025" />
               <p className={styles.body}>
                 Click a series to put it on the chart or take it off.{' '}
                 {partialQ
@@ -314,6 +306,7 @@ export default function GovinoReport() {
                     </button>
                   );
                 })}
+                <YearKey />
               </div>
 
               {/* Sales and spend are both dollars and share the upper plot. TACOS
@@ -325,11 +318,14 @@ export default function GovinoReport() {
                   data={PAIRED_QUARTERS.map((q) => ({
                     label: q.partial ? `${q.label} (${q.span})` : q.label,
                     sales: q.now.gross,
+                    salesPrior: q.before.gross,
                     spend: q.now.spend,
+                    spendPrior: q.before.spend,
                     tacos: q.now.tacos,
+                    tacosPrior: q.before.tacos,
                   }))}
                   show={shown}
-                  caption="govino 2026 by quarter. Sales and spend in dollars above, TACOS below."
+                  caption="Sales and spend in dollars above, TACOS below. Each quarter compares the same months in both years."
                 />
               </div>
 
