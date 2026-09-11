@@ -434,3 +434,164 @@ export function Legend({ items }: { items: { label: string; color: string }[] })
     </div>
   );
 }
+
+// --- Multi-series index lines --------------------------------------------
+
+/**
+ * One chart, any combination of the six metrics on it.
+ *
+ * The metrics are dollars, unit counts and percentages, which have no honest
+ * shared linear axis: drawn raw, TACOS at 24 and units at 3,700 would sit as a
+ * flat line under sales at 105,000, and the shape of the comparison would be an
+ * artefact of the scale rather than the data. So every series is indexed to its
+ * own first quarter = 100 and the axis reads in index points. That makes the
+ * question the chart answers "which of these moved most, and which way", which
+ * is the one worth asking of six measures at once. Real values in native units
+ * are in the tooltip, which is where the absolute numbers belong.
+ *
+ * Colour is assigned per metric in fixed order and never cycled, so a metric
+ * keeps its hue whichever others are switched on. Palette validated against the
+ * #141414 card surface: lightness band, chroma floor, CVD separation,
+ * normal-vision floor and contrast all pass.
+ */
+export const SERIES_COLORS = [
+  '#199e70',
+  '#3987e5',
+  '#c27612',
+  '#9b6ef3',
+  '#12a4bf',
+  '#FF2D7B',
+];
+
+export interface IndexSeries {
+  name: string;
+  color: string;
+  /** Indexed to the first period = 100. */
+  index: number[];
+  /** Actual values, already formatted for display. */
+  display: string[];
+}
+
+export function IndexLines({
+  labels,
+  series,
+  caption,
+}: {
+  labels: string[];
+  series: IndexSeries[];
+  caption: string;
+}) {
+  const [hover, setHover] = useState<number | null>(null);
+
+  const H2 = 360;
+  const plotH2 = H2 - padT - padB;
+  const all = series.flatMap((s) => s.index);
+  const lo = Math.min(100, ...all);
+  const hi = Math.max(100, ...all);
+  // Pad the band so lines never graze the frame, and keep 100 inside it.
+  const pad = Math.max((hi - lo) * 0.12, 5);
+  const min = Math.floor((lo - pad) / 10) * 10;
+  const max = Math.ceil((hi + pad) / 10) * 10;
+  const ticks = 4;
+  const stepV = (max - min) / ticks;
+  const gridVals = Array.from({ length: ticks + 1 }, (_, i) => min + i * stepV);
+
+  const step = plotW / labels.length;
+  const y = (v: number) => padT + plotH2 - ((v - min) / (max - min)) * plotH2;
+  const cx = (i: number) => padL + i * step + step / 2;
+
+  return (
+    <figure className={styles.panelFig}>
+      <div className={styles.chartWrap} onMouseLeave={() => setHover(null)}>
+        <svg viewBox={`0 0 ${W} ${H2}`} className={styles.svg} role="img" aria-label={caption}>
+          {gridVals.map((v, i) => (
+            <g key={i}>
+              <line x1={padL} x2={W - padR} y1={y(v)} y2={y(v)} stroke={C.grid} strokeWidth={1} />
+              <text x={padL - 14} y={y(v) + 7} textAnchor="end" className={styles.axisText}>
+                {Math.round(v)}
+              </text>
+            </g>
+          ))}
+
+          {/* The baseline every series starts from. */}
+          <line
+            x1={padL}
+            x2={W - padR}
+            y1={y(100)}
+            y2={y(100)}
+            stroke={C.axis}
+            strokeWidth={1.5}
+            strokeDasharray="6 5"
+          />
+
+          {hover !== null && (
+            <line x1={cx(hover)} x2={cx(hover)} y1={padT} y2={padT + plotH2} stroke={C.axis} strokeWidth={1} />
+          )}
+
+          {series.map((s) => (
+            <g key={s.name}>
+              <path
+                d={s.index.map((v, i) => `${i === 0 ? 'M' : 'L'}${cx(i)},${y(v)}`).join(' ')}
+                fill="none"
+                stroke={s.color}
+                strokeWidth={2.5}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+              {s.index.map((v, i) => (
+                <circle
+                  key={i}
+                  cx={cx(i)}
+                  cy={y(v)}
+                  r={hover === i ? 7 : 4.5}
+                  fill={s.color}
+                  stroke="#141414"
+                  strokeWidth={2}
+                />
+              ))}
+            </g>
+          ))}
+
+          {labels.map((l, i) => (
+            <rect
+              key={l}
+              x={cx(i) - step / 2}
+              y={padT}
+              width={step}
+              height={plotH2}
+              fill="transparent"
+              onMouseEnter={() => setHover(i)}
+            />
+          ))}
+
+          <line x1={padL} x2={W - padR} y1={padT + plotH2} y2={padT + plotH2} stroke={C.axis} strokeWidth={1} />
+
+          {labels.map((l, i) => (
+            <text key={l} x={cx(i)} y={H2 - 14} textAnchor="middle" className={styles.axisText}>
+              {l}
+            </text>
+          ))}
+        </svg>
+
+        {hover !== null && series.length > 0 && (
+          <div
+            className={styles.tooltip}
+            style={{
+              left: `${((cx(hover) - padL) / plotW) * 88 + 6}%`,
+              top: `${(Math.min(...series.map((s) => y(s.index[hover]))) / H2) * 100}%`,
+            }}
+          >
+            <strong>{labels[hover]}</strong>
+            {series.map((s) => (
+              <span key={s.name}>
+                <i className={styles.tipDot} style={{ background: s.color }} /> {s.name}{' '}
+                <em>{s.display[hover]}</em>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      <figcaption className={styles.panelCaption}>{caption}</figcaption>
+    </figure>
+  );
+}

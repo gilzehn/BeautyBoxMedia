@@ -126,6 +126,34 @@ export const MONTHS_2026: MonthRow[] = [
 
 export const MONTHS_ELAPSED = MONTHS_2026.length;
 
+/**
+ * September 2026 so far: 1 to 8 September, not a full month.
+ *
+ * Kept apart from MONTHS_2026 on purpose. Eight days cannot sit in an array of
+ * whole months without quietly corrupting every total and quarter built from
+ * it. It exists only so the commentary can show where ACOS and TACOS have moved
+ * since the August rebalance, and anything rendered from it has to say it is a
+ * part-month.
+ *
+ * Note this is the figure as reported by BigQuery. August's spend is overridden
+ * by hand (see AUG_2026_SPEND), so an August-to-September comparison is not
+ * strictly like for like on the spend line.
+ */
+export const SEP_MTD = {
+  label: '1-8 September',
+  days: 8,
+  spend: 1467.26,
+  ppcSales: 3832.19,
+  gross: 6073.4,
+  units: 209,
+  get acos() {
+    return (this.spend / this.ppcSales) * 100;
+  },
+  get tacos() {
+    return (this.spend / this.gross) * 100;
+  },
+};
+
 /** Where the data stops, for the stamp line and the footnotes. */
 export const DATA_THROUGH = '31 August 2026';
 export const PULLED_ON = '11 September 2026';
