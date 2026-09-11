@@ -27,7 +27,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import styles from './govino.module.css';
-import { IndexLines, SERIES_COLORS } from './charts';
+import { ComboChart, COMBO, SERIES_COLORS } from './charts';
 import {
   MONTHS_2025,
   MONTHS_2026,
@@ -132,6 +132,17 @@ const METRICS: Metric[] = [
 const AUG_2026 = total([MONTHS_2026[MONTHS_2026.length - 1]]);
 const AUG_2025 = total([MONTHS_2025[7]]);
 
+/**
+ * What the chart carries: sales as bars, spend and TACOS as lines. Kept apart
+ * from METRICS because the scorecards show six figures and the chart shows
+ * three — they answer different questions and should not be forced to agree.
+ */
+const CHART_SERIES = [
+  { key: 'sales' as const, label: 'Total Sales', mark: 'bars' as const, color: COMBO.sales },
+  { key: 'spend' as const, label: 'Ad Spend', mark: 'line' as const, color: COMBO.spend },
+  { key: 'tacos' as const, label: 'TACOS', mark: 'line' as const, color: COMBO.tacos },
+];
+
 /** `n` is omitted where a tab has only one section and a lone "01" would be noise. */
 function SectionHead({ n, title }: { n?: string; title: string }) {
   return (
@@ -207,15 +218,10 @@ function Score({
 }
 
 export default function GovinoReport() {
-  // Every metric drawn by default; clicking a chip hides or restores its panel.
-  const [shown, setShown] = useState<Set<MetricKey>>(new Set(METRICS.map((m) => m.key)));
-  const toggle = (k: MetricKey) =>
-    setShown((prev) => {
-      const next = new Set(prev);
-      if (next.has(k)) next.delete(k);
-      else next.add(k);
-      return next;
-    });
+  // All three series drawn by default; a chip takes one off the chart.
+  const [shown, setShown] = useState({ sales: true, spend: true, tacos: true });
+  const toggle = (k: 'sales' | 'spend' | 'tacos') =>
+    setShown((prev) => ({ ...prev, [k]: !prev[k] }));
 
   const partialQ = PAIRED_QUARTERS.find((q) => q.partial);
 
@@ -282,60 +288,53 @@ export default function GovinoReport() {
             <section className={styles.section}>
               <SectionHead title="2026 by quarter" />
               <p className={styles.body}>
-                Click a metric to put it on the chart or take it off.{' '}
+                Click a series to put it on the chart or take it off.{' '}
                 {partialQ
                   ? `${partialQ.label} covers ${partialQ.span} only, since September is not yet complete.`
                   : ''}
               </p>
 
-              <div className={styles.toggleRow} role="group" aria-label="Metrics shown">
-                {METRICS.map((m) => {
-                  const on = shown.has(m.key);
+              <div className={styles.toggleRow} role="group" aria-label="Series shown">
+                {CHART_SERIES.map((c) => {
+                  const on = shown[c.key];
                   return (
                     <button
-                      key={m.key}
+                      key={c.key}
                       type="button"
                       aria-pressed={on}
                       className={`${styles.toggle} ${on ? styles.toggleOn : ''}`}
-                      onClick={() => toggle(m.key)}
+                      onClick={() => toggle(c.key)}
                     >
                       <span
-                        className={styles.toggleDot}
-                        style={{ background: on ? m.color : 'transparent', borderColor: m.color }}
+                        className={c.mark === 'bars' ? styles.toggleDot : styles.toggleLine}
+                        style={{ background: on ? c.color : 'transparent', borderColor: c.color }}
                         aria-hidden="true"
                       />
-                      {m.label}
+                      {c.label}
                     </button>
                   );
                 })}
               </div>
 
-              {/* One chart. The chips above are the legend: each carries its
-                  metric's colour, so identity is never colour-alone. */}
+              {/* Sales and spend are both dollars and share the upper plot. TACOS
+                  is a rate, so it gets its own plot below rather than a second
+                  y-axis, which would let the crossings be set by axis placement
+                  rather than by the data. */}
               <div className={styles.card}>
-                <div className={styles.cardHead}>Indexed to Q1 2026 = 100</div>
-                <div className={styles.cardSub}>
-                  These six measures are dollars, unit counts and percentages, so they have no
-                  shared scale. Each is indexed to its own Q1, which puts them on one axis and shows
-                  which moved furthest. Hover a quarter for the real numbers.
-                </div>
-                <IndexLines
-                  labels={PAIRED_QUARTERS.map((q) => (q.partial ? `${q.label} (${q.span})` : q.label))}
-                  series={METRICS.filter((m) => shown.has(m.key)).map((m) => {
-                    const base = PAIRED_QUARTERS[0].now[m.key];
-                    return {
-                      name: m.label,
-                      color: m.color,
-                      index: PAIRED_QUARTERS.map((q) => (q.now[m.key] / base) * 100),
-                      display: PAIRED_QUARTERS.map((q) => m.fmt(q.now[m.key])),
-                    };
-                  })}
-                  caption="govino 2026 by quarter, each metric indexed to its own Q1"
+                <ComboChart
+                  data={PAIRED_QUARTERS.map((q) => ({
+                    label: q.partial ? `${q.label} (${q.span})` : q.label,
+                    sales: q.now.gross,
+                    spend: q.now.spend,
+                    tacos: q.now.tacos,
+                  }))}
+                  show={shown}
+                  caption="govino 2026 by quarter. Sales and spend in dollars above, TACOS below."
                 />
               </div>
 
-              {shown.size === 0 && (
-                <p className={styles.body}>No metrics selected. Pick one above to draw it.</p>
+              {!shown.sales && !shown.spend && !shown.tacos && (
+                <p className={styles.body}>Nothing selected. Pick a series above to draw it.</p>
               )}
             </section>
 

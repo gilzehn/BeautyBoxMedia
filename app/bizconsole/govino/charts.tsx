@@ -595,3 +595,233 @@ export function IndexLines({
     </figure>
   );
 }
+
+// --- Sales / spend / TACOS combo -----------------------------------------
+
+/**
+ * Total sales as bars, ad spend as a line, TACOS as a line.
+ *
+ * Sales and spend are both dollars, so they legitimately share one y-axis and
+ * are drawn together in the upper plot. TACOS is a percentage and cannot join
+ * them: on a scale that reaches $105,000 it would sit flat on the floor, and
+ * giving it a second y-axis would let the crossings between the lines be set by
+ * where the two axes were pinned rather than by the data. So it gets its own
+ * shorter plot underneath, sharing the same quarters and the same crosshair —
+ * the price-and-volume arrangement, which keeps every comparison honest.
+ */
+export interface ComboPoint {
+  label: string;
+  sales: number;
+  spend: number;
+  tacos: number;
+}
+
+export const COMBO = {
+  sales: '#199e70',
+  spend: '#9b6ef3',
+  tacos: '#c27612',
+};
+
+export function ComboChart({
+  data,
+  caption,
+  show,
+}: {
+  data: ComboPoint[];
+  caption: string;
+  show: { sales: boolean; spend: boolean; tacos: boolean };
+}) {
+  const [hover, setHover] = useState<number | null>(null);
+  const clipId = useId();
+
+  const HC = 420;
+  const gap = 34;
+  const lowerH = show.tacos ? 96 : 0;
+  const upperTop = padT;
+  const upperH = HC - padT - padB - (show.tacos ? lowerH + gap : 0);
+  const lowerTop = upperTop + upperH + gap;
+
+  // Upper plot: dollars. Both series share it because both are dollars.
+  const moneyVals = [
+    ...(show.sales ? data.map((d) => d.sales) : []),
+    ...(show.spend ? data.map((d) => d.spend) : []),
+  ];
+  const dollarTicks = niceTicks(Math.max(1, ...moneyVals) * 1.08, 4);
+  const dMax = dollarTicks[dollarTicks.length - 1];
+  const yD = (v: number) => upperTop + upperH - (v / dMax) * upperH;
+
+  const pctTicks = niceTicks(Math.max(...data.map((d) => d.tacos)) * 1.15, 2);
+  const pMax = pctTicks[pctTicks.length - 1];
+  const yP = (v: number) => lowerTop + lowerH - (v / pMax) * lowerH;
+
+  const step = plotW / data.length;
+  const barW = Math.min(step * 0.34, 64);
+  const cx = (i: number) => padL + i * step + step / 2;
+
+  return (
+    <figure className={styles.panelFig}>
+      <div className={styles.chartWrap} onMouseLeave={() => setHover(null)}>
+        <svg viewBox={`0 0 ${W} ${HC}`} className={styles.svg} role="img" aria-label={caption}>
+          <defs>
+            <clipPath id={clipId}>
+              <rect x={0} y={0} width={W} height={yD(0)} />
+            </clipPath>
+          </defs>
+
+          {/* Upper plot: dollars */}
+          {dollarTicks.map((v, i) => (
+            <g key={i}>
+              <line x1={padL} x2={W - padR} y1={yD(v)} y2={yD(v)} stroke={C.grid} strokeWidth={1} />
+              <text x={padL - 14} y={yD(v) + 7} textAnchor="end" className={styles.axisText}>
+                {money(v)}
+              </text>
+            </g>
+          ))}
+
+          {show.sales && (
+            <g clipPath={`url(#${clipId})`}>
+              {data.map((d, i) => (
+                <rect
+                  key={d.label}
+                  x={cx(i) - barW / 2}
+                  y={yD(d.sales)}
+                  width={barW}
+                  height={yD(0) - yD(d.sales) + 8}
+                  rx={4}
+                  fill={COMBO.sales}
+                />
+              ))}
+            </g>
+          )}
+
+          {show.spend && (
+            <g>
+              <path
+                d={data.map((d, i) => `${i === 0 ? 'M' : 'L'}${cx(i)},${yD(d.spend)}`).join(' ')}
+                fill="none"
+                stroke={COMBO.spend}
+                strokeWidth={2.5}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+              {data.map((d, i) => (
+                <circle
+                  key={d.label}
+                  cx={cx(i)}
+                  cy={yD(d.spend)}
+                  r={hover === i ? 7 : 5}
+                  fill={COMBO.spend}
+                  stroke="#141414"
+                  strokeWidth={2}
+                />
+              ))}
+            </g>
+          )}
+
+          <line x1={padL} x2={W - padR} y1={yD(0)} y2={yD(0)} stroke={C.axis} strokeWidth={1} />
+
+          {/* Lower plot: TACOS, its own scale, same quarters */}
+          {show.tacos && (
+            <>
+              {pctTicks.map((v, i) => (
+                <g key={i}>
+                  <line x1={padL} x2={W - padR} y1={yP(v)} y2={yP(v)} stroke={C.grid} strokeWidth={1} />
+                  <text x={padL - 14} y={yP(v) + 7} textAnchor="end" className={styles.axisText}>
+                    {`${Math.round(v)}%`}
+                  </text>
+                </g>
+              ))}
+              <path
+                d={data.map((d, i) => `${i === 0 ? 'M' : 'L'}${cx(i)},${yP(d.tacos)}`).join(' ')}
+                fill="none"
+                stroke={COMBO.tacos}
+                strokeWidth={2.5}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+              {data.map((d, i) => (
+                <circle
+                  key={d.label}
+                  cx={cx(i)}
+                  cy={yP(d.tacos)}
+                  r={hover === i ? 7 : 5}
+                  fill={COMBO.tacos}
+                  stroke="#141414"
+                  strokeWidth={2}
+                />
+              ))}
+              <line x1={padL} x2={W - padR} y1={yP(0)} y2={yP(0)} stroke={C.axis} strokeWidth={1} />
+            </>
+          )}
+
+          {hover !== null && (
+            <line
+              x1={cx(hover)}
+              x2={cx(hover)}
+              y1={upperTop}
+              y2={show.tacos ? lowerTop + lowerH : yD(0)}
+              stroke={C.axis}
+              strokeWidth={1}
+            />
+          )}
+
+          {data.map((d, i) => (
+            <rect
+              key={d.label}
+              x={cx(i) - step / 2}
+              y={upperTop}
+              width={step}
+              height={(show.tacos ? lowerTop + lowerH : yD(0)) - upperTop}
+              fill="transparent"
+              onMouseEnter={() => setHover(i)}
+            />
+          ))}
+
+          {data.map((d, i) => (
+            <text key={d.label} x={cx(i)} y={HC - 14} textAnchor="middle" className={styles.axisText}>
+              {d.label}
+            </text>
+          ))}
+        </svg>
+
+        {hover !== null && (
+          <div
+            className={styles.tooltip}
+            /* Anchored to the tallest mark in the upper plot so the card sits
+               over the chart rather than over the prose above it. */
+            style={{
+              left: `${((cx(hover) - padL) / plotW) * 88 + 6}%`,
+              top: `${(yD(
+                Math.max(
+                  show.sales ? data[hover].sales : 0,
+                  show.spend ? data[hover].spend : 0,
+                ),
+              ) / HC) * 100}%`,
+            }}
+          >
+            <strong>{data[hover].label}</strong>
+            {show.sales && (
+              <span>
+                <i className={styles.tipDot} style={{ background: COMBO.sales }} /> Total Sales{' '}
+                <em>{exact(data[hover].sales)}</em>
+              </span>
+            )}
+            {show.spend && (
+              <span>
+                <i className={styles.tipDot} style={{ background: COMBO.spend }} /> Ad Spend{' '}
+                <em>{exact(data[hover].spend)}</em>
+              </span>
+            )}
+            {show.tacos && (
+              <span>
+                <i className={styles.tipDot} style={{ background: COMBO.tacos }} /> TACOS{' '}
+                <em>{data[hover].tacos.toFixed(1)}%</em>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+      <figcaption className={styles.panelCaption}>{caption}</figcaption>
+    </figure>
+  );
+}

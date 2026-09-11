@@ -234,6 +234,17 @@
   display: inline-block;
 }
 
+/* Line series get a rule rather than a block, so the chip says which mark the
+   series is drawn with and not only which colour it wears. */
+.toggleLine {
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+  border: 2px solid;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
 /* --- Panel grid -------------------------------------------------------- */
 
 /* Small multiples: each metric keeps its own y-axis, since dollars, unit counts
