@@ -655,6 +655,42 @@ function spread(a: number, b: number, min = 26): [number, number] {
 const pctChange = (now: number, before: number) => (before ? (now / before - 1) * 100 : 0);
 const signed = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(0)}%`;
 
+/**
+ * One tooltip row: the metric, then this year over last year in a two-column
+ * grid so the years stack and the values line up under each other. Compact
+ * enough that three of these still read at a glance.
+ */
+function TipRow({
+  name,
+  color,
+  now,
+  prior,
+  delta,
+}: {
+  name: string;
+  color: string;
+  now: string;
+  prior: string;
+  delta: string;
+}) {
+  return (
+    <div className={styles.tipRow}>
+      <div className={styles.tipName}>
+        <i className={styles.tipDot} style={{ background: color }} />
+        {name}
+      </div>
+      <div className={styles.tipYears}>
+        <span className={styles.tipYr}>2026</span>
+        <span className={styles.tipNow}>{now}</span>
+        <span />
+        <span className={styles.tipYr}>2025</span>
+        <span className={styles.tipWas}>{prior}</span>
+        <span className={styles.tipDelta}>{delta}</span>
+      </div>
+    </div>
+  );
+}
+
 /** Dashed with hollow markers for last year, solid and filled for this one. */
 function YearLine({
   pts,
@@ -874,24 +910,22 @@ export function SalesSpendChart({
           >
             <strong>{data[hover].label}</strong>
             {show.sales && (
-              <span>
-                <i className={styles.tipDot} style={{ background: COMBO.sales }} /> Total Sales{' '}
-                <em>{exact(data[hover].sales)}</em> 2026
-                <small className={styles.tipPrior}>
-                  2025: {exact(data[hover].salesPrior)} ·{' '}
-                  {signed(pctChange(data[hover].sales, data[hover].salesPrior))}
-                </small>
-              </span>
+              <TipRow
+                name="Total Sales"
+                color={COMBO.sales}
+                now={exact(data[hover].sales)}
+                prior={exact(data[hover].salesPrior)}
+                delta={signed(pctChange(data[hover].sales, data[hover].salesPrior))}
+              />
             )}
             {show.spend && (
-              <span>
-                <i className={styles.tipDot} style={{ background: COMBO.spend }} /> Ad Spend{' '}
-                <em>{exact(data[hover].spend)}</em> 2026
-                <small className={styles.tipPrior}>
-                  2025: {exact(data[hover].spendPrior)} ·{' '}
-                  {signed(pctChange(data[hover].spend, data[hover].spendPrior))}
-                </small>
-              </span>
+              <TipRow
+                name="Ad Spend"
+                color={COMBO.spend}
+                now={exact(data[hover].spend)}
+                prior={exact(data[hover].spendPrior)}
+                delta={signed(pctChange(data[hover].spend, data[hover].spendPrior))}
+              />
             )}
           </div>
         )}
@@ -1000,16 +1034,15 @@ export function TacosChart({ data, caption }: { data: ComboPoint[]; caption: str
             style={{ left: `${((cx(hover) - padL) / plotW2) * 80 + 8}%`, top: `${(padT / H2) * 100}%` }}
           >
             <strong>{data[hover].label}</strong>
-            <span>
-              <i className={styles.tipDot} style={{ background: COMBO.tacos }} /> TACOS{' '}
-              <em>{data[hover].tacos.toFixed(1)}%</em> 2026
-              <small className={styles.tipPrior}>
-                2025: {data[hover].tacosPrior.toFixed(1)}% ·{' '}
-                {`${data[hover].tacos - data[hover].tacosPrior >= 0 ? '+' : ''}${(
-                  data[hover].tacos - data[hover].tacosPrior
-                ).toFixed(1)} pts`}
-              </small>
-            </span>
+            <TipRow
+              name="TACOS"
+              color={COMBO.tacos}
+              now={`${data[hover].tacos.toFixed(1)}%`}
+              prior={`${data[hover].tacosPrior.toFixed(1)}%`}
+              delta={`${data[hover].tacos - data[hover].tacosPrior >= 0 ? '+' : ''}${(
+                data[hover].tacos - data[hover].tacosPrior
+              ).toFixed(1)} pts`}
+            />
           </div>
         )}
       </div>
