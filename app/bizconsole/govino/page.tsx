@@ -3,15 +3,15 @@
 /**
  * govino monthly performance report.
  *
- * Two tabs, deliberately separated. "Dashboard" is the numbers: a scorecard row
- * driven by the month dropdown, and revenue against last year. Nothing argued.
- * "Insights" is the argument and the asks — where the money actually went, and
- * what we want the brand to decide. The brand owner reads this on a call and
- * forwards it as a PDF, so the type is set large and both tabs print.
+ * Two tabs, deliberately separated. "Dashboard" is the numbers: six scorecards
+ * fixed to the latest complete month, then the same six metrics by quarter,
+ * each one a panel the reader can switch off. Nothing argued. "Insights" is the
+ * argument and the asks — where the money actually went, and what we want the
+ * brand to decide. The brand owner reads this on a call and forwards it as a
+ * PDF, so the type is set large and both tabs print.
  *
- * The dropdown is the whole reason the Dashboard stays this thin: any month's
- * figures, including TACOS, are one selection away, so the trend panels and the
- * month-by-month table that used to sit here were cut as redundant. charts.tsx
+ * The quarter panels are small multiples rather than six series on one chart:
+ * dollars, unit counts and percentages have no honest shared y-axis. charts.tsx
  * keeps StackedBars and TrendLines for when they are wanted again; they are
  * tree-shaken out of the bundle while unused.
  *
@@ -24,13 +24,13 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import styles from './govino.module.css';
-import { GroupedBars, Legend, C } from './charts';
+import { GroupedBars, Legend, C, fmtCount, fmtCountExact, fmtPct, fmtPctExact } from './charts';
 import {
   MONTHS_2025,
   MONTHS_2026,
   total,
-  PAIRED,
   PAIRED_QUARTERS,
+  type Totals,
   SPLIT_2026,
   BRANDED,
   GENERIC,
@@ -38,8 +38,6 @@ import {
   ASINS,
   RESTOCK,
   daysCover,
-  YTD_2025,
-  YTD_2026,
   FY_2025,
   Q4_2025,
   YOY,
@@ -51,13 +49,100 @@ import {
   signedPct,
 } from '@/lib/govino';
 
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+/**
+ * The six figures the brand asked for, in the order they read: sales, units and
+ * TACOS on the top row, then the advertising line beneath it.
+ *
+ * `unit` drives two things that are easy to get wrong. Percentages compare as
+ * point moves, not relative ones, so ACOS going 36.4% to 46.5% is "+10.1 pts",
+ * never "+28%". And dollars, unit counts and percentages each need their own
+ * axis formatter, which is why the panels below are small multiples rather than
+ * six series sharing one scale.
+ */
+type MetricKey = 'gross' | 'units' | 'tacos' | 'spend' | 'ppcSales' | 'acos';
+
+interface Metric {
+  key: MetricKey;
+  label: string;
+  unit: 'usd' | 'count' | 'pct';
+  lowerIsBetter?: boolean;
+  /** No good/bad direction: shown in plain ink rather than green or red. */
+  neutral?: boolean;
+  fmt: (n: number) => string;
+  fmtAxis: (n: number) => string;
+  fmtExact: (n: number) => string;
+  caption: string;
+  note?: (now: Totals, before: Totals) => string;
+}
+
+const METRICS: Metric[] = [
+  {
+    key: 'gross',
+    label: 'Total Sales',
+    unit: 'usd',
+    fmt: (n) => usd(n),
+    fmtAxis: (n) => (Math.abs(n) >= 1000 ? `$${(n / 1000).toFixed(0)}K` : `$${Math.round(n)}`),
+    fmtExact: (n) => usd(n),
+    caption: 'Ordered product sales, advertised and organic',
+  },
+  {
+    key: 'units',
+    label: 'Total Units',
+    unit: 'count',
+    fmt: (n) => num(n),
+    fmtAxis: fmtCount,
+    fmtExact: fmtCountExact,
+    caption: 'Units ordered',
+  },
+  {
+    key: 'tacos',
+    label: 'TACOS',
+    unit: 'pct',
+    lowerIsBetter: true,
+    fmt: (n) => pct(n),
+    fmtAxis: fmtPct,
+    fmtExact: fmtPctExact,
+    caption: 'Ad spend as a share of all sales',
+    note: () => 'Ad spend as a share of all sales',
+  },
+  {
+    key: 'spend',
+    label: 'Ad Spend',
+    unit: 'usd',
+    neutral: true,
+    fmt: (n) => usd(n),
+    fmtAxis: (n) => (Math.abs(n) >= 1000 ? `$${(n / 1000).toFixed(0)}K` : `$${Math.round(n)}`),
+    fmtExact: (n) => usd(n),
+    caption: 'Sponsored Products and Sponsored Display',
+  },
+  {
+    key: 'ppcSales',
+    label: 'Ad Attributed Sales',
+    unit: 'usd',
+    fmt: (n) => usd(n),
+    fmtAxis: (n) => (Math.abs(n) >= 1000 ? `$${(n / 1000).toFixed(0)}K` : `$${Math.round(n)}`),
+    fmtExact: (n) => usd(n),
+    caption: 'Sales on a 14-day click attribution',
+  },
+  {
+    key: 'acos',
+    label: 'ACOS',
+    unit: 'pct',
+    lowerIsBetter: true,
+    fmt: (n) => pct(n),
+    fmtAxis: fmtPct,
+    fmtExact: fmtPctExact,
+    caption: 'Ad spend as a share of ad-attributed sales',
+    note: (now) => `${now.roas.toFixed(2)}× return on ad spend`,
+  },
 ];
 
 const TABS = ['Dashboard', 'Insights'] as const;
 type Tab = (typeof TABS)[number];
+
+/** The scorecards are fixed to the latest complete month and its counterpart. */
+const AUG_2026 = total([MONTHS_2026[MONTHS_2026.length - 1]]);
+const AUG_2025 = total([MONTHS_2025[7]]);
 
 /** `n` is omitted where a tab has only one section and a lone "01" would be noise. */
 function SectionHead({ n, title }: { n?: string; title: string }) {
@@ -80,14 +165,17 @@ function Delta({
   v,
   invert = false,
   unit = 'pct',
+  neutral = false,
 }: {
   v: number;
   invert?: boolean;
   unit?: 'pct' | 'pts';
+  /** For measures where neither direction is self-evidently good, like spend. */
+  neutral?: boolean;
 }) {
   const good = invert ? v < 0 : v >= 0;
   return (
-    <span className={good ? styles.up : styles.down}>
+    <span className={neutral ? styles.flat : good ? styles.up : styles.down}>
       {v >= 0 ? '▲' : '▼'}{' '}
       {unit === 'pts' ? `${v >= 0 ? '+' : ''}${v.toFixed(1)} pts` : signedPct(v)}
     </span>
@@ -102,6 +190,7 @@ function Score({
   change,
   invert,
   unit,
+  neutral,
   note,
 }: {
   label: string;
@@ -111,6 +200,7 @@ function Score({
   change?: number;
   invert?: boolean;
   unit?: 'pct' | 'pts';
+  neutral?: boolean;
   note?: string;
 }) {
   return (
@@ -120,7 +210,7 @@ function Score({
       {prior && (
         <div className={styles.scorePrior}>
           <span>{priorLabel}: {prior}</span>
-          {change !== undefined && <Delta v={change} invert={invert} unit={unit} />}
+          {change !== undefined && <Delta v={change} invert={invert} unit={unit} neutral={neutral} />}
         </div>
       )}
       {note && <div className={styles.scoreNote}>{note}</div>}
@@ -130,19 +220,16 @@ function Score({
 
 export default function GovinoReport() {
   const [tab, setTab] = useState<Tab>('Dashboard');
-  // -1 is the whole Jan-Aug window; 0-7 select a single month. Defaults to the
-  // latest complete month, which is what the brand asks about first.
-  const [period, setPeriod] = useState<number>(MONTHS_2026.length - 1);
+  // Every metric drawn by default; clicking a chip hides or restores its panel.
+  const [shown, setShown] = useState<Set<MetricKey>>(new Set(METRICS.map((m) => m.key)));
+  const toggle = (k: MetricKey) =>
+    setShown((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
 
-  // Scorecard figures follow the dropdown. `total()` takes any set of months,
-  // so a single month and the whole window compute identically — including the
-  // derived rates, which stay weighted rather than averaged.
-  const isYtd = period === -1;
-  const now = isYtd ? YTD_2026 : total([MONTHS_2026[period]]);
-  const before = isYtd ? YTD_2025 : total([MONTHS_2025[MONTHS_2026[period].m - 1]]);
-  const periodLabel = isYtd ? 'Jan–Aug 2026' : `${MONTHS_2026[period].label} 2026`;
-  const priorLabel = isYtd ? '2025' : `${MONTHS_2026[period].label} 2025`;
-  const d = (a: number, b: number) => ((a - b) / b) * 100;
   const partialQ = PAIRED_QUARTERS.find((q) => q.partial);
   const brandedShare = (BRANDED.spend / SPLIT_TOTAL_SPEND) * 100;
   const genericShare = (GENERIC.spend / SPLIT_TOTAL_SPEND) * 100;
@@ -169,10 +256,9 @@ export default function GovinoReport() {
           <div className={styles.accentBar} />
           <h1 className={styles.srOnly}>govino on Amazon, January to August 2026</h1>
           <p className={styles.standfirst}>
-            Revenue, advertising and where the two meet, set against the same period of 2025. Pick
-            a month for the headline figures; the chart below carries the year so far by quarter.
-            Revenue is total ordered product sales across the govino catalogue, advertised and
-            organic together.
+            August 2026 against August 2025, with the year so far by quarter beneath it. Total
+            sales is ordered product sales across the govino catalogue, advertised and organic
+            together.
           </p>
           <div className={styles.stamp}>
             <span>Account: The Beauty Box (US)</span>
@@ -201,94 +287,60 @@ export default function GovinoReport() {
         {tab === 'Dashboard' && (
           <>
             <section className={styles.section}>
-              <SectionHead title="At a glance" />
-
-              <div className={styles.periodBar}>
-                <label className={styles.periodLabel} htmlFor="period">
-                  Showing
-                </label>
-                <select
-                  id="period"
-                  className={styles.periodSelect}
-                  value={period}
-                  onChange={(e) => setPeriod(Number(e.target.value))}
-                >
-                  <option value={-1}>January to August 2026 (all)</option>
-                  {MONTHS_2026.map((r, i) => (
-                    <option key={r.label} value={i}>
-                      {MONTH_NAMES[r.m - 1]} 2026
-                    </option>
-                  ))}
-                </select>
-                <span className={styles.periodNote}>
-                  compared against {isYtd ? 'the same months of 2025' : priorLabel}
-                </span>
-              </div>
+              <SectionHead title="August 2026 at a glance" />
+              <p className={styles.body}>
+                The latest complete month, against August 2025.
+              </p>
 
               <div className={styles.scoreGrid}>
-                <Score
-                  label="Revenue"
-                  value={usd(now.gross)}
-                  prior={usd(before.gross)}
-                  priorLabel={priorLabel}
-                  change={d(now.gross, before.gross)}
-                />
-                <Score
-                  label="Units sold"
-                  value={num(now.units)}
-                  prior={num(before.units)}
-                  priorLabel={priorLabel}
-                  change={d(now.units, before.units)}
-                />
-                <Score
-                  label="Ad spend"
-                  value={usd(now.spend)}
-                  prior={usd(before.spend)}
-                  priorLabel={priorLabel}
-                  change={d(now.spend, before.spend)}
-                />
-                <Score
-                  label="Ad-attributed sales"
-                  value={usd(now.ppcSales)}
-                  prior={usd(before.ppcSales)}
-                  priorLabel={priorLabel}
-                  change={d(now.ppcSales, before.ppcSales)}
-                />
-                <Score
-                  label="ACOS"
-                  value={pct(now.acos)}
-                  prior={pct(before.acos)}
-                  priorLabel={priorLabel}
-                  change={now.acos - before.acos}
-                  invert
-                  unit="pts"
-                  note={`${now.roas.toFixed(2)}× return, from ${before.roas.toFixed(2)}×`}
-                />
-                <Score
-                  label="TACOS"
-                  value={pct(now.tacos)}
-                  prior={pct(before.tacos)}
-                  priorLabel={priorLabel}
-                  change={now.tacos - before.tacos}
-                  invert
-                  unit="pts"
-                  note="Ad spend as a share of all revenue"
-                />
-                <Score
-                  label="Cost per click"
-                  value={`$${now.cpc.toFixed(2)}`}
-                  prior={`$${before.cpc.toFixed(2)}`}
-                  priorLabel={priorLabel}
-                  change={d(now.cpc, before.cpc)}
-                  invert
-                />
-                <Score
-                  label="Average order"
-                  value={`$${now.aov.toFixed(2)}`}
-                  prior={`$${before.aov.toFixed(2)}`}
-                  priorLabel={priorLabel}
-                  change={d(now.aov, before.aov)}
-                />
+                {METRICS.map((m) => {
+                  const v = AUG_2026[m.key];
+                  const p = AUG_2025[m.key];
+                  return (
+                    <Score
+                      key={m.key}
+                      label={m.label}
+                      value={m.fmt(v)}
+                      prior={m.fmt(p)}
+                      priorLabel="Aug 2025"
+                      change={m.unit === 'pct' ? v - p : ((v - p) / p) * 100}
+                      unit={m.unit === 'pct' ? 'pts' : 'pct'}
+                      invert={m.lowerIsBetter}
+                      neutral={m.neutral}
+                      note={m.note?.(AUG_2026, AUG_2025)}
+                    />
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className={styles.section}>
+              <SectionHead title="By quarter, 2026 against 2025" />
+              <p className={styles.body}>
+                {partialQ
+                  ? `Each pair compares the same months on both sides. ${partialQ.label} covers ${partialQ.span} only, since September is not yet complete.`
+                  : 'Each pair compares the same months on both sides.'}{' '}
+                Click a metric to show or hide it.
+              </p>
+
+              <div className={styles.toggleRow} role="group" aria-label="Metrics shown">
+                {METRICS.map((m) => {
+                  const on = shown.has(m.key);
+                  return (
+                    <button
+                      key={m.key}
+                      type="button"
+                      aria-pressed={on}
+                      className={`${styles.toggle} ${on ? styles.toggleOn : ''}`}
+                      onClick={() => toggle(m.key)}
+                    >
+                      <span className={styles.toggleTick} aria-hidden="true">
+                        {on ? '✓' : ''}
+                      </span>
+                      {m.label}
+                    </button>
+                  );
+                })}
               </div>
 
               <Legend
@@ -298,53 +350,37 @@ export default function GovinoReport() {
                 ]}
               />
 
-              <div className={styles.card}>
-                <div className={styles.cardHead}>Quarterly revenue, 2026 against 2025</div>
-                <div className={styles.cardSub}>
-                  {partialQ
-                    ? `${partialQ.label} covers ${partialQ.span} only, on both sides, since September is not yet complete — so every pair compares the same months.`
-                    : 'Each pair compares the same months on both sides.'}
-                </div>
-                <GroupedBars
-                  data={PAIRED_QUARTERS.map((q) => ({
-                    label: q.partial ? `${q.label} (${q.span})` : q.label,
-                    before: q.before.gross,
-                    now: q.now.gross,
-                    change: q.grossYoY,
-                  }))}
-                  caption={`Ordered product sales across all ${ASIN_COUNT} govino ASINs`}
-                  beforeLabel="2025"
-                  nowLabel="2026"
-                />
+              {/* One panel per metric, each with its own y-axis. Dollars, unit
+                  counts and percentages cannot share a scale, so they are drawn
+                  as small multiples rather than forced onto one axis. */}
+              <div className={styles.panelGrid}>
+                {METRICS.filter((m) => shown.has(m.key)).map((m) => (
+                  <div key={m.key} className={styles.card}>
+                    <div className={styles.cardHead}>{m.label}</div>
+                    <GroupedBars
+                      data={PAIRED_QUARTERS.map((q) => ({
+                        label: q.partial ? `${q.label} (${q.span})` : q.label,
+                        before: q.before[m.key],
+                        now: q.now[m.key],
+                        change:
+                          m.unit === 'pct'
+                            ? q.now[m.key] - q.before[m.key]
+                            : ((q.now[m.key] - q.before[m.key]) / q.before[m.key]) * 100,
+                      }))}
+                      caption={m.caption}
+                      beforeLabel="2025"
+                      nowLabel="2026"
+                      fmtAxis={m.fmtAxis}
+                      fmtExact={m.fmtExact}
+                    />
+                  </div>
+                ))}
               </div>
 
-              <p className={styles.body}>
-                Every quarter of 2026 clears its 2025 counterpart, by between{' '}
-                {signedPct(Math.min(...PAIRED_QUARTERS.map((q) => q.grossYoY)))} and{' '}
-                {signedPct(Math.max(...PAIRED_QUARTERS.map((q) => q.grossYoY)))}.
-              </p>
-
-              {isYtd ? (
-                <p className={styles.lede}>
-                  Revenue is up <strong>{signedPct(YOY.gross)}</strong> on the same eight months of
-                  2025, to <strong>{usd(YTD_2026.gross)}</strong>. Advertising is up{' '}
-                  <strong>{signedPct(YOY.spend)}</strong>. Growth is real, but it is being bought at
-                  roughly <strong>{(YOY.spend / YOY.gross).toFixed(1)}×</strong> the rate it
-                  arrives: every extra dollar of revenue cost materially more this year than last.
-                </p>
-              ) : (
-                <p className={styles.lede}>
-                  {periodLabel} took <strong>{usd(now.gross)}</strong> of revenue on{' '}
-                  <strong>{num(now.units)} units</strong>, against{' '}
-                  <strong>{usd(before.gross)}</strong> in {priorLabel} —{' '}
-                  <strong>{signedPct(d(now.gross, before.gross))}</strong>. Advertising took{' '}
-                  <strong>{usd(now.spend)}</strong>, which is{' '}
-                  <strong>{pct(now.tacos)}</strong> of everything the brand sold that month, from{' '}
-                  {pct(before.tacos)} a year earlier.
-                </p>
+              {shown.size === 0 && (
+                <p className={styles.body}>No metrics selected. Pick one above to draw it.</p>
               )}
             </section>
-
           </>
         )}
 

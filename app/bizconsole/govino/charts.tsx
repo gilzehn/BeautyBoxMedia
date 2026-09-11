@@ -39,6 +39,13 @@ const money = (n: number) => {
 
 const exact = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 
+/** Counts (units) and rates (ACOS, TACOS) cannot wear the money formatter. */
+export const fmtCount = (n: number) =>
+  Math.abs(n) >= 1000 ? `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}K` : `${Math.round(n)}`;
+export const fmtCountExact = (n: number) => Math.round(n).toLocaleString('en-US');
+export const fmtPct = (n: number) => `${n.toFixed(0)}%`;
+export const fmtPctExact = (n: number) => `${n.toFixed(1)}%`;
+
 /** Round an axis maximum up to a readable step, so gridlines land on $20K. */
 function niceTicks(rawMax: number, target = 4): number[] {
   const rough = rawMax / target;
@@ -72,12 +79,18 @@ export function GroupedBars({
   beforeLabel,
   nowLabel,
   colors = [C.before, C.now],
+  fmtAxis = money,
+  fmtExact = exact,
 }: {
   data: GroupPoint[];
   caption: string;
   beforeLabel: string;
   nowLabel: string;
   colors?: [string, string];
+  /** Axis ticks. Defaults to money; pass a counter or a percentage formatter. */
+  fmtAxis?: (n: number) => string;
+  /** Tooltip values, usually the unrounded form of the same unit. */
+  fmtExact?: (n: number) => string;
 }) {
   const [tip, setTip] = useState<{ x: number; y: number; p: GroupPoint } | null>(null);
   const clipId = useId();
@@ -104,7 +117,7 @@ export function GroupedBars({
             <g key={i}>
               <line x1={padL} x2={W - padR} y1={y(v)} y2={y(v)} stroke={C.grid} strokeWidth={1} />
               <text x={padL - 14} y={y(v) + 7} textAnchor="end" className={styles.axisText}>
-                {money(v)}
+                {fmtAxis(v)}
               </text>
             </g>
           ))}
@@ -156,11 +169,11 @@ export function GroupedBars({
             <strong>{tip.p.label}</strong>
             <span>
               <i className={styles.tipDot} style={{ background: colors[0] }} /> {beforeLabel}{' '}
-              {exact(tip.p.before)}
+              {fmtExact(tip.p.before)}
             </span>
             <span>
               <i className={styles.tipDot} style={{ background: colors[1] }} /> {nowLabel}{' '}
-              {exact(tip.p.now)}
+              {fmtExact(tip.p.now)}
             </span>
             <em>{`${tip.p.change >= 0 ? '+' : ''}${tip.p.change.toFixed(0)}% year on year`}</em>
           </div>

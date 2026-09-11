@@ -75,6 +75,28 @@ const row = (
   impressions: number,
 ): MonthRow => ({ m, label: L[m - 1], spend, ppcSales, gross, units, orders, sessions, clicks, impressions });
 
+/**
+ * August 2026 ad spend, set by hand rather than taken from the warehouse.
+ *
+ * BigQuery reports $12,662.00 for August across Sponsored Products ($12,567.95)
+ * and Sponsored Display ($94.05), scoped to the govino ASINs the same way every
+ * other month here is. The figure below was supplied by Beauty Box Media and
+ * replaces it, a difference of $2,984.00.
+ *
+ * It is kept as a named constant, with the warehouse figure recorded beside it,
+ * so the override is visible to anyone reading or updating this file rather
+ * than buried in a data row. ACOS and TACOS for August, and every aggregate
+ * that includes August (the Jan-Aug totals and the Q3 pair), are computed from
+ * this number, so the whole page stays internally consistent.
+ *
+ * If the intent was only ever to restate the client-facing spend, the reported
+ * figure is still here to reconcile against. Whoever refreshes this file next
+ * should decide whether the override still applies before re-pulling.
+ */
+export const AUG_2026_SPEND = 9678;
+/** What BigQuery actually reports for the same month and scope. */
+export const AUG_2026_SPEND_REPORTED = 12662.0;
+
 export const MONTHS_2025: MonthRow[] = [
   row(1, 979.87, 4640.52, 9439.22, 355, 295, 3449, 1503, 424900),
   row(2, 1714.5, 5705.97, 11611.85, 522, 431, 3828, 2017, 381353),
@@ -99,7 +121,7 @@ export const MONTHS_2026: MonthRow[] = [
   row(5, 12918.27, 18378.6, 33555.78, 1213, 1047, 9099, 5786, 1352408),
   row(6, 12068.21, 26060.97, 50754.77, 1823, 1545, 12955, 6691, 1474133),
   row(7, 11836.56, 21105.55, 41149.98, 1344, 1172, 9566, 5635, 1207453),
-  row(8, 12662.0, 20810.39, 35697.7, 1110, 986, 8969, 6250, 1395931),
+  row(8, AUG_2026_SPEND, 20810.39, 35697.7, 1110, 986, 8969, 6250, 1395931),
 ];
 
 export const MONTHS_ELAPSED = MONTHS_2026.length;

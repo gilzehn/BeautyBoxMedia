@@ -177,70 +177,83 @@
   font-weight: 700;
 }
 
-/* --- Period selector --------------------------------------------------- */
+/* --- Metric toggles ---------------------------------------------------- */
 
-/* Sits in one row above the scorecards, per the filter convention. Native
-   <select> on purpose: it is one control, it is keyboard- and
-   screen-reader-correct for free, and it gets the platform picker on a phone. */
-.periodBar {
+/* One row of chips above the panels, per the filter convention. Real buttons
+   with aria-pressed, so state is announced rather than implied by colour. */
+.toggleRow {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
-  gap: 10px 14px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 18px;
 }
 
-.periodLabel {
-  font-size: 0.95rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.8;
-}
-
-.periodSelect {
+.toggle {
   appearance: none;
-  background: var(--g-card);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
   color: #ffffff;
   border: 1px solid #3a3a3a;
-  border-radius: 8px;
-  padding: 10px 38px 10px 14px;
+  border-radius: 999px;
+  padding: 8px 15px;
   font-family: inherit;
-  font-size: 1.1rem;
-  font-weight: 550;
+  font-size: 1.02rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.2s;
-  /* Chevron drawn inline so no network request and no icon dependency. */
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' stroke='%23ffffff' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
+  opacity: 0.6;
+  transition: opacity 0.15s, border-color 0.15s, background 0.15s;
 }
 
-.periodSelect:hover {
+.toggle:hover {
+  opacity: 0.85;
   border-color: #555;
 }
 
-.periodSelect:focus-visible {
+.toggleOn {
+  opacity: 1;
+  font-weight: 600;
+  border-color: var(--g-accent);
+  background: rgba(255, 45, 123, 0.12);
+}
+
+.toggle:focus-visible {
   outline: 2px solid var(--g-accent);
   outline-offset: 2px;
 }
 
-/* The native popup is painted by the OS, so the options need their own colours
-   or they render dark-on-dark in some browsers. */
-.periodSelect option {
-  background: #1a1a1a;
-  color: #ffffff;
+/* Fixed width so chips do not shift sideways as the tick appears. */
+.toggleTick {
+  width: 11px;
+  display: inline-block;
+  text-align: center;
+  color: var(--g-accent);
+  font-size: 0.95rem;
+  line-height: 1;
 }
 
-.periodNote {
-  font-size: 1.05rem;
-  opacity: 0.72;
+/* --- Panel grid -------------------------------------------------------- */
+
+/* Small multiples: each metric keeps its own y-axis, since dollars, unit counts
+   and percentages cannot honestly share one. */
+.panelGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.panelGrid .card {
+  margin-bottom: 0;
+  min-width: 0;
 }
 
 /* --- Scorecards -------------------------------------------------------- */
 
 .scoreGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
   margin-bottom: 20px;
 }
@@ -293,6 +306,12 @@
 
 .down {
   color: #e08b83;
+}
+
+/* Neither up nor down is good news for this measure. */
+.flat {
+  color: #ffffff;
+  opacity: 0.75;
 }
 
 /* --- Cards & charts ---------------------------------------------------- */
@@ -562,6 +581,10 @@
 @media (max-width: 980px) {
   .scoreGrid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .panelGrid {
+    grid-template-columns: 1fr;
   }
 }
 
