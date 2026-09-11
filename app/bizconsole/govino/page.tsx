@@ -3,11 +3,17 @@
 /**
  * govino monthly performance report.
  *
- * Two tabs, deliberately separated. "Dashboard" is the numbers: scorecards and
- * trends, nothing argued. "Insights" is the argument and the asks — where the
- * money actually went, and what we want the brand to decide. The brand owner
- * reads this on a call and forwards it as a PDF, so the type is set large and
- * both tabs print.
+ * Two tabs, deliberately separated. "Dashboard" is the numbers: a scorecard row
+ * driven by the month dropdown, and revenue against last year. Nothing argued.
+ * "Insights" is the argument and the asks — where the money actually went, and
+ * what we want the brand to decide. The brand owner reads this on a call and
+ * forwards it as a PDF, so the type is set large and both tabs print.
+ *
+ * The dropdown is the whole reason the Dashboard stays this thin: any month's
+ * figures, including TACOS, are one selection away, so the trend panels and the
+ * month-by-month table that used to sit here were cut as redundant. charts.tsx
+ * keeps StackedBars and TrendLines for when they are wanted again; they are
+ * tree-shaken out of the bundle while unused.
  *
  * Provenance for every figure is documented at the top of lib/govino.ts, which
  * is where it needs to stay accurate.
@@ -16,11 +22,12 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import styles from './govino.module.css';
-import { GroupedBars, StackedBars, TrendLines, Legend, C } from './charts';
+import { GroupedBars, Legend, C } from './charts';
 import {
+  MONTHS_2025,
   MONTHS_2026,
+  total,
   PAIRED,
-  TREND_2026,
   SPLIT_2026,
   BRANDED,
   GENERIC,
@@ -41,6 +48,11 @@ import {
   pct,
   signedPct,
 } from '@/lib/govino';
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
 
 const TABS = ['Dashboard', 'Insights'] as const;
 type Tab = (typeof TABS)[number];
@@ -83,6 +95,7 @@ function Score({
   label,
   value,
   prior,
+  priorLabel = '2025',
   change,
   invert,
   unit,
@@ -91,6 +104,7 @@ function Score({
   label: string;
   value: string;
   prior?: string;
+  priorLabel?: string;
   change?: number;
   invert?: boolean;
   unit?: 'pct' | 'pts';
@@ -102,7 +116,7 @@ function Score({
       <div className={styles.scoreValue}>{value}</div>
       {prior && (
         <div className={styles.scorePrior}>
-          <span>2025: {prior}</span>
+          <span>{priorLabel}: {prior}</span>
           {change !== undefined && <Delta v={change} invert={invert} unit={unit} />}
         </div>
       )}
@@ -113,8 +127,18 @@ function Score({
 
 export default function GovinoReport() {
   const [tab, setTab] = useState<Tab>('Dashboard');
+  // -1 is the whole Jan-Aug window; 0-7 select a single month.
+  const [period, setPeriod] = useState<number>(-1);
 
-  const labels = MONTHS_2026.map((r) => r.label);
+  // Scorecard figures follow the dropdown. `total()` takes any set of months,
+  // so a single month and the whole window compute identically — including the
+  // derived rates, which stay weighted rather than averaged.
+  const isYtd = period === -1;
+  const now = isYtd ? YTD_2026 : total([MONTHS_2026[period]]);
+  const before = isYtd ? YTD_2025 : total([MONTHS_2025[MONTHS_2026[period].m - 1]]);
+  const periodLabel = isYtd ? 'Jan–Aug 2026' : `${MONTHS_2026[period].label} 2026`;
+  const priorLabel = isYtd ? '2025' : `${MONTHS_2026[period].label} 2025`;
+  const d = (a: number, b: number) => ((a - b) / b) * 100;
   const brandedShare = (BRANDED.spend / SPLIT_TOTAL_SPEND) * 100;
   const genericShare = (GENERIC.spend / SPLIT_TOTAL_SPEND) * 100;
   // What the generic half would have returned at the branded half's efficiency.
@@ -171,82 +195,123 @@ export default function GovinoReport() {
         {tab === 'Dashboard' && (
           <>
             <section className={styles.section}>
-              <SectionHead n="01" title="The eight months at a glance" />
+              <SectionHead n="01" title="At a glance" />
+
+              <div className={styles.periodBar}>
+                <label className={styles.periodLabel} htmlFor="period">
+                  Showing
+                </label>
+                <select
+                  id="period"
+                  className={styles.periodSelect}
+                  value={period}
+                  onChange={(e) => setPeriod(Number(e.target.value))}
+                >
+                  <option value={-1}>January to August 2026 (all)</option>
+                  {MONTHS_2026.map((r, i) => (
+                    <option key={r.label} value={i}>
+                      {MONTH_NAMES[r.m - 1]} 2026
+                    </option>
+                  ))}
+                </select>
+                <span className={styles.periodNote}>
+                  compared against {isYtd ? 'the same months of 2025' : priorLabel}
+                </span>
+              </div>
 
               <div className={styles.scoreGrid}>
                 <Score
                   label="Revenue"
-                  value={usd(YTD_2026.gross)}
-                  prior={usd(YTD_2025.gross)}
-                  change={YOY.gross}
+                  value={usd(now.gross)}
+                  prior={usd(before.gross)}
+                  priorLabel={priorLabel}
+                  change={d(now.gross, before.gross)}
                 />
                 <Score
                   label="Units sold"
-                  value={num(YTD_2026.units)}
-                  prior={num(YTD_2025.units)}
-                  change={YOY.units}
+                  value={num(now.units)}
+                  prior={num(before.units)}
+                  priorLabel={priorLabel}
+                  change={d(now.units, before.units)}
                 />
                 <Score
                   label="Ad spend"
-                  value={usd(YTD_2026.spend)}
-                  prior={usd(YTD_2025.spend)}
-                  change={YOY.spend}
+                  value={usd(now.spend)}
+                  prior={usd(before.spend)}
+                  priorLabel={priorLabel}
+                  change={d(now.spend, before.spend)}
                 />
                 <Score
                   label="Ad-attributed sales"
-                  value={usd(YTD_2026.ppcSales)}
-                  prior={usd(YTD_2025.ppcSales)}
-                  change={YOY.ppcSales}
+                  value={usd(now.ppcSales)}
+                  prior={usd(before.ppcSales)}
+                  priorLabel={priorLabel}
+                  change={d(now.ppcSales, before.ppcSales)}
                 />
                 <Score
                   label="ACOS"
-                  value={pct(YTD_2026.acos)}
-                  prior={pct(YTD_2025.acos)}
-                  change={YTD_2026.acos - YTD_2025.acos}
+                  value={pct(now.acos)}
+                  prior={pct(before.acos)}
+                  priorLabel={priorLabel}
+                  change={now.acos - before.acos}
                   invert
                   unit="pts"
-                  note={`${YTD_2026.roas.toFixed(2)}× return, from ${YTD_2025.roas.toFixed(2)}×`}
+                  note={`${now.roas.toFixed(2)}× return, from ${before.roas.toFixed(2)}×`}
                 />
                 <Score
                   label="TACOS"
-                  value={pct(YTD_2026.tacos)}
-                  prior={pct(YTD_2025.tacos)}
-                  change={YTD_2026.tacos - YTD_2025.tacos}
+                  value={pct(now.tacos)}
+                  prior={pct(before.tacos)}
+                  priorLabel={priorLabel}
+                  change={now.tacos - before.tacos}
                   invert
                   unit="pts"
                   note="Ad spend as a share of all revenue"
                 />
                 <Score
                   label="Cost per click"
-                  value={`$${YTD_2026.cpc.toFixed(2)}`}
-                  prior={`$${YTD_2025.cpc.toFixed(2)}`}
-                  change={((YTD_2026.cpc - YTD_2025.cpc) / YTD_2025.cpc) * 100}
+                  value={`$${now.cpc.toFixed(2)}`}
+                  prior={`$${before.cpc.toFixed(2)}`}
+                  priorLabel={priorLabel}
+                  change={d(now.cpc, before.cpc)}
                   invert
                 />
                 <Score
                   label="Average order"
-                  value={`$${YTD_2026.aov.toFixed(2)}`}
-                  prior={`$${YTD_2025.aov.toFixed(2)}`}
-                  change={((YTD_2026.aov - YTD_2025.aov) / YTD_2025.aov) * 100}
+                  value={`$${now.aov.toFixed(2)}`}
+                  prior={`$${before.aov.toFixed(2)}`}
+                  priorLabel={priorLabel}
+                  change={d(now.aov, before.aov)}
                 />
               </div>
 
-              <p className={styles.lede}>
-                Revenue is up <strong>{signedPct(YOY.gross)}</strong> on the same eight months of
-                2025, to <strong>{usd(YTD_2026.gross)}</strong>. Advertising is up{' '}
-                <strong>{signedPct(YOY.spend)}</strong>. Growth is real, but it is being bought at
-                roughly <strong>{(YOY.spend / YOY.gross).toFixed(1)}×</strong> the rate it arrives:
-                every extra dollar of revenue cost materially more this year than last.
-              </p>
+              {isYtd ? (
+                <p className={styles.lede}>
+                  Revenue is up <strong>{signedPct(YOY.gross)}</strong> on the same eight months of
+                  2025, to <strong>{usd(YTD_2026.gross)}</strong>. Advertising is up{' '}
+                  <strong>{signedPct(YOY.spend)}</strong>. Growth is real, but it is being bought at
+                  roughly <strong>{(YOY.spend / YOY.gross).toFixed(1)}×</strong> the rate it
+                  arrives: every extra dollar of revenue cost materially more this year than last.
+                </p>
+              ) : (
+                <p className={styles.lede}>
+                  {periodLabel} took <strong>{usd(now.gross)}</strong> of revenue on{' '}
+                  <strong>{num(now.units)} units</strong>, against{' '}
+                  <strong>{usd(before.gross)}</strong> in {priorLabel} —{' '}
+                  <strong>{signedPct(d(now.gross, before.gross))}</strong>. Advertising took{' '}
+                  <strong>{usd(now.spend)}</strong>, which is{' '}
+                  <strong>{pct(now.tacos)}</strong> of everything the brand sold that month, from{' '}
+                  {pct(before.tacos)} a year earlier.
+                </p>
+              )}
             </section>
 
             {/* --- 02 ----------------------------------------------------- */}
             <section className={styles.section}>
-              <SectionHead n="02" title="Revenue and spend, 2026 against 2025" />
+              <SectionHead n="02" title="Revenue, 2026 against 2025" />
               <p className={styles.body}>
-                Each pair of bars is one month, 2025 beside 2026. Revenue and spend are drawn on
-                separate panels because they sit on very different scales — one y-axis each, so the
-                comparison is shaped by the data rather than by where the axes were pinned.
+                Each pair of bars is one month, 2025 beside 2026. Hover a month for both years and
+                the change between them.
               </p>
 
               <Legend
@@ -274,194 +339,10 @@ export default function GovinoReport() {
                 />
               </div>
 
-              <div className={styles.card}>
-                <div className={styles.cardHead}>Ad spend</div>
-                <div className={styles.cardSub}>Sponsored Products and Sponsored Display combined</div>
-                <GroupedBars
-                  data={PAIRED.map((p) => ({
-                    label: p.label,
-                    before: p.before.spend,
-                    now: p.now.spend,
-                    change: p.spendYoY,
-                  }))}
-                  caption="Monthly ad spend, 2026 against 2025"
-                  beforeLabel="2025"
-                  nowLabel="2026"
-                />
-              </div>
-
               <p className={styles.body}>
-                Revenue clears its 2025 counterpart in every one of the eight months. Spend clears
-                it in {PAIRED.filter((p) => p.spendYoY > 0).length} of them — and from May onwards
-                by more than double, every month.
-              </p>
-            </section>
-
-            {/* --- 03 ----------------------------------------------------- */}
-            <section className={styles.section}>
-              <SectionHead n="03" title="Where the revenue comes from" />
-              <p className={styles.body}>
-                Each bar is one month&apos;s total revenue, split into the part Amazon attributes to
-                an ad click within 14 days and the part it does not.
-              </p>
-
-              <Legend
-                items={[
-                  { label: 'Not ad-attributed', color: C.organic },
-                  { label: 'Ad-attributed', color: C.paid },
-                ]}
-              />
-
-              <div className={styles.card}>
-                <div className={styles.cardHead}>Revenue composition</div>
-                <div className={styles.cardSub}>
-                  Ad-attributed sales sat at {pct(100 - TREND_2026[0].organicShare, 0)} of revenue in
-                  January and {pct(100 - TREND_2026[7].organicShare, 0)} in August
-                </div>
-                <StackedBars
-                  data={TREND_2026.map((r) => ({
-                    label: r.label,
-                    lower: r.organic,
-                    upper: r.ppcSales,
-                  }))}
-                  caption="Monthly revenue split by attribution, 2026"
-                  lowerLabel="Not ad-attributed"
-                  upperLabel="Ad-attributed"
-                />
-              </div>
-            </section>
-
-            {/* --- 04 ----------------------------------------------------- */}
-            <section className={styles.section}>
-              <SectionHead n="04" title="Efficiency trend" />
-              <p className={styles.body}>
-                ACOS is spend against ad-attributed sales; TACOS is the same spend against all
-                revenue. Both are drawn on one axis because both are percentages of the same kind.
-              </p>
-
-              <Legend
-                items={[
-                  { label: 'ACOS', color: C.paid },
-                  { label: 'TACOS', color: C.branded },
-                ]}
-              />
-
-              <div className={styles.card}>
-                <div className={styles.cardHead}>ACOS and TACOS by month</div>
-                <div className={styles.cardSub}>Lower is better on both</div>
-                <TrendLines
-                  labels={labels}
-                  series={[
-                    { name: 'ACOS', color: C.paid, values: TREND_2026.map((r) => r.acos) },
-                    { name: 'TACOS', color: C.branded, values: TREND_2026.map((r) => r.tacos) },
-                  ]}
-                  caption="Advertising cost of sales, 2026"
-                  format={(n) => `${n.toFixed(0)}%`}
-                />
-              </div>
-
-              <div className={styles.card}>
-                <div className={styles.cardHead}>Cost per click</div>
-                <div className={styles.cardSub}>
-                  What one click costs, blended across Sponsored Products and Sponsored Display
-                </div>
-                <TrendLines
-                  labels={labels}
-                  series={[{ name: 'CPC', color: C.paid, values: TREND_2026.map((r) => r.cpc) }]}
-                  caption="Blended cost per click, 2026"
-                  format={(n) => `$${n.toFixed(2)}`}
-                />
-              </div>
-            </section>
-
-            {/* --- 05 ----------------------------------------------------- */}
-            <section className={styles.section}>
-              <SectionHead n="05" title="Month by month" />
-              <p className={styles.body}>
-                The same five figures the monthly spreadsheet has always carried — spend, ad sales,
-                revenue, ACOS and TACOS — with units and sessions alongside them. Quarter columns
-                are weighted totals, not averages of the monthly percentages.
-              </p>
-
-              <div className={styles.tableWrap}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Month</th>
-                      <th>Spend</th>
-                      <th>Ad sales</th>
-                      <th>Revenue</th>
-                      <th>ACOS</th>
-                      <th>TACOS</th>
-                      <th>Units</th>
-                      <th>Sessions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {MONTHS_2026.map((r) => {
-                      const acos = (r.spend / r.ppcSales) * 100;
-                      const tacos = (r.spend / r.gross) * 100;
-                      return (
-                        <tr key={r.label}>
-                          <td>{r.label} 2026</td>
-                          <td>{usd(r.spend)}</td>
-                          <td>{usd(r.ppcSales)}</td>
-                          <td>{usd(r.gross)}</td>
-                          <td className={acos > 70 ? styles.flag : undefined}>{pct(acos, 1)}</td>
-                          <td className={tacos > 30 ? styles.flag : undefined}>{pct(tacos, 1)}</td>
-                          <td>{num(r.units)}</td>
-                          <td>{num(r.sessions)}</td>
-                        </tr>
-                      );
-                    })}
-                    <tr>
-                      <td>
-                        <strong>Jan–Aug 2026</strong>
-                      </td>
-                      <td>
-                        <strong>{usd(YTD_2026.spend)}</strong>
-                      </td>
-                      <td>
-                        <strong>{usd(YTD_2026.ppcSales)}</strong>
-                      </td>
-                      <td>
-                        <strong>{usd(YTD_2026.gross)}</strong>
-                      </td>
-                      <td>
-                        <strong>{pct(YTD_2026.acos, 1)}</strong>
-                      </td>
-                      <td>
-                        <strong>{pct(YTD_2026.tacos, 1)}</strong>
-                      </td>
-                      <td>
-                        <strong>{num(YTD_2026.units)}</strong>
-                      </td>
-                      <td>
-                        <strong>{num(YTD_2026.sessions)}</strong>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Jan–Aug 2025</td>
-                      <td>{usd(YTD_2025.spend)}</td>
-                      <td>{usd(YTD_2025.ppcSales)}</td>
-                      <td>{usd(YTD_2025.gross)}</td>
-                      <td>{pct(YTD_2025.acos, 1)}</td>
-                      <td>{pct(YTD_2025.tacos, 1)}</td>
-                      <td>{num(YTD_2025.units)}</td>
-                      <td>{num(YTD_2025.sessions)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <p className={styles.body}>
-                TACOS is the number to watch on this table. It went from{' '}
-                <strong>{pct(TREND_2026[0].tacos)}</strong> in January to{' '}
-                <strong>{pct(TREND_2026[7].tacos)}</strong> in August — meaning that by August,{' '}
-                {pct(TREND_2026[7].tacos, 0)} of every dollar govino took on Amazon went straight
-                back out as advertising. Across the eight months it averaged{' '}
-                <strong>{pct(YTD_2026.tacos)}</strong>, against {pct(YTD_2025.tacos)} over the same
-                months last year.
+                Revenue clears its 2025 counterpart in every one of the eight months, by between{' '}
+                {signedPct(Math.min(...PAIRED.map((p) => p.grossYoY)))} and{' '}
+                {signedPct(Math.max(...PAIRED.map((p) => p.grossYoY)))}.
               </p>
             </section>
           </>
