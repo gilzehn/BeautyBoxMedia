@@ -390,11 +390,13 @@ export default function GovinoReport() {
                   full support. Spend came in at <strong>{usd(AUG_2026.spend)}</strong>, sales
                   still grew{' '}
                   <strong>{signedPct(((AUG_2026.gross - AUG_2025.gross) / AUG_2025.gross) * 100)}</strong>{' '}
-                  year on year, at {pct(AUG_2026.acos)} ACOS and {pct(AUG_2026.tacos)} TACOS. The
-                  early September read is better still: <strong>{pct(SEP_MTD.acos)} ACOS</strong>{' '}
-                  and <strong>{pct(SEP_MTD.tacos)} TACOS</strong> across {SEP_MTD.label}. That is
-                  only {SEP_MTD.days} days, so we would not bank it yet, but it points the way we
-                  hoped it would.
+                  year on year, at {pct(AUG_2026.acos)} ACOS and {pct(AUG_2026.tacos)} TACOS.
+                  September has answered the question less kindly. With spend cut further, sales
+                  across {SEP_MTD.label} are <strong>{signedPct(SEP_MTD.revYoY)}</strong> against
+                  the same 21 days of 2025, and sessions are down by about the same amount that
+                  spend came down. Seasonality accounts for roughly 5 points of that; the rest
+                  tracks the budget. The position we have built is still rented rather than
+                  owned.
                 </p>
               </div>
             </div>
@@ -407,10 +409,11 @@ export default function GovinoReport() {
                   There are two honest paths from here and they lead to different places.{' '}
                   <strong>Invest significantly more</strong> and we push for another step change
                   through Q4, the strongest quarter of govino&apos;s year: faster growth, thinner
-                  margin, and it needs stock behind it. <strong>Hold the balance</strong> we have
-                  been finding since August and growth slows to something steadier, but it comes
-                  with profit attached. Neither is the wrong answer. We would like to put a meeting
-                  in the diary and choose deliberately rather than drift into it.
+                  margin, and it needs stock behind it. <strong>Hold the line</strong> and September is the shape of it:
+                  profitable, but trading below last year rather than growing. Neither is the wrong
+                  answer, and neither is executable without stock, which is the decision in front of
+                  us first. We would like to put a meeting in the diary and choose deliberately
+                  rather than drift into it.
                 </p>
               </div>
             </div>

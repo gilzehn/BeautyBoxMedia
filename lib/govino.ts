@@ -127,30 +127,39 @@ export const MONTHS_2026: MonthRow[] = [
 export const MONTHS_ELAPSED = MONTHS_2026.length;
 
 /**
- * September 2026 so far: 1 to 8 September, not a full month.
+ * September 2026 so far: 1 to 21 September, not a full month.
  *
- * Kept apart from MONTHS_2026 on purpose. Eight days cannot sit in an array of
- * whole months without quietly corrupting every total and quarter built from
- * it. It exists only so the commentary can show where ACOS and TACOS have moved
- * since the August rebalance, and anything rendered from it has to say it is a
- * part-month.
+ * Kept apart from MONTHS_2026 on purpose. A part month cannot sit in an array
+ * of whole months without quietly corrupting every total and quarter built from
+ * it. Anything rendered from it has to say it is a part month.
  *
- * Note this is the figure as reported by BigQuery. August's spend is overridden
- * by hand (see AUG_2026_SPEND), so an August-to-September comparison is not
- * strictly like for like on the spend line.
+ * Two caveats that pull in opposite directions. Ad-attributed sales accrue for
+ * 14 days after the click, so the most recent fortnight is still filling in and
+ * ACOS here is overstated; it will settle lower. Ordered product sales are not
+ * subject to that, so the revenue figure and the year-on-year comparison are
+ * firm. This is BigQuery's reported spend, not the hand-set basis used for
+ * August, so an August-to-September spend comparison is not like for like.
  */
 export const SEP_MTD = {
-  label: '1-8 September',
-  days: 8,
-  spend: 1467.26,
-  ppcSales: 3832.19,
-  gross: 6073.4,
-  units: 209,
+  label: '1-21 September',
+  days: 21,
+  spend: 4769.41,
+  ppcSales: 10576.74,
+  gross: 15743.37,
+  units: 562,
+  /** The same 21 days of 2025, queried directly, for a like-for-like read. */
+  grossPrior: 23777.12,
+  unitsPrior: 863,
+  sessions: 3465,
+  sessionsPrior: 5295,
   get acos() {
     return (this.spend / this.ppcSales) * 100;
   },
   get tacos() {
     return (this.spend / this.gross) * 100;
+  },
+  get revYoY() {
+    return (this.gross / this.grossPrior - 1) * 100;
   },
 };
 
