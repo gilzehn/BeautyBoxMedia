@@ -211,3 +211,65 @@ A future Amazon sync will not disturb this: the refresh rules above never touch
 `prep_cost`, `inbound_cost`, `discount_pct`, `desired_profit_pct` or
 `desired_price`. Re-running the *Profit-Calc cost import*, however, would
 reintroduce $0.52 unless inbound is excluded from it.
+
+### Govino repricing, 2026-09-26
+
+Govino sits entirely in **TBB**. Three changes were made, all to data rather than
+code.
+
+**1. `amzn.gr.*` remnants removed.** 77 of Govino's 103 rows were
+Amazon-generated SKUs (`amzn.gr.<real-sku>-<hash>-<suffix>`, some
+double-prefixed) shadowing 17 real listings. All carried `purchase_cost = 0`, so
+the view showed them at 52–77% margin and they dominated any brand-level
+average. They were deleted from **both** `cogs` and `unit_economics` — the two
+tables join on `(account, sku)` with no foreign key, so deleting from `cogs`
+alone would have left orphan rows. Govino is now 26 rows: 17 costed, 9 awaiting
+a cost. Average margin across the costed rows is **23.1%**; the pre-cleanup
+figure was inflated by the zero-cost remnants. A backup of the deleted rows is
+in the session scratchpad (`govino/amzn_gr_cogs_backup.json`).
+
+**560 such rows exist table-wide** across 5 brands — Golden Rabbit (TB) alone
+has 470, plus Lifefactory, Mason Pearson and Rescue Detox. None has a cost.
+Only Govino's were cleaned here; the rest still distort those brands.
+
+**2. Per-SKU discount ceilings replaced the blanket 15%.** `discount_pct` on
+each costed Govino row is now the largest discount that still leaves a **10%
+margin**, derived from that row's own `referral_rate` rather than a flat
+assumption:
+
+```sql
+(total_cost + storage_fee + fulfillment_fee) / (1 - referral_rate - 0.10)
+```
+
+Eleven rows were already safe at 15% and kept it. Six were cut:
+
+| SKU | ASIN | Was | Now |
+|---|---|---|---|
+| J2-P3P8-FZPP | B07792YXG3 | 15% | **0.1%** |
+| 6R-7I4D-UTXY | B084KQCD2X | 15% | 2.7% |
+| 16ozBEER-6PACK | B00K1KHUU2 | 15% | 4.3% |
+| RN-GETQ-L1MF | B002WXSAT6 | 15% | 5.6% |
+| BJ-UH1N-K0JI | B0FXYH3CCT | 15% | 9.8% |
+| 6D-B6P5-T55Z | B073D7HF23 | 15% | 14.5% |
+
+At the old 15%, J2-P3P8-FZPP ran at **−3.2%** and 6R-7I4D-UTXY at **−0.8%**.
+
+**3. Price targets set.** `desired_price` on the four thinnest SKUs is the price
+that yields 20% at list (the view's `suggested_price`): J2-P3P8-FZPP $14.95 →
+**$17.24**, 6R-7I4D-UTXY $24.95 → **$28.00**, 16ozBEER-6PACK $29.95 →
+**$33.08**, RN-GETQ-L1MF $24.95 → **$27.05**. These are targets recorded for
+review — nothing was pushed to Amazon.
+
+#### Still open on Govino
+
+- **Nine listings have no cost**, four of them carrying real revenue:
+  `12ozWINE-8PACK` (B0F2PYKHGW, ~$40.5k trailing 12m), `AC-NDSJ-WEJ5`
+  (B075QPYS96, ~$12.5k), `R3-32CD-R6HT` (B00KWD90GA, ~$9.8k), and
+  `0C-KONW-R1GG` (B099H7HMTD). They cannot be priced or discounted safely until
+  a cost is entered.
+- **Duplicate SKUs on one ASIN.** B07792YXG3 has both `J2-P3P8-FZPP` (costed)
+  and `IV-YKC7-5EQJ` ($0); B009T7NSFE has both `X9-40QM-EMB1` and
+  `AL-OFZ3-GHCB`. Worth confirming which is the live offer.
+- **Ad spend outruns margin on two ASINs.** B009T7NSFE runs ~59% TACOS against
+  a 38.8% margin, and B075QPYS96 ~47% TACOS with no cost recorded at all. Both
+  lose money on every ad-driven sale at current settings.
