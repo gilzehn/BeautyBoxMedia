@@ -1,6 +1,6 @@
 {
  "account": "TBB",
- "_comment": "Advertising by the brand token in the campaign name (iComm | <Brand> - <line> | <type> | <targeting>), SP+SB+SD combined, from the campaign reports. Cross-check only: the P&L attributes the same dollars by the ad's ASIN. A null token means the campaign name does not follow the convention. Source: analysis/campaign_spend.sql.",
+ "_comment": "Advertising by the brand token in the campaign name, SP+SB+SD combined, from the campaign reports. Cross-check only: the P&L attributes the same dollars by the ad's ASIN. Source: analysis/campaign_spend.sql.",
  "columns": [
   "ym",
   "token",
@@ -14,7 +14,7 @@
   "Govino": "Govino",
   "Glimmer Goddess": "Glimmer Goddess",
   "KAI": "Kai",
-  "Watercolors": "Watercolors Haircare",
+  "Watercolors": "Watercolors",
   "Lisap": "Lisap Haircare",
   "theBalm": "The Balm Cosmetics",
   "Eagle Fortress": "Eagle Fortress",
@@ -50,8 +50,15 @@
    "2026-08",
    "(unnamed)",
    "SP+SB+SD",
-   523.34,
-   169.01
+   555.27,
+   376.32
+  ],
+  [
+   "2026-09",
+   "(unnamed)",
+   "SP+SB+SD",
+   147.93,
+   302.0
   ],
   [
    "2026-05",
@@ -72,14 +79,21 @@
    "Cosmedica",
    "SP+SB+SD",
    2937.85,
-   6550.77
+   6512.27
   ],
   [
    "2026-08",
    "Cosmedica",
    "SP+SB+SD",
-   17843.82,
-   27505.64
+   21314.98,
+   36848.47
+  ],
+  [
+   "2026-09",
+   "Cosmedica",
+   "SP+SB+SD",
+   15938.86,
+   39316.42
   ],
   [
    "2026-05",
@@ -99,8 +113,15 @@
    "2026-08",
    "Eagle Fortress",
    "SP+SB+SD",
-   1668.25,
-   1935.09
+   2471.02,
+   3413.19
+  ],
+  [
+   "2026-09",
+   "Eagle Fortress",
+   "SP+SB+SD",
+   2358.88,
+   4353.59
   ],
   [
    "2026-05",
@@ -127,8 +148,15 @@
    "2026-08",
    "GOVINO",
    "SP+SB+SD",
-   11114.68,
-   16493.61
+   12017.0,
+   19152.26
+  ],
+  [
+   "2026-09",
+   "GOVINO",
+   "SP+SB+SD",
+   4562.08,
+   10832.63
   ],
   [
    "2026-05",
@@ -155,8 +183,15 @@
    "2026-08",
    "Glimmer Goddess",
    "SP+SB+SD",
-   3567.19,
-   7773.23
+   4270.13,
+   9824.36
+  ],
+  [
+   "2026-09",
+   "Glimmer Goddess",
+   "SP+SB+SD",
+   1732.62,
+   5597.2
   ],
   [
    "2026-05",
@@ -183,8 +218,15 @@
    "2026-08",
    "Govino",
    "SP+SB+SD",
-   407.73,
-   1199.89
+   645.0,
+   1658.13
+  ],
+  [
+   "2026-09",
+   "Govino",
+   "SP+SB+SD",
+   558.54,
+   965.06
   ],
   [
    "2026-05",
@@ -212,14 +254,21 @@
    "KAI",
    "SP+SB+SD",
    5511.28,
-   29088.96
+   29034.96
   ],
   [
    "2026-08",
    "KAI",
    "SP+SB+SD",
-   3660.72,
-   12341.09
+   4795.72,
+   17494.3
+  ],
+  [
+   "2026-09",
+   "KAI",
+   "SP+SB+SD",
+   3003.06,
+   10753.63
   ],
   [
    "2026-05",
@@ -240,14 +289,21 @@
    "Lisap",
    "SP+SB+SD",
    159.15,
-   561.3
+   536.31
   ],
   [
    "2026-08",
    "Lisap",
    "SP+SB+SD",
-   614.48,
-   1071.11
+   741.01,
+   1563.28
+  ],
+  [
+   "2026-09",
+   "Lisap",
+   "SP+SB+SD",
+   564.8,
+   1175.16
   ],
   [
    "2026-05",
@@ -274,8 +330,15 @@
    "2026-08",
    "Mason Pearson",
    "SP+SB+SD",
-   916.86,
-   5049.0
+   1260.84,
+   8092.0
+  ],
+  [
+   "2026-09",
+   "Mason Pearson",
+   "SP+SB+SD",
+   619.83,
+   4350.0
   ],
   [
    "2026-05",
@@ -330,8 +393,15 @@
    "2026-08",
    "Roxanne Rizzo",
    "SP+SB+SD",
-   337.82,
-   1131.5
+   375.51,
+   1373.49
+  ],
+  [
+   "2026-09",
+   "Roxanne Rizzo",
+   "SP+SB+SD",
+   73.71,
+   723.98
   ],
   [
    "2026-05",
@@ -380,14 +450,21 @@
    "Watercolors",
    "SP+SB+SD",
    7902.6,
-   32823.68
+   32777.76
   ],
   [
    "2026-08",
    "Watercolors",
    "SP+SB+SD",
-   13198.33,
-   36970.36
+   20537.66,
+   53454.6
+  ],
+  [
+   "2026-09",
+   "Watercolors",
+   "SP+SB+SD",
+   17416.23,
+   41993.75
   ],
   [
    "2026-05",
