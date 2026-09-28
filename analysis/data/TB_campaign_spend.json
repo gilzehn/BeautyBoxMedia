@@ -1,21 +1,138 @@
 {
-  "account": "TB",
-  "_comment": "Advertising by the brand token in the campaign name, SP+SB+SD combined, from the campaign reports. Cross-check only: the P&L attributes the same dollars by the ad's ASIN. Source: analysis/campaign_spend.sql.",
-  "columns": ["ym","token","type","cost","sales"],
-  "tokenToBrand": {"Sonoma":"Sonoma Syrup Co","Golden Rabbit":"Golden Rabbit","Vivioptal":"Vivioptal","El Gallito":"El Gallito Coffee"},
-  "rows": [
-    ["2026-08","El Gallito","SP+SB+SD",787.38,1813.78],
-    ["2026-05","Golden Rabbit","SP+SB+SD",5268.82,21855.08],
-    ["2026-06","Golden Rabbit","SP+SB+SD",7906.06,42372.25],
-    ["2026-07","Golden Rabbit","SP+SB+SD",4751.10,21177.63],
-    ["2026-08","Golden Rabbit","SP+SB+SD",6301.77,19868.89],
-    ["2026-05","Sonoma","SP+SB+SD",10695.40,26324.46],
-    ["2026-06","Sonoma","SP+SB+SD",5400.37,24339.30],
-    ["2026-07","Sonoma","SP+SB+SD",4355.88,19284.35],
-    ["2026-08","Sonoma","SP+SB+SD",3459.42,14032.67],
-    ["2026-05","Vivioptal","SP+SB+SD",2350.95,8360.67],
-    ["2026-06","Vivioptal","SP+SB+SD",1664.37,6032.45],
-    ["2026-07","Vivioptal","SP+SB+SD",693.31,2064.67],
-    ["2026-08","Vivioptal","SP+SB+SD",204.56,462.72]
+ "account": "TB",
+ "_comment": "Advertising by the brand token in the campaign name, SP+SB+SD combined, from the campaign reports. Cross-check only: the P&L attributes the same dollars by the ad's ASIN. Source: analysis/campaign_spend.sql.",
+ "columns": [
+  "ym",
+  "token",
+  "type",
+  "cost",
+  "sales"
+ ],
+ "tokenToBrand": {
+  "Sonoma": "Sonoma Syrup Co",
+  "Golden Rabbit": "Golden Rabbit",
+  "Vivioptal": "Vivioptal",
+  "El Gallito": "El Gallito Coffee"
+ },
+ "rows": [
+  [
+   "2026-08",
+   "El Gallito",
+   "SP+SB+SD",
+   1311.65,
+   2845.39
+  ],
+  [
+   "2026-09",
+   "El Gallito",
+   "SP+SB+SD",
+   942.91,
+   2017.19
+  ],
+  [
+   "2026-05",
+   "Golden Rabbit",
+   "SP+SB+SD",
+   5268.82,
+   21855.08
+  ],
+  [
+   "2026-06",
+   "Golden Rabbit",
+   "SP+SB+SD",
+   7906.06,
+   42372.25
+  ],
+  [
+   "2026-07",
+   "Golden Rabbit",
+   "SP+SB+SD",
+   4751.1,
+   21177.63
+  ],
+  [
+   "2026-08",
+   "Golden Rabbit",
+   "SP+SB+SD",
+   8502.24,
+   32225.45
+  ],
+  [
+   "2026-09",
+   "Golden Rabbit",
+   "SP+SB+SD",
+   5848.27,
+   16940.27
+  ],
+  [
+   "2026-05",
+   "Sonoma",
+   "SP+SB+SD",
+   10695.4,
+   26324.46
+  ],
+  [
+   "2026-06",
+   "Sonoma",
+   "SP+SB+SD",
+   5400.37,
+   24339.3
+  ],
+  [
+   "2026-07",
+   "Sonoma",
+   "SP+SB+SD",
+   4355.88,
+   19284.35
+  ],
+  [
+   "2026-08",
+   "Sonoma",
+   "SP+SB+SD",
+   4752.71,
+   22624.45
+  ],
+  [
+   "2026-09",
+   "Sonoma",
+   "SP+SB+SD",
+   8934.39,
+   28917.46
+  ],
+  [
+   "2026-05",
+   "Vivioptal",
+   "SP+SB+SD",
+   2350.95,
+   8360.67
+  ],
+  [
+   "2026-06",
+   "Vivioptal",
+   "SP+SB+SD",
+   1664.37,
+   6032.45
+  ],
+  [
+   "2026-07",
+   "Vivioptal",
+   "SP+SB+SD",
+   693.31,
+   2064.67
+  ],
+  [
+   "2026-08",
+   "Vivioptal",
+   "SP+SB+SD",
+   622.59,
+   1733.19
+  ],
+  [
+   "2026-09",
+   "Vivioptal",
+   "SP+SB+SD",
+   518.8,
+   1239.38
   ]
+ ]
 }
