@@ -177,7 +177,12 @@ def compute(account, d_from, d_to):
         for r in rows:
             sku = g(r, "sku")
             asin = g(r, "asin")
-            c = cost_by_sku.get(sku) or cost_by_asin.get(asin) or {}
+            # A SKU's own row wins only when it actually carries a cost. A
+            # zero-cost row must not shadow a real cost on the same ASIN — that
+            # is what happens when the cogs table gains placeholder rows.
+            c = cost_by_sku.get(sku)
+            if not (c and c.get("has_cost")):
+                c = cost_by_asin.get(asin) or c or {}
             if sku not in skus:
                 src_brand = (c.get("brand") or "").strip()
                 bq_brand = (g(r, "bq_brand") or "").strip()
