@@ -1,12 +1,53 @@
 {
-  "account": "NRG",
-  "account_name": "National Retail Group Seller US",
-  "account_id": 2156840,
-  "_comment": "Account-level settlement lines that carry no SKU, per month, stated as POSITIVE costs. Source: analysis/account_costs.sql.",
-  "months": {
-    "2026-05": {"advertising":35821.25,"inbound_logistics":10479.66,"storage":2540.63,"removals_disposal":530.15,"returns_processing":16.28,"subscription":39.99,"other_adjustments":22.75},
-    "2026-06": {"advertising":26913.68,"inbound_logistics":8506.19,"storage":2461.08,"removals_disposal":621.63,"returns_processing":31.17,"subscription":39.99,"other_adjustments":101.57},
-    "2026-07": {"advertising":40775.24,"inbound_logistics":14077.27,"storage":1993.13,"removals_disposal":221.00,"returns_processing":71.89,"subscription":0.0,"other_adjustments":126.68},
-    "2026-08": {"advertising":25577.72,"inbound_logistics":9100.11,"storage":1838.76,"removals_disposal":322.06,"returns_processing":27.92,"subscription":0.0,"other_adjustments":74.75}
+ "account": "NRG",
+ "account_name": "National Retail Group Seller US",
+ "account_id": 2156840,
+ "_comment": "Account-level settlement lines that carry no SKU, per month, stated as POSITIVE costs. Source: analysis/account_costs.sql.",
+ "months": {
+  "2026-05": {
+   "advertising": 35821.25,
+   "inbound_logistics": 10479.66,
+   "storage": 2540.63,
+   "removals_disposal": 530.15,
+   "returns_processing": 16.28,
+   "subscription": 39.99,
+   "other_adjustments": 22.75
+  },
+  "2026-06": {
+   "advertising": 26913.68,
+   "inbound_logistics": 8506.19,
+   "storage": 2461.08,
+   "removals_disposal": 621.63,
+   "returns_processing": 31.17,
+   "subscription": 39.99,
+   "other_adjustments": 101.57
+  },
+  "2026-07": {
+   "advertising": 40775.24,
+   "inbound_logistics": 14077.27,
+   "storage": 1993.13,
+   "removals_disposal": 221.0,
+   "returns_processing": 71.89,
+   "subscription": 0.0,
+   "other_adjustments": 126.68
+  },
+  "2026-08": {
+   "advertising": 33744.42,
+   "inbound_logistics": 14277.44,
+   "storage": 1838.76,
+   "removals_disposal": 2173.45,
+   "returns_processing": 27.92,
+   "subscription": 0.0,
+   "other_adjustments": 83.67
+  },
+  "2026-09": {
+   "advertising": 13315.73,
+   "inbound_logistics": 11727.17,
+   "storage": 1529.2,
+   "removals_disposal": 2295.4,
+   "returns_processing": 55.1,
+   "subscription": 0.0,
+   "other_adjustments": 110.82
   }
+ }
 }

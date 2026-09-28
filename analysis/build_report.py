@@ -484,7 +484,7 @@ def main():
         periods.append({"key": ym, "label": label + (" MTD" if partial else ""),
                         "from": start, "to": end, "partial": partial,
                         "days": (dt.date.fromisoformat(end) - dt.date.fromisoformat(start)).days + 1})
-    periods.append({"key": TOTAL, "label": "All four", "from": args.d_from, "to": args.d_to,
+    periods.append({"key": TOTAL, "label": "All months", "from": args.d_from, "to": args.d_to,
                     "partial": False,
                     "days": (dt.date.fromisoformat(args.d_to) - dt.date.fromisoformat(args.d_from)).days + 1})
 
