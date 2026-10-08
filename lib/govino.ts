@@ -115,32 +115,35 @@ export const AUG_2026_SPEND_REPORTED = 12662.0;
  * there are no DSP or Sponsored Television tables in the dataset at all, and no
  * coupon or deal spend landed on the govino ASINs during the month.
  *
- * What is added here. Beauty Box Media supplies a further $9,367.00 of September
- * spend from outside the warehouse. The attributed sales belonging to it are not
- * available from any connected source, so they are DERIVED rather than measured:
- * the extra spend is credited with revenue at the 39.9% ACOS the month actually
- * ran at, and that same revenue is added both to ad-attributed sales and to
- * total sales. Units are scaled by that revenue at September's actual $27.34 per
- * unit, so the units card and the sales card do not contradict each other.
+ * What is shown instead. Beauty Box Media sets September spend at $9,367.00,
+ * replacing the reported figure the same way August is set to $9,678.00 rather
+ * than its reported $12,662.00. That leaves $3,975.57 of spend the warehouse did
+ * not see. The attributed sales belonging to it are not available from any
+ * connected source, so they are DERIVED rather than measured: the difference is
+ * credited with revenue at the 39.9% ACOS the month actually ran at, and that
+ * same revenue is added both to ad-attributed sales and to total sales. Units
+ * are scaled by it at September's measured $27.34 per unit, so the units card
+ * and the sales card do not contradict each other.
  *
- * This is a modelled month, not a measured one. Amazon recorded $21,487.53 on
- * 786 units; this file reports $44,963.72 on 1,645 units, which reads as +47%
- * against September 2025 where the measured figure was 30% below it. Sessions,
- * clicks, impressions and orders are deliberately left at their actual values,
- * so any per-click, per-session or per-order rate taken off this row is not
- * meaningful.
+ * So this is a part-modelled month. Amazon recorded $21,487.53 on 786 units;
+ * this file reports $31,451.36 on 1,150 units, which reads as +3% against
+ * September 2025 where the measured figure was 30% below it. Sessions, clicks,
+ * impressions and orders are deliberately left at their actual values, so any
+ * per-click, per-session or per-order rate taken off this row is not meaningful.
  *
  * Whoever refreshes this file next should decide whether this still applies, and
  * replace the derived sales with measured ones the moment the source carrying
- * that $9,367 is connected.
+ * the difference is connected.
  */
 /** What BigQuery reports for September spend, scoped as every other month is. */
 export const SEP_2026_SPEND_REPORTED = 5391.43;
-/** Spend supplied by hand, on top of the reported figure. */
-export const SEP_2026_EXTRA_SPEND = 9367.0;
-/** The ACOS, in percent, that the extra spend is credited at. */
+/** September spend as set by hand, replacing the reported figure. */
+export const SEP_2026_SPEND = 9367.0;
+/** The ACOS, in percent, that the unreported difference is credited at. */
 export const SEP_2026_ACOS_BASIS = 39.9;
-/** Revenue credited to the extra spend. Derived, not measured. */
+/** Spend the warehouse did not see: the part that needs sales credited to it. */
+const SEP_2026_EXTRA_SPEND = SEP_2026_SPEND - SEP_2026_SPEND_REPORTED;
+/** Revenue credited to that difference. Derived, not measured. */
 export const SEP_2026_EXTRA_SALES = SEP_2026_EXTRA_SPEND / (SEP_2026_ACOS_BASIS / 100);
 /** September's measured revenue per unit, used to scale units with the sales. */
 const SEP_2026_UNIT_VALUE = 21487.53 / 786;
@@ -174,7 +177,7 @@ export const MONTHS_2026: MonthRow[] = [
   row(8, AUG_2026_SPEND, 20810.39, 35697.7, 1110, 986, 8969, 6250, 1395931),
   row(
     9,
-    SEP_2026_SPEND_REPORTED + SEP_2026_EXTRA_SPEND,
+    SEP_2026_SPEND,
     13518.82 + SEP_2026_EXTRA_SALES,
     21487.53 + SEP_2026_EXTRA_SALES,
     786 + SEP_2026_EXTRA_UNITS,
