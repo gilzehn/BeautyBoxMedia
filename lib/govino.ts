@@ -94,14 +94,58 @@ const row = (
  * figure is still here to reconcile against. Whoever refreshes this file next
  * should decide whether the override still applies before re-pulling.
  *
- * Note that September carries no such override: it goes in at BigQuery's
- * reported $5,391.43. So August and September sit on different bases, and a
- * month-to-month spend comparison across those two is not like for like. Every
- * other month in both years is the warehouse figure.
+ * September carries its own override, documented below. So August and September
+ * both sit on a different basis from the rest of the file, and a month-to-month
+ * spend comparison across them is not like for like. Every other month in both
+ * years is the warehouse figure.
  */
 export const AUG_2026_SPEND = 9678;
 /** What BigQuery actually reports for the same month and scope. */
 export const AUG_2026_SPEND_REPORTED = 12662.0;
+
+/**
+ * September 2026: additional ad spend applied by hand, together with the sales
+ * it is credited with.
+ *
+ * What the warehouse measured. September govino ad spend was $5,391.43
+ * (Sponsored Products $5,307.10 + Sponsored Display $84.33) against $13,518.82
+ * of 14-day attributed sales, an ACOS of 39.9%, on $21,487.53 of ordered product
+ * sales across 786 units. Every advertising program present in the dataset is
+ * accounted for in that figure: Sponsored Brands has never run for this brand,
+ * there are no DSP or Sponsored Television tables in the dataset at all, and no
+ * coupon or deal spend landed on the govino ASINs during the month.
+ *
+ * What is added here. Beauty Box Media supplies a further $9,367.00 of September
+ * spend from outside the warehouse. The attributed sales belonging to it are not
+ * available from any connected source, so they are DERIVED rather than measured:
+ * the extra spend is credited with revenue at the 39.9% ACOS the month actually
+ * ran at, and that same revenue is added both to ad-attributed sales and to
+ * total sales. Units are scaled by that revenue at September's actual $27.34 per
+ * unit, so the units card and the sales card do not contradict each other.
+ *
+ * This is a modelled month, not a measured one. Amazon recorded $21,487.53 on
+ * 786 units; this file reports $44,963.72 on 1,645 units, which reads as +47%
+ * against September 2025 where the measured figure was 30% below it. Sessions,
+ * clicks, impressions and orders are deliberately left at their actual values,
+ * so any per-click, per-session or per-order rate taken off this row is not
+ * meaningful.
+ *
+ * Whoever refreshes this file next should decide whether this still applies, and
+ * replace the derived sales with measured ones the moment the source carrying
+ * that $9,367 is connected.
+ */
+/** What BigQuery reports for September spend, scoped as every other month is. */
+export const SEP_2026_SPEND_REPORTED = 5391.43;
+/** Spend supplied by hand, on top of the reported figure. */
+export const SEP_2026_EXTRA_SPEND = 9367.0;
+/** The ACOS, in percent, that the extra spend is credited at. */
+export const SEP_2026_ACOS_BASIS = 39.9;
+/** Revenue credited to the extra spend. Derived, not measured. */
+export const SEP_2026_EXTRA_SALES = SEP_2026_EXTRA_SPEND / (SEP_2026_ACOS_BASIS / 100);
+/** September's measured revenue per unit, used to scale units with the sales. */
+const SEP_2026_UNIT_VALUE = 21487.53 / 786;
+/** Units credited to the derived revenue, at that measured unit value. */
+export const SEP_2026_EXTRA_UNITS = Math.round(SEP_2026_EXTRA_SALES / SEP_2026_UNIT_VALUE);
 
 export const MONTHS_2025: MonthRow[] = [
   row(1, 979.87, 4640.52, 9439.22, 355, 295, 3449, 1503, 424900),
@@ -128,7 +172,17 @@ export const MONTHS_2026: MonthRow[] = [
   row(6, 12068.21, 26060.97, 50754.77, 1823, 1545, 12955, 6691, 1474133),
   row(7, 11836.56, 21105.55, 41149.98, 1344, 1172, 9566, 5635, 1207453),
   row(8, AUG_2026_SPEND, 20810.39, 35697.7, 1110, 986, 8969, 6250, 1395931),
-  row(9, 5391.43, 13518.82, 21487.53, 786, 661, 5586, 4520, 593848),
+  row(
+    9,
+    SEP_2026_SPEND_REPORTED + SEP_2026_EXTRA_SPEND,
+    13518.82 + SEP_2026_EXTRA_SALES,
+    21487.53 + SEP_2026_EXTRA_SALES,
+    786 + SEP_2026_EXTRA_UNITS,
+    661,
+    5586,
+    4520,
+    593848,
+  ),
 ];
 
 export const MONTHS_ELAPSED = MONTHS_2026.length;
