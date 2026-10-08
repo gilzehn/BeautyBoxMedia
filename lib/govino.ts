@@ -37,10 +37,11 @@
  *     reason. So the branded/generic panel describes keyword and auto
  *     targeting, not the whole ad account.
  *
- * Pulled and verified 2026-09-11. Sales data is complete through 2026-09-08 and
- * ad data through 2026-09-09, so September 2026 is a partial month and is kept
- * out of every comparison below. The reporting window is January to August,
- * complete on both sides.
+ * Pulled and verified 2026-10-06. Sales and ad data are both complete through
+ * 2026-09-30, so September is a whole month and the reporting window is January
+ * to September, complete on both sides. An earlier revision of this file carried
+ * September as a part month and held it out of the comparisons; that is no
+ * longer the case, and Q3 is now a full quarter on both sides.
  */
 
 export interface MonthRow {
@@ -86,12 +87,17 @@ const row = (
  * It is kept as a named constant, with the warehouse figure recorded beside it,
  * so the override is visible to anyone reading or updating this file rather
  * than buried in a data row. ACOS and TACOS for August, and every aggregate
- * that includes August (the Jan-Aug totals and the Q3 pair), are computed from
+ * that includes August (the Jan-Sep totals and the Q3 pair), are computed from
  * this number, so the whole page stays internally consistent.
  *
  * If the intent was only ever to restate the client-facing spend, the reported
  * figure is still here to reconcile against. Whoever refreshes this file next
  * should decide whether the override still applies before re-pulling.
+ *
+ * Note that September carries no such override: it goes in at BigQuery's
+ * reported $5,391.43. So August and September sit on different bases, and a
+ * month-to-month spend comparison across those two is not like for like. Every
+ * other month in both years is the warehouse figure.
  */
 export const AUG_2026_SPEND = 9678;
 /** What BigQuery actually reports for the same month and scope. */
@@ -112,7 +118,7 @@ export const MONTHS_2025: MonthRow[] = [
   row(12, 1805.02, 7489.0, 27502.62, 1171, 1016, 6534, 1693, 284194),
 ];
 
-/** January to August 2026. September is partial and deliberately excluded. */
+/** January to September 2026, all complete months. */
 export const MONTHS_2026: MonthRow[] = [
   row(1, 2429.7, 5604.54, 18059.16, 748, 641, 4851, 2304, 287807),
   row(2, 1241.44, 5014.27, 15241.58, 560, 466, 3657, 1572, 210374),
@@ -122,50 +128,14 @@ export const MONTHS_2026: MonthRow[] = [
   row(6, 12068.21, 26060.97, 50754.77, 1823, 1545, 12955, 6691, 1474133),
   row(7, 11836.56, 21105.55, 41149.98, 1344, 1172, 9566, 5635, 1207453),
   row(8, AUG_2026_SPEND, 20810.39, 35697.7, 1110, 986, 8969, 6250, 1395931),
+  row(9, 5391.43, 13518.82, 21487.53, 786, 661, 5586, 4520, 593848),
 ];
 
 export const MONTHS_ELAPSED = MONTHS_2026.length;
 
-/**
- * September 2026 so far: 1 to 21 September, not a full month.
- *
- * Kept apart from MONTHS_2026 on purpose. A part month cannot sit in an array
- * of whole months without quietly corrupting every total and quarter built from
- * it. Anything rendered from it has to say it is a part month.
- *
- * Two caveats that pull in opposite directions. Ad-attributed sales accrue for
- * 14 days after the click, so the most recent fortnight is still filling in and
- * ACOS here is overstated; it will settle lower. Ordered product sales are not
- * subject to that, so the revenue figure and the year-on-year comparison are
- * firm. This is BigQuery's reported spend, not the hand-set basis used for
- * August, so an August-to-September spend comparison is not like for like.
- */
-export const SEP_MTD = {
-  label: '1-21 September',
-  days: 21,
-  spend: 4769.41,
-  ppcSales: 10576.74,
-  gross: 15743.37,
-  units: 562,
-  /** The same 21 days of 2025, queried directly, for a like-for-like read. */
-  grossPrior: 23777.12,
-  unitsPrior: 863,
-  sessions: 3465,
-  sessionsPrior: 5295,
-  get acos() {
-    return (this.spend / this.ppcSales) * 100;
-  },
-  get tacos() {
-    return (this.spend / this.gross) * 100;
-  },
-  get revYoY() {
-    return (this.gross / this.grossPrior - 1) * 100;
-  },
-};
-
 /** Where the data stops, for the stamp line and the footnotes. */
-export const DATA_THROUGH = '31 August 2026';
-export const PULLED_ON = '11 September 2026';
+export const DATA_THROUGH = '30 September 2026';
+export const PULLED_ON = '6 October 2026';
 export const ASIN_COUNT = 44;
 
 // --- Totals -------------------------------------------------------------
@@ -221,9 +191,9 @@ export function total(rows: MonthRow[]): Totals {
   };
 }
 
-/** Jan to Aug 2026. */
+/** Jan to Sep 2026. */
 export const YTD_2026 = total(MONTHS_2026);
-/** Jan to Aug 2025, the like-for-like window. */
+/** Jan to Sep 2025, the like-for-like window. */
 export const YTD_2025 = total(MONTHS_2025.slice(0, MONTHS_ELAPSED));
 /** All twelve months of 2025, for Q4 context. */
 export const FY_2025 = total(MONTHS_2025);

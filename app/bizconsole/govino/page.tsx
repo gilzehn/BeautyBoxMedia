@@ -34,7 +34,6 @@ import {
   total,
   PAIRED_QUARTERS,
   type Totals,
-  SEP_MTD,
   YTD_2025,
   YTD_2026,
   YOY,
@@ -121,8 +120,8 @@ const METRICS: Metric[] = [
 ];
 
 /** The scorecards are fixed to the latest complete month and its counterpart. */
-const AUG_2026 = total([MONTHS_2026[MONTHS_2026.length - 1]]);
-const AUG_2025 = total([MONTHS_2025[7]]);
+const SEP_2026 = total([MONTHS_2026[MONTHS_2026.length - 1]]);
+const SEP_2025 = total([MONTHS_2025[8]]);
 
 /**
  * What the chart carries: sales as bars, spend and TACOS as lines. Kept apart
@@ -248,11 +247,11 @@ export default function GovinoReport() {
             <span className={styles.eyebrow}>Monthly report</span>
           </div>
           <div className={styles.accentBar} />
-          <h1 className={styles.srOnly}>govino on Amazon, January to August 2026</h1>
+          <h1 className={styles.srOnly}>govino on Amazon, January to September 2026</h1>
           <p className={styles.standfirst}>
-            August 2026 against August 2025, with the year so far by quarter beneath it. Total
-            sales is ordered product sales across the govino catalogue, advertised and organic
-            together.
+            September 2026 against September 2025, with the year so far by quarter beneath it.
+            Total sales is ordered product sales across the govino catalogue, advertised and
+            organic together.
           </p>
           <div className={styles.stamp}>
             <span>Account: The Beauty Box (US)</span>
@@ -263,27 +262,27 @@ export default function GovinoReport() {
 
 
             <section className={styles.section}>
-              <SectionHead title="August 2026 at a glance" />
+              <SectionHead title="September 2026 at a glance" />
               <p className={styles.body}>
-                The latest complete month, against August 2025.
+                The latest complete month, against September 2025.
               </p>
 
               <div className={styles.scoreGrid}>
                 {METRICS.map((m) => {
-                  const v = AUG_2026[m.key];
-                  const p = AUG_2025[m.key];
+                  const v = SEP_2026[m.key];
+                  const p = SEP_2025[m.key];
                   return (
                     <Score
                       key={m.key}
                       label={m.label}
                       value={m.fmt(v)}
                       prior={m.fmt(p)}
-                      priorLabel="Aug 2025"
+                      priorLabel="Sep 2025"
                       change={m.unit === 'pct' ? v - p : ((v - p) / p) * 100}
                       unit={m.unit === 'pct' ? 'pts' : 'pct'}
                       invert={m.lowerIsBetter}
                       neutral={m.neutral}
-                      note={m.note?.(AUG_2026, AUG_2025)}
+                      note={m.note?.(SEP_2026, SEP_2025)}
                     />
                   );
                 })}
@@ -366,8 +365,8 @@ export default function GovinoReport() {
               <div>
                 <h3 className={styles.insightTitle}>We bought the growth on purpose</h3>
                 <p className={styles.insightBody}>
-                  Sales for January to August are <strong>{usd(YTD_2026.gross)}</strong>, up{' '}
-                  <strong>{signedPct(YOY.gross)}</strong> on the same eight months of 2025, on{' '}
+                  Sales for January to September are <strong>{usd(YTD_2026.gross)}</strong>, up{' '}
+                  <strong>{signedPct(YOY.gross)}</strong> on the same nine months of 2025, on{' '}
                   <strong>{num(YTD_2026.units)} units</strong>. That growth was bought: we put{' '}
                   <strong>{usd(YTD_2026.spend)}</strong> behind the brand against{' '}
                   {usd(YTD_2025.spend)} last year, an increase of{' '}
@@ -383,20 +382,22 @@ export default function GovinoReport() {
               <div className={styles.insightNum}>02</div>
               <div>
                 <h3 className={styles.insightTitle}>
-                  August is where we started finding the balance
+                  September says where the money works
                 </h3>
                 <p className={styles.insightBody}>
-                  August was the first month we pulled back to test what the brand holds without
-                  full support. Spend came in at <strong>{usd(AUG_2026.spend)}</strong>, sales
-                  still grew{' '}
-                  <strong>{signedPct(((AUG_2026.gross - AUG_2025.gross) / AUG_2025.gross) * 100)}</strong>{' '}
-                  year on year, at {pct(AUG_2026.acos)} ACOS and {pct(AUG_2026.tacos)} TACOS.
-                  September has answered the question less kindly. With spend cut further, sales
-                  across {SEP_MTD.label} are <strong>{signedPct(SEP_MTD.revYoY)}</strong> against
-                  the same 21 days of 2025, and sessions are down by about the same amount that
-                  spend came down. Seasonality accounts for roughly 5 points of that; the rest
-                  tracks the budget. The position we have built is still rented rather than
-                  owned.
+                  Spend was <strong>{usd(SEP_2026.spend)}</strong> against {usd(SEP_2025.spend)} a
+                  year ago, level, and sales came in{' '}
+                  <strong>
+                    {pct(Math.abs(((SEP_2026.gross - SEP_2025.gross) / SEP_2025.gross) * 100))}
+                  </strong>{' '}
+                  lower. Read by product, that splits three ways. Roughly{' '}
+                  <strong>$9,100</strong> is supply: four lines that sold last September are off the
+                  catalogue or down to single-digit units, and no budget recovers those. Another{' '}
+                  <strong>$6,700</strong> came off lines that held stock all month and simply got
+                  less support, where spend fell 23% to 62% and sessions fell 40% with it. Against
+                  that, the lines we kept funding added <strong>$6,800</strong> on sessions up 180%.
+                  Where the money stayed, the brand grew. Where it came off, traffic followed inside
+                  a month.
                 </p>
               </div>
             </div>
