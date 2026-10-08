@@ -34,9 +34,6 @@ import {
   total,
   PAIRED_QUARTERS,
   type Totals,
-  YTD_2025,
-  YTD_2026,
-  YOY,
   DATA_THROUGH,
   ASIN_COUNT,
   usd,
@@ -356,70 +353,6 @@ export default function GovinoReport() {
               )}
             </section>
 
-        <section className={styles.section}>
-          <SectionHead title="What this tells us" />
-
-          <div className={styles.insights}>
-            <div className={styles.insight}>
-              <div className={styles.insightNum}>01</div>
-              <div>
-                <h3 className={styles.insightTitle}>We bought the growth on purpose</h3>
-                <p className={styles.insightBody}>
-                  Sales for January to September are <strong>{usd(YTD_2026.gross)}</strong>, up{' '}
-                  <strong>{signedPct(YOY.gross)}</strong> on the same nine months of 2025, on{' '}
-                  <strong>{num(YTD_2026.units)} units</strong>. That growth was bought: we put{' '}
-                  <strong>{usd(YTD_2026.spend)}</strong> behind the brand against{' '}
-                  {usd(YTD_2025.spend)} last year, an increase of{' '}
-                  <strong>{signedPct(YOY.spend)}</strong>. The aggression was deliberate, taken to
-                  win rank on the core stemless range while the category was still winnable, and
-                  Q1 and Q2 both grew more than 50%. The cost of it shows in TACOS, which ran{' '}
-                  {pct(YTD_2026.tacos)} against {pct(YTD_2025.tacos)} a year earlier.
-                </p>
-              </div>
-            </div>
-
-            <div className={styles.insight}>
-              <div className={styles.insightNum}>02</div>
-              <div>
-                <h3 className={styles.insightTitle}>
-                  September says where the money works
-                </h3>
-                <p className={styles.insightBody}>
-                  Spend was <strong>{usd(SEP_2026.spend)}</strong> against {usd(SEP_2025.spend)} a
-                  year ago, level, and sales came in{' '}
-                  <strong>
-                    {pct(Math.abs(((SEP_2026.gross - SEP_2025.gross) / SEP_2025.gross) * 100))}
-                  </strong>{' '}
-                  lower. Read by product, that splits three ways. Roughly{' '}
-                  <strong>$9,100</strong> is supply: four lines that sold last September are off the
-                  catalogue or down to single-digit units, and no budget recovers those. Another{' '}
-                  <strong>$6,700</strong> came off lines that held stock all month and simply got
-                  less support, where spend fell 23% to 62% and sessions fell 40% with it. Against
-                  that, the lines we kept funding added <strong>$6,800</strong> on sessions up 180%.
-                  Where the money stayed, the brand grew. Where it came off, traffic followed inside
-                  a month.
-                </p>
-              </div>
-            </div>
-
-            <div className={styles.insight}>
-              <div className={styles.insightNum}>03</div>
-              <div>
-                <h3 className={styles.insightTitle}>The decision we need to make together</h3>
-                <p className={styles.insightBody}>
-                  There are two honest paths from here and they lead to different places.{' '}
-                  <strong>Invest significantly more</strong> and we push for another step change
-                  through Q4, the strongest quarter of govino&apos;s year: faster growth, thinner
-                  margin, and it needs stock behind it. <strong>Hold the line</strong> and September is the shape of it:
-                  profitable, but trading below last year rather than growing. Neither is the wrong
-                  answer, and neither is executable without stock, which is the decision in front of
-                  us first. We would like to put a meeting in the diary and choose deliberately
-                  rather than drift into it.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
     </div>
   );
