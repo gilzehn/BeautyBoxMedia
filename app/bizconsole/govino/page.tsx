@@ -116,6 +116,10 @@ const METRICS: Metric[] = [
   },
 ];
 
+/** July, August and September 2026 on their own, for the TACOS trend. */
+const JUL_2026 = total([MONTHS_2026[6]]);
+const AUG_2026 = total([MONTHS_2026[7]]);
+
 /** The scorecards are fixed to the latest complete month and its counterpart. */
 const SEP_2026 = total([MONTHS_2026[MONTHS_2026.length - 1]]);
 const SEP_2025 = total([MONTHS_2025[8]]);
@@ -353,6 +357,25 @@ export default function GovinoReport() {
               )}
             </section>
 
+        <section className={styles.section}>
+          <SectionHead title="What this tells us" />
+
+          <div className={styles.insights}>
+            <div className={`${styles.insight} ${styles.insightSolo}`}>
+              <div>
+                <h3 className={styles.insightTitle}>TACOS is coming down</h3>
+                <p className={styles.insightBody}>
+                  Advertising is taking a smaller share of revenue every month through the
+                  quarter: <strong>{pct(JUL_2026.tacos)}</strong> in July,{' '}
+                  <strong>{pct(AUG_2026.tacos)}</strong> in August, then{' '}
+                  <strong>{pct(SEP_2026.tacos)}</strong> in September. Spend came off faster
+                  than sales did, so each dollar of revenue is carrying less advertising cost
+                  than it was at the start of the quarter.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
