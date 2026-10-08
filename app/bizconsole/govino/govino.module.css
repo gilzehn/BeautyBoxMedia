@@ -538,11 +538,6 @@
   padding: 22px 24px;
 }
 
-/* A lone insight has no number beside it, so it takes the full width. */
-.insightSolo {
-  grid-template-columns: 1fr;
-}
-
 .insightNum {
   font-size: 1.05rem;
   font-variant-numeric: tabular-nums;
