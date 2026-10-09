@@ -125,6 +125,7 @@ const BY_SPEND = [...MONTHS_2026].sort((a, b) => b.spend - a.spend);
 const FUNDED = total(BY_SPEND.slice(0, 3));
 const LEAN = total(BY_SPEND.slice(-3));
 const JUL_2026 = total([MONTHS_2026[6]]);
+const JUL_SEP_2026 = total(MONTHS_2026.slice(6));
 
 /** The scorecards are fixed to the latest complete month and its counterpart. */
 const SEP_2026 = total([MONTHS_2026[MONTHS_2026.length - 1]]);
@@ -374,8 +375,9 @@ export default function GovinoReport() {
                   The three months we funded hardest this year averaged{' '}
                   <strong>{usd(FUNDED.spend / 3)}</strong> of spend and{' '}
                   <strong>{usd(FUNDED.gross / 3)}</strong> of sales. The three leanest averaged{' '}
-                  {usd(LEAN.spend / 3)} and {usd(LEAN.gross / 3)}. Then we tested the other
-                  direction: from July to September spend came down{' '}
+                  {usd(LEAN.spend / 3)} and {usd(LEAN.gross / 3)}. In July to September we spent{' '}
+                  <strong>{usd(JUL_SEP_2026.spend)}</strong> across the three months, stepping
+                  down as we went: spend came down{' '}
                   <strong>
                     {pct(Math.abs(((SEP_2026.spend - JUL_2026.spend) / JUL_2026.spend) * 100), 0)}
                   </strong>{' '}
