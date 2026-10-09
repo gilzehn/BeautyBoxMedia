@@ -116,6 +116,16 @@ const METRICS: Metric[] = [
   },
 ];
 
+/**
+ * The funded months against the lean ones, for the budget insight. Taken as the
+ * top and bottom three by spend rather than a fixed threshold, so the grouping
+ * survives a data refresh.
+ */
+const BY_SPEND = [...MONTHS_2026].sort((a, b) => b.spend - a.spend);
+const FUNDED = total(BY_SPEND.slice(0, 3));
+const LEAN = total(BY_SPEND.slice(-3));
+const JUL_2026 = total([MONTHS_2026[6]]);
+
 /** The scorecards are fixed to the latest complete month and its counterpart. */
 const SEP_2026 = total([MONTHS_2026[MONTHS_2026.length - 1]]);
 const SEP_2025 = total([MONTHS_2025[8]]);
@@ -353,6 +363,38 @@ export default function GovinoReport() {
               )}
             </section>
 
+        <section className={styles.section}>
+          <SectionHead title="What this tells us" />
+
+          <div className={styles.insights}>
+            <div className={`${styles.insight} ${styles.insightSolo}`}>
+              <div>
+                <h3 className={styles.insightTitle}>Growth is still budget-led</h3>
+                <p className={styles.insightBody}>
+                  The three months we funded hardest this year averaged{' '}
+                  <strong>{usd(FUNDED.spend / 3)}</strong> of spend and{' '}
+                  <strong>{usd(FUNDED.gross / 3)}</strong> of sales. The three leanest averaged{' '}
+                  {usd(LEAN.spend / 3)} and {usd(LEAN.gross / 3)}. Then we tested the other
+                  direction: from July to September spend came down{' '}
+                  <strong>
+                    {pct(Math.abs(((SEP_2026.spend - JUL_2026.spend) / JUL_2026.spend) * 100), 0)}
+                  </strong>{' '}
+                  and sales followed{' '}
+                  <strong>
+                    {pct(Math.abs(((SEP_2026.gross - JUL_2026.gross) / JUL_2026.gross) * 100), 0)}
+                  </strong>{' '}
+                  down with it, to {usd(SEP_2026.gross)}. Budget still sets the ceiling, because the brand is
+                  not yet big enough for organic to hold the rank on its own. We do not yet know
+                  exactly what it takes to reach <strong>$80,000 to $100,000</strong> a month.
+                  That is the work, and the only way to find it is to fund, read the result and
+                  adjust. Better profitability is there and we will take it, but the moment to
+                  pull back is at that level, not at {usd(SEP_2026.gross)}, where it only locks
+                  in the smaller number.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
